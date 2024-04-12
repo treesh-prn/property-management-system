@@ -1,0 +1,87 @@
+﻿@model PropertyManagementSystem.Models.GFMS_ReservationHeader
+@{
+    ViewData["Title"] = "Reservation Details";
+
+}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        ACCOMMODATION
+                    </div>
+                    <h2 class="page-title">
+                        GUEST ROOM
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <span class="d-none d-sm-inline">
+                            <a href="#" class="btn">
+                                Reservation List
+                            </a>
+                        </span>
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
+                            <i class="ti ti-plus"></i>
+                            Create New Reservation
+                        </a>
+                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create New Reservation">
+                            <i class="ti ti-plus"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+@*NEW ROOM MODAL *@
+<div class="modal modal-blur fade" id="modal-newReservatoion" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Reservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="fcFRM1" asp-controller="Accommodation" asp-action="newReservation" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label required">Charge to Company:</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_company")
+                            .DataTextField("Company")
+                            .DataValueField("Id")
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("getCompanies", "Global");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
+                    </div>
+                </div>
+
+
+                <div class="modal-footer">
+                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@*END - NEW Room MODAL *@

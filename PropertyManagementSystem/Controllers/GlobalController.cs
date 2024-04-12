@@ -1,0 +1,37 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using PropertyManagementSystem.Data;
+
+namespace PropertyManagementSystem.Controllers
+{
+    public class GlobalController : Controller
+    {
+        private readonly DAL _context;
+
+        public GlobalController(DAL context)
+        {
+
+            _context = context;
+
+        }
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        public JsonResult getCompanies()
+        {
+            var _companyList = _context.Companies.AsQueryable().ToList();
+
+            return Json(_companyList , new JsonSerializerSettings());
+        }
+        public string GenerateId()
+        {
+            //{00000000-0000-0000-0000-000000000000}
+            var guid1 = Guid.NewGuid().ToString("N").ToUpper();
+            var unique = $"{guid1}";
+            return unique;
+        }
+
+    }
+}

@@ -1,0 +1,50 @@
+﻿
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+    <link rel="icon" href="~/favicon.ico">
+    <title>TIPCO | GFMS</title>
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link href="@Url.Content("~/lib/kendo-ui/styles/kendo.material-arctic.min.css")" rel="stylesheet" type="text/css" />
+    @*<link href="@Url.Content("~/lib/kendo-ui/styles/kendo.common.min.css")" rel="stylesheet" type="text/css" />*@
+
+    <script src="@Url.Content("~/lib/kendo-ui/js/jquery.min.js")"></script>
+    <script src="@Url.Content("~/lib/kendo-ui/js/jszip.min.js")"></script>
+    <script src="@Url.Content("~/lib/kendo-ui/js/kendo.all.min.js")"></script>
+    <script src="@Url.Content("~/lib/kendo-ui/js/kendo.aspnetmvc.min.js")"></script>
+    <script src="@Url.Content("~/lib/kendo-ui/js/cultures/kendo.culture.en-PH.min.js")"></script>
+    <link rel="stylesheet" href="@Url.Content("~/lib/tabler-icons.min.css")">
+
+
+</head>
+
+<body class="layout-fluid">
+
+    <div class="page">
+
+        <partial name="_Navigation" />
+        <partial name="_Header" />
+        @RenderBody()
+    </div>
+
+    
+
+    @*Live Chat Plugin*@
+
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+  
+
+
+    <script>
+        kendo.culture("en-PH");
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
