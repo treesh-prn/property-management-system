@@ -21,6 +21,7 @@ namespace PropertyManagementSystem.Controllers
         {
             return View();
         }
+        public IActionResult FunctionRoom() { return View(); }
         public IActionResult newReservation(int _company)
         {
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
@@ -56,7 +57,7 @@ namespace PropertyManagementSystem.Controllers
         }
         public ActionResult getGuestHouseReservation([DataSourceRequest] DataSourceRequest request)
         {
-            List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable().Where(x => x.Status == 1).ToList();
+            List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable().Where(x => x.Status == 0).ToList();
             DataSourceResult result = _reservations.ToDataSourceResult(request, _reservation => new
             {
                 ReservationId = _reservation.ReservationId,

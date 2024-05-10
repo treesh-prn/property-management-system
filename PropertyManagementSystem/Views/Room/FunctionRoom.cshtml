@@ -67,7 +67,18 @@
                                     columns.ForeignKey(c => c.FacilityId, ds => ds.Read(r => r.Action("getFacilityList", "Facility")), "FacilityId", "FacilityName").Title("Facility").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
                                     columns.Bound(c => c.RoomName);
                                     columns.Bound(c => c.Capacity);
-                                    columns.Bound(c => c.isActive).Width(100);
+                                    columns.Bound(c => c.isActive).Hidden(true).ClientTemplate(
+                                    "# if(isActive) { #" +
+                                    "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Active</span>" +
+                                    "# } else { #" +
+                                    "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
+                                    "# } #"
+                                    ).Title("Active").Width(200);
+                                    columns.Command(command =>
+                                    {
+                                        command.Custom("View").Click("showDetails").Text("View");
+                                        command.Custom("Delete").Text("Delete");
+                                    }).Title("Actions").Width(250);
 
                                 })
                                 .Scrollable()
@@ -77,6 +88,7 @@
                                 })
                                 .DataSource(dataSource => dataSource
                                 .Ajax()
+                                .Group(group => group.Add(c => c.FacilityId))
                                 .Model(model => model.Id(p => p.FacilityId))
                                 .Read(read => read.Action("getFNRooms", "Room"))
                                 .PageSize(50)
@@ -92,8 +104,6 @@
     </div>
 
 </div>
-
-
 
 @*NEW ROOM MODAL *@
 <div class="modal modal-blur fade" id="modal-newRoom" tabindex="-1" role="dialog" aria-hidden="true">
@@ -122,6 +132,28 @@
                                     read.Action("getFacilityList", "Facility");
                                 });
                             })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Status</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_status")
+                            .BindTo(new List<SelectListItem>
+                        {
+                        new SelectListItem() {
+                        Text = "Open",
+                        Value = "Open"
+                        },
+                        new SelectListItem() {
+                        Text = "Occupied",
+                        Value = "Occupied"
+                        },
+                        new SelectListItem() {
+                        Text = "Under Maintenance",
+                        Value = "Under Maintenance"
+                        },
+                        })
                             .HtmlAttributes(new { style = "width: 100%" })
                             )
                     </div>

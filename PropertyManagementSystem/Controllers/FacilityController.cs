@@ -28,6 +28,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 FacilityId = _Facility.FacilityId,
                 FacilityName = _Facility.FacilityName,
+                FacilityClassification = _Facility.FacilityClassification,
                 FacilityLocation = _Facility.FacilityLocation,
                 isActive = _Facility.isActive
             });
@@ -36,7 +37,7 @@ namespace PropertyManagementSystem.Controllers
         }
         public ActionResult getFacilityList()
         {
-            List<GFMS_Facility> _Facilities = _context.Facilities.AsQueryable().ToList();
+            List<GFMS_Facility> _Facilities = _context.Facilities.AsQueryable().Where(x => x.FacilityClassification == "FACILITIES").ToList();
 
             List<facilityList> _facilityList = new List<facilityList>();
             foreach (var item in _Facilities)
@@ -54,11 +55,35 @@ namespace PropertyManagementSystem.Controllers
 
         }
 
-        public IActionResult newFacility(string _name, string _location, bool _isActive ) 
+        public ActionResult getGHList()
+        {
+            List<GFMS_Facility> _Facilities = _context.Facilities
+                .AsQueryable()
+                .Where(x => x.FacilityClassification == "GUESTHOUSE")
+                .ToList();
+
+            List<facilityList> _ghList = new List<facilityList>();
+            foreach (var item in _Facilities)
+            {
+
+
+                _ghList.Add(new facilityList
+                {
+                    FacilityId = item.FacilityId,
+                    FacilityName = item?.FacilityName
+                });
+            }
+
+            return Json(_ghList);
+
+        }
+
+        public IActionResult newFacility(string _name, string _classification, string _location, bool _isActive ) 
         {
             GFMS_Facility facility = new GFMS_Facility()
             {
                 FacilityName = _name,
+                FacilityClassification = _classification,
                 FacilityLocation = _location,
                 isActive = _isActive
             };

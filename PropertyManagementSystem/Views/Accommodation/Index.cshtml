@@ -156,6 +156,10 @@
             <form id="fcFRM1" asp-controller="Accommodation" asp-action="newReservation" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
+                        <label class="form-label required">Name </label>
+                        <input class="form-control" name="_name" type="text" required="required">
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label required">Charge to Company:</label>
                         @(Html.Kendo().DropDownList()
                             .Name("_company")

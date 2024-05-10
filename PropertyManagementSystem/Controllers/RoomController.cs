@@ -20,11 +20,17 @@ namespace PropertyManagementSystem.Controllers
             return View();
         }
 
-        public IActionResult GuestRoom()
+        public IActionResult GuestRoom(string roomName)
         {
 
             return View();
+            
 
+        }
+
+        public IActionResult ViewGuestRoom() 
+        { 
+            return View();
         }
         public IActionResult FunctionRoom()
         {
@@ -40,10 +46,14 @@ namespace PropertyManagementSystem.Controllers
         }
         public ActionResult getGHRooms([DataSourceRequest] DataSourceRequest request)
         {
-            List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable().Where(x => x.RoomType == 0).ToList();
+            List<GFMS_Rooms> _Rooms = _context.Rooms
+                .AsQueryable()
+                .Where(x => x.RoomType == 0)
+                .ToList();
             DataSourceResult result = _Rooms.ToDataSourceResult(request, _Room => new
             {
                 RoomId = _Room.RoomId,
+                RoomStatus = _Room.RoomStatus,
                 RoomName = _Room.RoomName,
                 FacilityId = _Room.FacilityId,
                 Capacity = _Room.Capacity,
@@ -52,23 +62,45 @@ namespace PropertyManagementSystem.Controllers
             return Json(result);
 
         }
+
+        public ActionResult getGHRoomDetail( int roomId, [DataSourceRequest] DataSourceRequest dataSourceRequest) 
+        {
+            List<GFMS_Rooms> _Rooms = _context.Rooms
+                .Where(x => x.RoomId == roomId)
+                .ToList();
+
+            DataSourceResult result = _Rooms.ToDataSourceResult(dataSourceRequest, _Room => new
+            {
+                RoomId = roomId,
+                RoomStatus = _Room.RoomStatus,
+                RoomName = _Room.RoomName,
+                FacilityId = _Room.FacilityId,
+                Capacity = _Room.Capacity,
+                isActive = _Room.isActive
+            });
+            return Json(result);
+        }
         public ActionResult getFNRooms([DataSourceRequest] DataSourceRequest request)
         {
-            List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable().Where(x => x.RoomType == 1).ToList();
+            List<GFMS_Rooms> _Rooms = _context.Rooms
+                .AsQueryable()
+                .Where(x => x.RoomType == 1)
+                .ToList();
             DataSourceResult result = _Rooms.ToDataSourceResult(request, _Room => new
             {
                 RoomId = _Room.RoomId,
                 RoomName = _Room.RoomName,
                 FacilityId = _Room.FacilityId,
                 Capacity = _Room.Capacity,
-                isActive = _Room.isActive
+                isActive = _Room.isActive,
+                //RoomType = _Room.RoomType
             });
             return Json(result);
 
         }
         public ActionResult getDMRooms([DataSourceRequest] DataSourceRequest request)
         {
-            List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable().Where(x => x.RoomType == 2).ToList();
+            List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable().ToList();
             DataSourceResult result = _Rooms.ToDataSourceResult(request, _Room => new
             {
                 RoomId = _Room.RoomId,
@@ -81,11 +113,12 @@ namespace PropertyManagementSystem.Controllers
 
         }
         [HttpPost]
-        public IActionResult newGHRoom(string _name,int _facility,  int _capacity, bool _isActive)
+        public IActionResult newGHRoom(string _name, string _status, int _facility,  int _capacity, bool _isActive)
         {
             GFMS_Rooms _room = new GFMS_Rooms()
             {
                 RoomName = _name,
+                RoomStatus = _status,
                 Capacity = _capacity,
                 FacilityId = _facility,
                 isActive = _isActive,
@@ -99,11 +132,12 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("GuestRoom", "Room");
         }
         [HttpPost]
-        public IActionResult newFNRoom(string _name, int _facility, int _capacity, bool _isActive)
+        public IActionResult newFNRoom(string _name, string _status, int _facility, int _capacity, bool _isActive)
         {
             GFMS_Rooms _room = new GFMS_Rooms()
             {
                 RoomName = _name,
+                RoomStatus = _status,
                 Capacity = _capacity,
                 FacilityId = _facility,
                 isActive = _isActive,
@@ -117,11 +151,12 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("FunctionRoom", "Room");
         }
         [HttpPost]
-        public IActionResult newDMRoom(string _name, int _facility, int _capacity, bool _isActive)
+        public IActionResult newDMRoom(string _name, string _status, int _facility, int _capacity, bool _isActive)
         {
             GFMS_Rooms _room = new GFMS_Rooms()
             {
                 RoomName = _name,
+                RoomStatus= _status,    
                 Capacity = _capacity,
                 FacilityId = _facility,
                 isActive = _isActive,
