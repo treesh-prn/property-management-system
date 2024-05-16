@@ -1,4 +1,4 @@
-﻿@model PropertyManagementSystem.Models.GFMS_Rooms;
+﻿@model PropertyManagementSystem.Models.RoomViewModel;
 
 @*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -26,6 +26,10 @@
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
+                        <a href="@Url.Action("GuestRoom", "Room")" class="btn btn-primary bg-green">
+                            <i class="ti ti-arrow-left icon"></i>
+                            Go Back
+                        </a>
                         @*   <span class="d-none d-sm-inline">
                         <a href="#" class="btn">
                         New view
@@ -52,34 +56,165 @@
                 <div class="col-md-3">
                     <div class="card">
                         <div class="card-header card-header-light">
-                            <h3 class="card-title">@Model.RoomName</h3>
+                            <h3 class="card-title">@Model.FacilityName</h3>
                         </div>
-                        <img src="@Url.Content("~/img/guest-room.jpg")">
-                        <div class="card-body p-0">
+                        @*<div class="img-responsive img-responsive-16x9 card-img-top" style="background-image: url(/img/guest-room.jpg)"></div>*@
+                        <img class="img-responsive2" src="@Url.Content("~/img/guest-room.jpg")">
+                        @*<div class="card-body p-0">
                             Lorem Ipsum Dolor Sit Amet
-                        </div>
+                        </div>*@
                     </div>
                 </div>
                 <div class="col-lg-9">
                     <div class="card">
-                        <div class="card-header">
-                            <div>
-                                <h3 class="card-title">
-                                    Room 1
-                                </h3>
-                                <p class="card-subtitle">
-                                    Lorem ipsum dolor sit amet consectetur adipisicing.
-                                </p>
+                        <div class="card">
+                            <div class="card-header">
+                                <div>
+                                    <h3 class="card-title">
+                                        @Model.RoomName
+                                    </h3>
+                                    <p class="card-subtitle">
+                                    </p>
+                                </div>
+                                <div class="card-actions">
+                                    <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
+                                        Edit Room
+                                    </a>
+                                </div>
                             </div>
-                            <div class="card-actions">
-                                <a href="#" class="btn btn-primary">
-                                    Edit Room
-                                </a>
+                            <div class="card-body">
+                                <div class="datagrid">
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Room Name</div>
+                                        <div class="datagrid-content">@Model.RoomName</div>
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Capacity</div>
+                                        <div class="datagrid-content">@Model.Capacity</div>
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Location</div>
+                                        <div class="datagrid-content">@Model.FacilityLocation</div>
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Room Type</div>
+                                        @if (@Model.RoomType.Equals(0))
+                                        {
+                                            <div class="datagrid-content">
+                                                Guest Room
+                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                                    <i class="ti ti-door icon"></i>
+                                                </span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Status</div>
+                                        @if (@Model.RoomStatus.Equals("Open"))
+                                        {
+                                            <div class="datagrid-content">
+                                                <span class='status status-teal'><span class='status-dot status-dot-animated'></span>Open</span>
+                                            </div>
+                                        }
+                                        else if (@Model.RoomStatus.Equals("Occupied"))
+                                        {
+                                            <div class="datagrid-content">
+                                                <span class='status status-red'><span class='status-dot status-dot-animated'></span>Occupied</span>
+                                            </div>
+                                        }
+                                        else if (@Model.RoomStatus.Equals("Under Maintenance"))
+                                        {
+                                            <div class="datagrid-content">
+                                                <span class='status status-yellow'><span class='status-dot status-dot-animated'></span>Under Maintenance</span>
+                                            </div>
+                                        }
+
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Active Status</div>
+                                        <div class="datagrid-content">
+                                             @if (Model.isActive.Equals(false))
+                                            {
+                                                <span class="status status-red">
+                                                    Inactive
+                                                </span>
+                                            }else{
+                                                <span class="status status-green">
+                                                    Active
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="card-body p-0">
                         </div>
                     </div>
+                </div>
+            </div>
+            @*<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>*@
+            @*off canvas edit form*@
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+                <div class="offcanvas-header">
+                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <form asp-action="EditGHRoom" asp-controller="Room" method="post">
+                        <input type="hidden" name="RoomId" asp-for="RoomId" />
+                        <div class="mb-3">
+                            <label class="form-label required">Room Name </label>
+                            <input class="form-control" name="RoomName" type="text" required="required" asp-for="RoomName">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label required">Facility</label>
+                            @(Html.Kendo().DropDownList()
+                                .Name("FacilityId") // Use the correct name for FacilityId property
+                                .DataTextField("FacilityName")
+                                .DataValueField("FacilityId")
+                                .DataSource(source =>
+                                {
+                                    source.Read(read =>
+                                    {
+                                        read.Action("getGHList", "Facility");
+                                    });
+                                })
+                                .Value(Model.FacilityId.ToString())
+                                .HtmlAttributes(new { style = "width: 100%" })
+                                )
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required">Status</label>
+                            @(Html.Kendo().DropDownList()
+                                .Name("RoomStatus") 
+                                .BindTo(new List<SelectListItem>
+                            {
+                            new SelectListItem() { Text = "Open", Value = "Open" },
+                            new SelectListItem() { Text = "Occupied", Value = "Occupied" },
+                            new SelectListItem() { Text = "Under Maintenance", Value = "Under Maintenance" }
+                            })
+                                .Value(Model.RoomStatus) // Set the selected value
+                                .HtmlAttributes(new { style = "width: 100%" })
+                                )
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required">Capacity</label>
+                            <input class="form-control" name="Capacity" type="number" required="required" asp-for="Capacity">
+                        </div>
+                        <label class="row">
+                            <span class="col form-label">Is Active</span>
+                            <span class="col-auto">
+                                <label class="form-check form-check-single form-switch">
+                                    <input class="form-check-input" name="isActive" type="checkbox" @(Model.isActive == true ? "checked" : "") />
+                                </label>
+                            </span>
+                        </label>
+                        <div class="mb-3 text-end">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

@@ -4828,7 +4828,7 @@ textarea.form-control-lg {
             border: 0 !important;
             transform: none !important;
             box-shadow: none;
-            transition: none
+            transition: 1.5s
         }
 
             .navbar-expand-sm .offcanvas .offcanvas-header {
@@ -4882,7 +4882,7 @@ textarea.form-control-lg {
             width: auto !important;
             height: auto !important;
             visibility: visible !important;
-            background-color: transparent !important;
+            
             border: 0 !important;
             transform: none !important;
             box-shadow: none;
@@ -4890,7 +4890,7 @@ textarea.form-control-lg {
         }
 
             .navbar-expand-md .offcanvas .offcanvas-header {
-                display: none
+                display: none;
             }
 
             .navbar-expand-md .offcanvas .offcanvas-body {
@@ -4948,7 +4948,8 @@ textarea.form-control-lg {
         }
 
             .navbar-expand-lg .offcanvas .offcanvas-header {
-                display: none
+                display: none;
+                background-color: #182433;
             }
 
             .navbar-expand-lg .offcanvas .offcanvas-body {
@@ -5006,7 +5007,7 @@ textarea.form-control-lg {
         }
 
             .navbar-expand-xl .offcanvas .offcanvas-header {
-                display: none
+                display: none;
             }
 
             .navbar-expand-xl .offcanvas .offcanvas-body {
@@ -5064,7 +5065,7 @@ textarea.form-control-lg {
         }
 
             .navbar-expand-xxl .offcanvas .offcanvas-header {
-                display: none
+                display: none;
             }
 
             .navbar-expand-xxl .offcanvas .offcanvas-body {
@@ -5121,7 +5122,7 @@ textarea.form-control-lg {
     }
 
         .navbar-expand .offcanvas .offcanvas-header {
-            display: none
+            display: none;
         }
 
         .navbar-expand .offcanvas .offcanvas-body {
@@ -6791,7 +6792,6 @@ textarea.form-control-lg {
 }
 
     .btn-close:hover {
-        color: var(--tblr-btn-close-color);
         text-decoration: none;
         opacity: var(--tblr-btn-close-hover-opacity)
     }
@@ -7848,7 +7848,7 @@ textarea.form-control-lg {
     }
 
         .offcanvas-sm .offcanvas-header {
-            display: none
+            display: none;
         }
 
         .offcanvas-sm .offcanvas-body {
@@ -7937,7 +7937,7 @@ textarea.form-control-lg {
     }
 
         .offcanvas-md .offcanvas-header {
-            display: none
+            display: none;
         }
 
         .offcanvas-md .offcanvas-body {
@@ -8026,7 +8026,7 @@ textarea.form-control-lg {
     }
 
         .offcanvas-lg .offcanvas-header {
-            display: none
+            display: none;
         }
 
         .offcanvas-lg .offcanvas-body {
@@ -8115,7 +8115,7 @@ textarea.form-control-lg {
     }
 
         .offcanvas-xl .offcanvas-header {
-            display: none
+            display: none;
         }
 
         .offcanvas-xl .offcanvas-body {
@@ -8204,7 +8204,7 @@ textarea.form-control-lg {
     }
 
         .offcanvas-xxl .offcanvas-header {
-            display: none
+            display: none;
         }
 
         .offcanvas-xxl .offcanvas-body {
@@ -8234,7 +8234,7 @@ textarea.form-control-lg {
 
 @media (prefers-reduced-motion:reduce) {
     .offcanvas {
-        transition: none
+        transition: .5s;
     }
 }
 
@@ -8302,6 +8302,8 @@ textarea.form-control-lg {
 .offcanvas-header {
     display: flex;
     align-items: center;
+    font-weight: bold;
+    font-size: 24px;
     justify-content: space-between;
     padding: var(--tblr-offcanvas-padding-y) var(--tblr-offcanvas-padding-x)
 }
@@ -22915,11 +22917,12 @@ a.card-title:hover {
     }
 
 .datagrid {
-    --tblr-datagrid-padding: 1.5rem;
-    --tblr-datagrid-item-width: 15rem;
+    --tblr-datagrid-padding: 2.45rem;
+    --tblr-datagrid-item-width: 55rem;
     display: grid;
     grid-gap: var(--tblr-datagrid-padding);
-    grid-template-columns: repeat(auto-fit,minmax(var(--tblr-datagrid-item-width),1fr))
+    grid-template-columns: repeat(2, 1fr);
+    /*grid-template-columns: repeat(auto-fit,minmax(var(--tblr-datagrid-item-width),1fr)) */
 }
 
 .datagrid-title {
@@ -27948,8 +27951,10 @@ img {
     border: 1px solid #EB1D36;
     border-radius: 4px;
     padding: 8px 16px;
+    margin: 4px 15px 2px 15px;
     font-size: 14px;
     color: whitesmoke;
+    font-weight: bold;
 }
 
 .k-grid-content .k-button.k-grid-View {
@@ -27957,8 +27962,10 @@ img {
     border: 1px solid #206BC4;
     border-radius: 4px;
     padding: 8px 16px;
+    margin: 4px 7px 2px 15px;
     font-size: 14px;
     color: whitesmoke;
+    font-weight: bold;
 }
 
 .k-searchbox{
@@ -27968,5 +27975,17 @@ img {
 
 span.k-button-text{
     font-weight: bold;
+}
+.img-responsive2 {
+    max-width: 400px; /* Set the maximum width of the image */
+    max-height: 200px; /* Set the maximum height of the image */
+    margin: 10px 25px 25px; /* Add margin around the image */
+}
+.offcanvasRightLabel {
+    font-weight: bold;
+    color: whitesmoke;
+}
 
+.hide {
+    display: none;
 }

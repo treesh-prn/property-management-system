@@ -21,6 +21,17 @@ namespace PropertyManagementSystem.Controllers
             return View();
         }
 
+        public IActionResult ViewFacility(int FacilityId)
+        {
+            var facilityDetails = _context.Facilities.FirstOrDefault(f => f.FacilityId == FacilityId);
+            if (facilityDetails == null)
+            {
+                return NotFound();
+            }
+            return View(facilityDetails);
+        }
+
+
         public ActionResult getFacilities([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_Facility> _Facilities = _context.Facilities.AsQueryable().ToList();

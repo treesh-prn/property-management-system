@@ -56,39 +56,47 @@
                         <div class="card-body p-0">
                             @(
                                 Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_Rooms>()
-                                        .Name("roomGrid")
-                                        .ToolBar(tools => tools.Excel())
-                                        .Excel(excel => excel
-                                        .FileName("Rooms.xlsx")
-                                        .AllPages(true))
-                                        .Columns(columns =>
-                                        {
-                                            columns.Bound(c => c.RoomId).Visible(false).Exportable(false);
-                                            columns.ForeignKey(c => c.FacilityId, ds => ds.Read(r => r.Action("getGHList", "Facility")), "FacilityId", "FacilityName").Title("Facility").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
-                                            columns.Bound(c => c.RoomName);
-                                            columns.Bound(c => c.Capacity);
-                                            columns.Bound(c => c.isActive).Hidden(true).ClientTemplate(
-                                        "# if(isActive == 1) { #" +
-                                        "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Active</span>" +
-                                        "# } else { #" +
-                                        "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
-                                        "# } #"
-                                        ).Title("Active").Width(200);
-                                        columns.Bound(c => c.RoomStatus).Hidden(true).ClientTemplate(
-                                        "# if(RoomStatus === 'Open') { #" +
-                                        "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Open</span>" +
-                                        "# } else if(RoomStatus === 'Occupied') { #" +
-                                        "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Occupied</span>" +
-                                        "# } else if(RoomStatus === 'Under Maintenance') { #" +
-                                        "<span class='status status-yellow''><span class='status-dot status-dot-animated'></span>Under Maintenance</span>" +
-                                        "# } #"
-                                        ).Title("Room Status");
-                                    columns.Command(command =>
-                                    {
-                                        command.Custom("View").Click("showDetails").Text("View");
-                                        command.Destroy().Text("Delete");
-                                    }).Title("Actions").Width(250);
-                                    })
+                                            .Name("roomGrid")
+                                            .ToolBar(tools => tools.Excel())
+                                            .Excel(excel => excel
+                                            .FileName("Rooms.xlsx")
+                                            .AllPages(true))
+                                            .Columns(columns =>
+                                            {
+                                                columns.Bound(c => c.RoomId).Visible(false).Exportable(false);
+                                                columns.ForeignKey(c => c.FacilityId, ds => ds.Read(r => r.Action("getGHList", "Facility")), "FacilityId", "FacilityName").Title("Facility").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
+                                                columns.Bound(c => c.RoomName);
+                                                columns.Bound(c => c.Capacity);
+                                                columns.Bound(c => c.isActive).Hidden(true).ClientTemplate(
+                                            "# if(isActive == 1) { #" +
+                                            "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Active</span>" +
+                                            "# } else { #" +
+                                            "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
+                                            "# } #"
+                                            ).Title("Active").Width(200);
+                                                columns.Bound(c => c.RoomStatus).Hidden(true).ClientTemplate(
+                                                            "# if(RoomStatus === 'Open') { #" +
+                                                            "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Open</span>" +
+                                                            "# } else if(RoomStatus === 'Occupied') { #" +
+                                                            "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Occupied</span>" +
+                                                            "# } else if(RoomStatus === 'Under Maintenance') { #" +
+                                                            "<span class='status status-yellow''><span class='status-dot status-dot-animated'></span>Under Maintenance</span>" +
+                                                            "# } #"
+                                                            ).Title("Room Status");
+                                                columns.Bound(c => c.RoomId)
+                                            .ClientTemplate(
+                                                "<div style='display: inline-block;'>" +
+                                                "   <a href='" + Url.Action("ViewGuestRoom", "Room", new { RoomId = "#= RoomId #" }) + "' class='k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success'><i class='ti ti-eye'></i>&nbsp;View</a>" +
+                                                "</div>" +
+                                                "<form class='delete-form' action='" + Url.Action("DeleteGHRoom", "Room") + "' method='post' style='display: inline-block;'>" +
+                                                "   <button type='submit' class='k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger'><i class='ti ti-trash'></i>&nbsp;Delete</button>" +
+                                                "   <input type='hidden' name='RoomId' value='#= RoomId #' />" +
+                                                "</form>"
+                                            )
+                                            .Title("Actions")
+                                            .Exportable(false)
+                                            .Filterable(false);
+                                            })
                                     .Scrollable()
                                     .ToolBar(toolbar =>
                                     {
@@ -126,7 +134,7 @@
             <form id="fcFRM1" asp-controller="Room" asp-action="newGHRoom" enctype="multipart/form-data" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label required">Name </label>
+                        <label class="form-label required">Room Name </label>
                         <input class="form-control" name="_name" type="text" required="required">
                     </div>
                     <div class="mb-3">
@@ -175,7 +183,7 @@
                         <span class="col form-label">Is Active</span>
                         <span class="col-auto">
                             <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" id="switch" name="_isActive" type="checkbox" checked>
+                                <input class="form-check-input" id="switch" name="_isActive" type="checkbox" value="true" checked>
                             </label>
                         </span>
                     </label>
@@ -188,23 +196,3 @@
     </div>
 </div>
 @*END - NEW Room MODAL *@
-<script>
-    $(document).ready(function () {
-        $("#switch").kendoSwitch({
-            change: function (e) {
-                var value = this.value();
-                console.log(value)
-                $.ajax({
-                    type: "POST",
-                    url: "@Url.Action("newGHRoom", "Room")",
-                    data: { switchValue: value },
-                    success: function (response) {
-                        console.log("Switch value saved successfully");
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("Error saving switch value:", error);
-                    }
-                });
-            }
-        });
-</script>

@@ -28,9 +28,41 @@ namespace PropertyManagementSystem.Controllers
 
         }
 
-        public IActionResult ViewGuestRoom() 
-        { 
-            return View();
+        public IActionResult ViewGuestRoom(int RoomId, [DataSourceRequest] DataSourceRequest request) 
+        {
+            var roomDetails = (from room in _context.Rooms
+                               join facilityList in _context.Facilities on room.FacilityId equals facilityList.FacilityId
+                               where room.RoomId == RoomId
+                               select new
+                               {
+                                   RoomId = room.RoomId,
+                                   RoomName = room.RoomName,
+                                   RoomStatus = room.RoomStatus,
+                                   FacilityName = facilityList.FacilityName,
+                                   FacilityLocation = facilityList.FacilityLocation,
+                                   Capacity = room.Capacity,
+                                   isActive = room.isActive,
+                                   RoomType = room.RoomType
+
+                               }).FirstOrDefault();
+            if (roomDetails == null)
+            {
+                return NotFound();
+            }
+            var roomViewModel = new RoomViewModel
+            {
+                RoomId = roomDetails.RoomId,
+                RoomName = roomDetails.RoomName,
+                RoomStatus = roomDetails.RoomStatus,
+                FacilityName = roomDetails.FacilityName,
+                FacilityLocation = roomDetails.FacilityLocation,
+                Capacity = roomDetails.Capacity,
+                isActive = roomDetails.isActive,
+                RoomType = roomDetails.RoomType
+
+            };
+
+            return View(roomViewModel);
         }
         public IActionResult FunctionRoom()
         {
@@ -44,6 +76,7 @@ namespace PropertyManagementSystem.Controllers
             return View();
 
         }
+        /*Display*/
         public ActionResult getGHRooms([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_Rooms> _Rooms = _context.Rooms
@@ -112,6 +145,7 @@ namespace PropertyManagementSystem.Controllers
             return Json(result);
 
         }
+        /*Create*/
         [HttpPost]
         public IActionResult newGHRoom(string _name, string _status, int _facility,  int _capacity, bool _isActive)
         {
@@ -169,5 +203,47 @@ namespace PropertyManagementSystem.Controllers
 
             return RedirectToAction("FunctionRoom", "Room");
         }
+
+        /*Update*/
+        [HttpGet]
+        public IActionResult EditGHRoom(int RoomId)
+        {
+            GFMS_Rooms room = _context.Rooms.Find(RoomId);
+            if (room == null)
+            {
+                return NotFound();
+            }
+
+            return View(room);
+        }
+
+        [HttpPost]
+        public IActionResult EditGHRoom(GFMS_Rooms room)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Rooms.Update(room);
+                _context.SaveChanges();
+
+                string redirectUrl = Url.Action("ViewGuestRoom", "Room", new { RoomId = room.RoomId });
+                return Redirect(redirectUrl);
+            }
+            return View(room);
+        }
+
+        /*Delete*/
+        [HttpPost]
+        public IActionResult DeleteGHRoom(int RoomId) 
+        {
+            GFMS_Rooms room = _context.Rooms.Find(RoomId);
+            if(room == null)
+            {
+                return NotFound();
+            }
+            _context.Rooms.Remove(room);
+            _context.SaveChanges();
+            return RedirectToAction("GuestRoom", "Room");
+        }
+
     }
 }
