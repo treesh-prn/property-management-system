@@ -133,7 +133,9 @@ namespace PropertyManagementSystem.Controllers
         }
         public ActionResult getDMRooms([DataSourceRequest] DataSourceRequest request)
         {
-            List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable().ToList();
+            List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable()
+                .Where(X => X.RoomType == 2)
+                .ToList();
             DataSourceResult result = _Rooms.ToDataSourceResult(request, _Room => new
             {
                 RoomId = _Room.RoomId,
@@ -201,7 +203,7 @@ namespace PropertyManagementSystem.Controllers
             _context.Rooms.Add(_room);
             _context.SaveChanges();
 
-            return RedirectToAction("FunctionRoom", "Room");
+            return RedirectToAction("DormRoom", "Room");
         }
 
         /*Update*/
@@ -242,8 +244,38 @@ namespace PropertyManagementSystem.Controllers
             }
             _context.Rooms.Remove(room);
             _context.SaveChanges();
+
+            
             return RedirectToAction("GuestRoom", "Room");
+
         }
 
+        [HttpPost]
+        public IActionResult DeleteDMRoom(int RoomId)
+        {
+            GFMS_Rooms room = _context.Rooms.Find(RoomId);
+            if (room == null)
+            {
+                return NotFound();
+            }
+            _context.Rooms.Remove(room);
+            _context.SaveChanges();
+
+            return RedirectToAction("DormRoom", "Room");
+        }
+
+        public IActionResult DeleteFNRoom(int RoomId)
+        {
+            GFMS_Rooms room = _context.Rooms.Find(RoomId);
+            if(room == null)
+            {
+                return NotFound();
+            }
+
+            _context.Rooms.Remove(room);
+            _context.SaveChanges();
+
+            return RedirectToAction("FunctionRoom", "Room");
+        }
     }
 }

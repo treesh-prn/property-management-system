@@ -27977,9 +27977,12 @@ span.k-button-text{
     font-weight: bold;
 }
 .img-responsive2 {
-    max-width: 400px; /* Set the maximum width of the image */
-    max-height: 200px; /* Set the maximum height of the image */
-    margin: 10px 25px 25px; /* Add margin around the image */
+    max-width: 350px;
+    max-height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 50px 25px;
 }
 .offcanvasRightLabel {
     font-weight: bold;

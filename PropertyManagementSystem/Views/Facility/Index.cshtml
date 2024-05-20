@@ -79,7 +79,7 @@
                                     "<div style='display: inline-block;'>" +
                                     "   <a href='" + Url.Action("ViewFacility", "Facility", new { FacilityId = "#= FacilityId #" }) + "' class='k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success'><i class='ti ti-eye'></i>&nbsp;View</a>" +
                                     "</div>" +
-                                    "<form class='delete-form' action='" + Url.Action("ViewFacility", "Facility") + "' method='post' style='display: inline-block;'>" +
+                                    "<form class='delete-form' action='" + Url.Action("DeleteFacility", "Facility") + "' method='post' style='display: inline-block;'>" +
                                     "   <button type='submit' class='k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger'><i class='ti ti-trash'></i>&nbsp;Delete</button>" +
                                     "   <input type='hidden' name='FacilityId' value='#= FacilityId #' />" +
                                     "</form>"
@@ -129,8 +129,22 @@
                         <input class="form-control" name="_name" type="text" required="required">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label required">Location</label>
-                        <input class="form-control" name="_location" type="text" required="required">
+                        <label class="form-label required">Facility Location</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_location")
+                            .BindTo(new List<SelectListItem>
+                        {
+                        new SelectListItem() {
+                        Text = "MILL",
+                        Value = "MILL"
+                        },
+                        new SelectListItem() {
+                        Text = "MAKATI",
+                        Value = "MAKATI"
+                        },
+                        })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                        )
                     </div>
                     <div class="mb-3">
                         <label class="form-label required">Status</label>

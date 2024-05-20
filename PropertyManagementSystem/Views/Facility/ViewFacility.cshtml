@@ -94,7 +94,21 @@
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Location</div>
-                                        <div class="datagrid-content">@Model.FacilityLocation</div>
+                                        @if (Model.FacilityLocation.Equals("MILL"))
+                                        {
+                                            <div class="datagrid-content">@Model.FacilityLocation
+                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                                    <i class="ti ti-building-factory-2"></i>
+                                                </span>
+                                            </div>
+                                        }else{
+                                            <div class="datagrid-content">
+                                                @Model.FacilityLocation
+                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                                    <i class="ti ti-building-skyscraper"></i>
+                                                </span>
+                                            </div>
+                                        }
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Active Status</div>
@@ -146,25 +160,40 @@
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
-                    <form asp-action="EditGHRoom" asp-controller="Room" method="post">
-                        <input type="hidden" name="RoomId" asp-for="FacilityId" />
+                    <form asp-action="EditFacility" asp-controller="Facility" method="post">
+                        <input type="hidden" name="FacilityId" asp-for="FacilityId" />
                         <div class="mb-3">
                             <label class="form-label required">Facility Name </label>
                             <input class="form-control" name="FacilityName" type="text" required="required" asp-for="FacilityName">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label required">Location</label>
-                            <input class="form-control" name="_location" type="text" required="required" asp-for="FacilityLocation">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label required">Status</label>
+                            <label class="form-label required">Facility Location</label>
                             @(Html.Kendo().DropDownList()
-                                .Name("_classification")
+                                .Name("FacilityLocation")
                                 .BindTo(new List<SelectListItem>
                             {
                             new SelectListItem() {
-                            Text = "FACILITIES",
-                            Value = "FACILITIES"
+                            Text = "MILL",
+                            Value = "MILL"
+                            },
+                            new SelectListItem() {
+                            Text = "MAKATI",
+                            Value = "MAKATI"
+                            },
+                            })
+                                .Value(Model.FacilityLocation)
+                                .HtmlAttributes(new { style = "width: 100%" })
+                                )
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required">Facility Classification</label>
+                            @(Html.Kendo().DropDownList()
+                                .Name("FacilityClassification")
+                                .BindTo(new List<SelectListItem>
+                            {
+                            new SelectListItem() {
+                            Text = "FUNCTION ROOM",
+                            Value = "FUNCTION ROOM"
                             },
                             new SelectListItem() {
                             Text = "GUESTHOUSE",
@@ -183,7 +212,7 @@
                             <span class="col form-label">Is Active</span>
                             <span class="col-auto">
                                 <label class="form-check form-check-single form-switch">
-                                    <input class="form-check-input" name="isActive" type="checkbox" @(Model.isActive == true ? "checked" : "") />
+                                    <input class="form-check-input" name="isActive" type="checkbox" value="true" @(Model.isActive == true ? "checked" : "") />
                                 </label>
                             </span>
                         </label>
