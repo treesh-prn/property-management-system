@@ -19,5 +19,9 @@ namespace PropertyManagementSystem.Models
         public DateTime DateAdded { get; set; }
         public int EmployeeID { get; set; }
 
+        public int RoomId { get; set; }
+        public int FacilityId { get; set; }
+
+        public GFMS_ReservationHeader ReservationHeader { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.Net.NetworkInformation;
 using System;
+using Microsoft.EntityFrameworkCore;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -17,23 +18,69 @@ namespace PropertyManagementSystem.Controllers
         {
             _context = context;
         }
-        public IActionResult Index()
+        public IActionResult FunctionRoom()
         {
+
+            var rooms = _context.Rooms
+           .Include(r => r.Facility)
+           .Where(x => x.RoomType == 1)
+           .Select(room => new GFMS_Rooms
+           {
+               RoomId = room.RoomId,
+               RoomName = room.RoomName,
+               RoomType = room.RoomType,
+               FacilityId = room.FacilityId
+           })
+           .ToList();
+
+            var facilities = _context.Facilities
+           .Where(facility => facility.Rooms.Any(room => room.RoomType == 1))
+           .Select(facility => new GFMS_Facility
+           {
+               FacilityId = facility.FacilityId,
+               FacilityName = facility.FacilityName,
+           })
+           .ToList();
+
+            ViewData["Rooms"] = rooms;
+            ViewData["Facilities"] = facilities;
             return View();
         }
-        public IActionResult FunctionRoom() { return View(); }
-        public IActionResult newReservation(int _company)
+
+        public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
+        {
+            var reservations = (from resDetails in _context.ReservationDetails
+                                join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
+                                select new ReservationViewModel
+                                {
+                                    ReservationId = resDetails.ReservationId,
+                                    Requestor = resHeader.Requestor,
+                                    ChargeToCompany = resHeader.ChargeToCompany,
+                                    Start = resDetails.StartDate,
+                                    End = resDetails.EndDate,
+                                    Title = resDetails.Purpose,
+                                    RoomId = resDetails.RoomId,
+                                    FacilityId = resDetails.FacilityId
+                                }).ToList();
+
+            return Json(reservations.ToDataSourceResult(request));
+        }
+
+        [HttpPost]
+        public IActionResult CreateReservation(int _company, string _requestor)
         {
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
 
-            GFMS_ReservationHeader _reservation = new GFMS_ReservationHeader() {
+            GFMS_ReservationHeader _reservation = new GFMS_ReservationHeader()
+            {
                 GUID = unique,
                 ChargeToCompany = _company,
-                Requestor = "Jerwin Alimuin",
-                RequestorEmail = "jerwin_alimuin@tecoindustrialpark.com",
-                Approver = "Ken Dela Rosa",
+                Requestor = _requestor,
+                RequestorEmail = User.Identity.Name,
+                Approver = "Jerwin Alimuin",
                 DateFiled = DateTime.Now,
+                DateSubmitted = DateTime.Now,
                 Status = 0
 
             };
@@ -46,15 +93,25 @@ namespace PropertyManagementSystem.Controllers
         }
         public IActionResult ReservationDetails(string Id)
         {
-            var _reservation = _context.ReservationHeaders.AsQueryable().Where(x => x.GUID == Id).ToList();
-            int _reservationId = _reservation.FirstOrDefault().ReservationId;
+            var _reservation = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
 
-            List<GFMS_ReservationDetails> _ReservationDetails = _context.ReservationDetails.AsQueryable().Where(x => x.ReservationId == _reservationId).ToList();
-            TempData["ResevationDetails"] = _ReservationDetails;
+            if (_reservation == null)
+            {
+                return NotFound();
+            }
+
+            int _reservationId = _reservation.ReservationId;
+
+            List<GFMS_ReservationDetails> _ReservationDetails = _context.ReservationDetails
+                                                                        .Where(x => x.ReservationId == _reservationId)
+                                                                        .ToList();
+            TempData["ReservationDetails"] = _ReservationDetails;
 
             return View(_reservation);
-
         }
+
+
+
         public ActionResult getGuestHouseReservation([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable().Where(x => x.Status == 0).ToList();
@@ -63,7 +120,7 @@ namespace PropertyManagementSystem.Controllers
                 ReservationId = _reservation.ReservationId,
                 DateFiled = _reservation.DateFiled,
                 Requestor = _reservation.Requestor,
-                RequestorEmail  =   _reservation.RequestorEmail,
+                RequestorEmail = _reservation.RequestorEmail,
                 GUID = _reservation.GUID,
                 Status = _reservation.Status,
                 DateSubmitted = _reservation.DateSubmitted,
@@ -77,12 +134,12 @@ namespace PropertyManagementSystem.Controllers
 
         }
         public IActionResult ReservationList()
-        { 
+        {
 
 
             return View();
 
-            
+
         }
 
     }

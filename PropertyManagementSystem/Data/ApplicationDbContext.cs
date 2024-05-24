@@ -26,6 +26,15 @@ namespace PropertyManagementSystem.Data
         public virtual DbSet<GFMS_ReservationDetails> ReservationDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<GFMS_Rooms>()
+                .HasOne(r => r.Facility)
+                .WithMany(f => f.Rooms)
+                .HasForeignKey(r => r.FacilityId);
+
+            modelBuilder.Entity<GFMS_ReservationDetails>()
+                .HasOne(rd => rd.ReservationHeader)
+                .WithMany()
+                .HasForeignKey(rd => rd.ReservationId);
 
         }
     }

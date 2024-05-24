@@ -131,6 +131,19 @@ namespace PropertyManagementSystem.Controllers
             return Json(result);
 
         }
+        public IActionResult GetFNRoomList(int FacilityId)
+        {
+            var rooms = _context.Rooms
+                .Where(r => r.FacilityId == 1)
+                .Select(r => new
+                {
+                    RoomId = r.RoomId,
+                    RoomName = r.RoomName
+                })
+                .ToList();
+
+            return Json(rooms);
+        }
         public ActionResult getDMRooms([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable()
