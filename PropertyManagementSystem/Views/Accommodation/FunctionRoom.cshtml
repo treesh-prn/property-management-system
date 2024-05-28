@@ -1,4 +1,4 @@
-﻿@model IEnumerable<PropertyManagementSystem.Models.ReservationViewModel>
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
 
 @{
     ViewData["Title"] = "Home Page";
@@ -60,7 +60,7 @@
                                             </div>
                                             <div class="col">
                                                 <div class="font-weight-heavy">
-                                                    3
+                                                    @Model.NewReservationsCount
                                                 </div>
                                                 <div class="text-secondary">
                                                     New Reservations
@@ -106,7 +106,7 @@
                                             </div>
                                             <div class="col">
                                                 <div class="font-weight-heavy">
-                                                    5
+                                                    @Model.OccupiedRoomsCount
                                                 </div>
                                                 <div class="text-secondary">
                                                     Occupied Rooms
@@ -129,7 +129,7 @@
                                             </div>
                                             <div class="col">
                                                 <div class="font-weight-heavy">
-                                                    10
+                                                    @Model.AvailableRoomsCount
                                                 </div>
                                                 <div class="text-secondary">
                                                     Available Room
@@ -144,20 +144,19 @@
                             @(
                                 Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
                                 .Name("scheduler")
-                                .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 8, 0, 0))
-                                .EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 8, 0, 0))
-                                .MajorTick(1440)
+                                .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0))
+                                .EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0))
+                                .MajorTick(60)
                                 .MinorTickCount(1)
                                 .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
                                 .Views(views =>
                                 {
-
                                     views.TimelineWorkWeekView(timeline => timeline.EventHeight(50));
                                     views.TimelineMonthView(timeline =>
                                     {
-                                        timeline.StartTime(new DateTime(2022, 6, 13, 00, 00, 00));
-                                        timeline.EndTime(new DateTime(2022, 6, 13, 00, 00, 00));
-                                        timeline.MajorTick(1440);
+                                        timeline.StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0));
+                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0));
+                                        timeline.MajorTick(60);
                                         timeline.EventHeight(50);
                                     });
                                 })
@@ -198,8 +197,8 @@
                                     m.Id(f => f.ReservationId);
                                     m.Field(f => f.Title).DefaultValue("No title");
                                     m.RecurrenceId(f => f.RecurrenceID);
-                                    m.Field(f => f.Start).DefaultValue(DateTime.UtcNow);
-                                    m.Field(f => f.End).DefaultValue(DateTime.UtcNow.AddHours(1));
+                                    m.Field(f => f.Start);
+                                    m.Field(f => f.End);
                                     m.Field(f => f.RoomId);
                                     m.Field(f => f.FacilityId);
                                 })
@@ -242,6 +241,10 @@
                     <div class="mb-3">
                         <label class="form-label required">Requestor Name</label>
                         <input class="form-control" name="_requestor" type="text" required="required">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Requestor Email</label>
+                        <input class="form-control" name="_requestorEmail" type="email" required="required">
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -27992,3 +27992,8 @@ span.k-button-text{
 .hide {
     display: none;
 }
+
+.table-borderless tbody tr th,
+.table-borderless tbody tr td {
+    border: none;
+}

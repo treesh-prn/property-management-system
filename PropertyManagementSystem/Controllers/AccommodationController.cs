@@ -42,9 +42,19 @@ namespace PropertyManagementSystem.Controllers
            })
            .ToList();
 
+            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == 0);
+            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 1); 
+            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 0); 
+
+            var viewModel = new ReservationViewModel
+            {
+                NewReservationsCount = newReservationCount,
+            };
+
             ViewData["Rooms"] = rooms;
             ViewData["Facilities"] = facilities;
-            return View();
+
+            return View(viewModel);
         }
 
         public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
@@ -56,18 +66,32 @@ namespace PropertyManagementSystem.Controllers
                                     ReservationId = resDetails.ReservationId,
                                     Requestor = resHeader.Requestor,
                                     ChargeToCompany = resHeader.ChargeToCompany,
-                                    Start = resDetails.StartDate,
-                                    End = resDetails.EndDate,
+                                    Start = DateTime.SpecifyKind(resDetails.StartDate.Value, DateTimeKind.Utc),
+                                    End = DateTime.SpecifyKind(resDetails.EndDate.Value, DateTimeKind.Utc),
                                     Title = resDetails.Purpose,
                                     RoomId = resDetails.RoomId,
                                     FacilityId = resDetails.FacilityId
                                 }).ToList();
 
-            return Json(reservations.ToDataSourceResult(request));
+            var groupedReservations = reservations.GroupBy(r => r.ReservationId)
+                                                  .Select(group => new ReservationViewModel
+                                                  {
+                                                      ReservationId = group.Key,                        
+                                                      Requestor = group.First().Requestor,
+                                                      ChargeToCompany = group.First().ChargeToCompany,
+                                                      Start = group.First().Start,
+                                                      End = group.First().End,
+                                                      Title = group.First().Title,
+                                                      RoomId = group.First().RoomId,
+                                                      FacilityId = group.First().FacilityId
+                                                  }).ToList();
+
+            return Json(groupedReservations.ToDataSourceResult(request));
         }
 
+
         [HttpPost]
-        public IActionResult CreateReservation(int _company, string _requestor)
+        public IActionResult CreateReservation(int _company, string _requestor, string _requestorEmail)
         {
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
@@ -77,8 +101,9 @@ namespace PropertyManagementSystem.Controllers
                 GUID = unique,
                 ChargeToCompany = _company,
                 Requestor = _requestor,
-                RequestorEmail = User.Identity.Name,
+                RequestorEmail = _requestorEmail,
                 Approver = "Jerwin Alimuin",
+                ApproverEmail = "jerwin_alimuin@tecoindustrialpark.com",
                 DateFiled = DateTime.Now,
                 DateSubmitted = DateTime.Now,
                 Status = 0
@@ -93,21 +118,76 @@ namespace PropertyManagementSystem.Controllers
         }
         public IActionResult ReservationDetails(string Id)
         {
-            var _reservation = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
-
-            if (_reservation == null)
+            var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
+            if (reservationHeader == null)
             {
                 return NotFound();
             }
+            int reservationId = reservationHeader.ReservationId;
 
-            int _reservationId = _reservation.ReservationId;
+            var reservationDetails = _context.ReservationDetails
+                .Where(x => x.ReservationId == reservationId)
+                .ToList();
 
-            List<GFMS_ReservationDetails> _ReservationDetails = _context.ReservationDetails
-                                                                        .Where(x => x.ReservationId == _reservationId)
-                                                                        .ToList();
-            TempData["ReservationDetails"] = _ReservationDetails;
+            var reservation = new ReservationDetailViewModel
+            {
+                ReservationHeader = reservationHeader,
+                ReservationDetails = reservationDetails
+            };
 
-            return View(_reservation);
+            return View(reservation);
+        }
+
+        public IActionResult CreateReservationDetails(int _reservationId, string _guests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose)
+        {
+            Console.WriteLine($"Start Date: {_startDate}");
+            Console.WriteLine($"End Date: {_endDate}");
+
+            if (_startDate < new DateTime(1753, 1, 1) || _startDate > new DateTime(9999, 12, 31) ||
+                _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
+            {
+                throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
+            }
+
+            try
+            {
+                if (_guests != null)
+                {
+
+                    List<string> guests = _guests.Split(',').Select(g => g.Trim()).ToList();
+
+
+                    foreach (var guest in guests)
+                    {
+                        GFMS_ReservationDetails reservationDetails = new GFMS_ReservationDetails()
+                        {
+                            ReservationId = _reservationId,
+                            GuestName = guest,
+                            FacilityId = _facilityId,
+                            RoomId = _roomId,
+                            StartDate = _startDate,
+                            EndDate = _endDate,
+                            Purpose = _purpose,
+                            DateAdded = DateTime.UtcNow,
+                        };
+
+                        _context.ReservationDetails.Add(reservationDetails);
+                    }
+                }
+
+                _context.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"An error occurred while saving changes: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                throw;
+            }
+
+            return RedirectToAction("FunctionRoom", "Accommodation");
         }
 
 

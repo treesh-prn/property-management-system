@@ -41,5 +41,12 @@ namespace PropertyManagementSystem.Models
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
 
+        //count for dashboard
+        public int NewReservationsCount { get; set; }
+        public int ActiveGuestCount { get; set; }
+        public int OccupiedRoomsCount { get; set; }
+        public int AvailableRoomsCount { get; set; }
+        public IEnumerable<ReservationViewModel> Reservations { get; set; }
+
     }
 }

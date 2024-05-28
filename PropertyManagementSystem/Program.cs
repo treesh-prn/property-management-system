@@ -52,6 +52,13 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "ReservationDetails",
+    pattern: "Accommodation/ReservationDetails/{Id}",
+    defaults: new { controller = "Accommodation", action = "ReservationDetails" }
+);
+
 app.MapRazorPages();
 
 app.Run();

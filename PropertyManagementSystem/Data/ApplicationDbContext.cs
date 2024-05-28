@@ -36,6 +36,15 @@ namespace PropertyManagementSystem.Data
                 .WithMany()
                 .HasForeignKey(rd => rd.ReservationId);
 
+            modelBuilder.Entity<GFMS_ReservationDetails>()
+            .Property(e => e.StartDate)
+            .HasColumnType("datetime");
+
+            modelBuilder.Entity<GFMS_ReservationDetails>()
+            .Property(e => e.EndDate)
+            .HasColumnType("datetime");
+
+
         }
     }
 
