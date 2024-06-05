@@ -18,12 +18,11 @@ namespace PropertyManagementSystem.Controllers
         {
             _context = context;
         }
-        public IActionResult FunctionRoom()
+        public IActionResult Guesthouse()
         {
-
             var rooms = _context.Rooms
            .Include(r => r.Facility)
-           .Where(x => x.RoomType == 1)
+           .Where(x => x.RoomType == 0)
            .Select(room => new GFMS_Rooms
            {
                RoomId = room.RoomId,
@@ -34,7 +33,7 @@ namespace PropertyManagementSystem.Controllers
            .ToList();
 
             var facilities = _context.Facilities
-           .Where(facility => facility.Rooms.Any(room => room.RoomType == 1))
+           .Where(facility => facility.Rooms.Any(room => room.RoomType == 0))
            .Select(facility => new GFMS_Facility
            {
                FacilityId = facility.FacilityId,
@@ -66,6 +65,7 @@ namespace PropertyManagementSystem.Controllers
                                     ReservationId = resDetails.ReservationId,
                                     Requestor = resHeader.Requestor,
                                     ChargeToCompany = resHeader.ChargeToCompany,
+                                    Status = resHeader.Status,
                                     Start = DateTime.SpecifyKind(resDetails.StartDate.Value, DateTimeKind.Utc),
                                     End = DateTime.SpecifyKind(resDetails.EndDate.Value, DateTimeKind.Utc),
                                     Title = resDetails.Purpose,
@@ -79,6 +79,7 @@ namespace PropertyManagementSystem.Controllers
                                                       ReservationId = group.Key,                        
                                                       Requestor = group.First().Requestor,
                                                       ChargeToCompany = group.First().ChargeToCompany,
+                                                      Status = group.First().Status,
                                                       Start = group.First().Start,
                                                       End = group.First().End,
                                                       Title = group.First().Title,
@@ -118,27 +119,53 @@ namespace PropertyManagementSystem.Controllers
         }
         public IActionResult ReservationDetails(string Id)
         {
-            var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
-            if (reservationHeader == null)
+            if (string.IsNullOrEmpty(Id))
             {
-                return NotFound();
+                return BadRequest("GUID cannot be null or empty");
             }
-            int reservationId = reservationHeader.ReservationId;
 
-            var reservationDetails = _context.ReservationDetails
-                .Where(x => x.ReservationId == reservationId)
-                .ToList();
-
-            var reservation = new ReservationDetailViewModel
+            try
             {
-                ReservationHeader = reservationHeader,
-                ReservationDetails = reservationDetails
-            };
+                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
+                if (reservationHeader == null)
+                {
+                    return NotFound("Reservation Header not found");
+                }
 
-            return View(reservation);
+                int reservationId = reservationHeader.ReservationId;
+
+                var reservationDetails = _context.ReservationDetails
+                    .Where(x => x.ReservationId == reservationId)
+                    .ToList();
+
+                var reservation = new ReservationDetailViewModel
+                {
+                    ReservationHeader = reservationHeader,
+                    ReservationDetails = reservationDetails
+                };
+
+                return View(reservation);
+            }
+            catch (InvalidCastException ex)
+            {
+                // Log detailed error
+                Console.WriteLine($"InvalidCastException: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                return StatusCode(500, "Internal server error");
+            }
+            catch (Exception ex)
+            {
+                // Log any other exceptions
+                Console.WriteLine($"Exception: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
-        public IActionResult CreateReservationDetails(int _reservationId, string _guests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose)
+
+        public IActionResult CreateReservationDetails(int _reservationId, string[] _guests, string[] _company, string[] _relationship, DateTime _startDate, DateTime _endDate, string _purpose)
         {
             Console.WriteLine($"Start Date: {_startDate}");
             Console.WriteLine($"End Date: {_endDate}");
@@ -151,20 +178,20 @@ namespace PropertyManagementSystem.Controllers
 
             try
             {
-                if (_guests != null)
+                if (_guests != null && _company != null && _relationship != null)
                 {
+                    int length = Math.Min(Math.Min(_guests.Length, _company.Length), _relationship.Length);
 
-                    List<string> guests = _guests.Split(',').Select(g => g.Trim()).ToList();
-
-
-                    foreach (var guest in guests)
+                    for (int i = 0; i < length; i++)
                     {
                         GFMS_ReservationDetails reservationDetails = new GFMS_ReservationDetails()
                         {
                             ReservationId = _reservationId,
-                            GuestName = guest,
-                            FacilityId = _facilityId,
-                            RoomId = _roomId,
+                            GuestName = _guests[i],
+                            Company = _company[i],
+                            Relationship = _relationship[i],
+                            FacilityId = 1003,
+                            RoomId = 1010,
                             StartDate = _startDate,
                             EndDate = _endDate,
                             Purpose = _purpose,
@@ -173,9 +200,9 @@ namespace PropertyManagementSystem.Controllers
 
                         _context.ReservationDetails.Add(reservationDetails);
                     }
-                }
 
-                _context.SaveChanges();
+                    _context.SaveChanges();
+                }
             }
             catch (DbUpdateException ex)
             {
@@ -187,7 +214,7 @@ namespace PropertyManagementSystem.Controllers
                 throw;
             }
 
-            return RedirectToAction("FunctionRoom", "Accommodation");
+            return RedirectToAction("Guesthouse", "Accommodation");
         }
 
 
@@ -216,9 +243,7 @@ namespace PropertyManagementSystem.Controllers
         public IActionResult ReservationList()
         {
 
-
             return View();
-
 
         }
 

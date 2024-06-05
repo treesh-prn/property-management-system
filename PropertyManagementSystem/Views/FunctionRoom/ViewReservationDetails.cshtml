@@ -1,0 +1,182 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        View Reservation
+                    </div>
+                    <h2 class="page-title">
+                        Reservation Details
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <a href="@Url.Action("FunctionRoom", "FunctionRoom")" class="btn btn-primary bg-green">
+                            <i class="ti ti-arrow-left icon"></i>
+                            Go Back
+                        </a>
+                        @*<a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                        Create new report
+                        </a>
+                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                        </a>*@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-cards">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-header card-header-light">
+                            <h3 class="card-title">Reservation #@Model.ReservationHeader.ReservationId</h3>
+                        </div>
+                        <img class="img-responsive2 mx-auto" src="@Url.Content("~/img/calendar.jpg")" alt="Reservation Image">
+                        <div class="card-body">
+                            <h5 class="card-title">Reservation Details</h5>
+                            <table class="table table-borderless text-left">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Requestor</th>
+                                        <td>@Model.ReservationHeader.Requestor</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Email</th>
+                                        <td>@Model.ReservationHeader.RequestorEmail</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Date Filed</th>
+                                        <td>@Model.ReservationHeader.DateFiled</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">
+                                    Facilities Reservation Form
+                                </h3>
+                                <p class="card-subtitle">
+                                </p>
+                            </div>
+                        </div>
+                        @foreach (var detail in Model.ReservationDetails)
+                        {
+                            <div class="card-body">
+                                <div class="modal-content">
+                                    <form asp-action="EditReservation" asp-controller="FunctionRoom" method="post">
+                                        <div class="modal-body">
+                                            <input type="hidden" class="form-control" name="_reservationId" asp-for="ReservationId">
+                                            <div id="dynamic-rows">
+                                                <div class="row mb-3">
+                                                    <label class="form-label">Number of Attendees</label>
+                                                    <input type="number" class="form-control" name="NumberOfGuest" placeholder="Number of Attendees" asp-for="@detail.NumberOfGuest">
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label required">Facility</label>
+                                                @(
+                                                    Html.Kendo().DropDownList()
+                                                    .Name("_facilityId")
+                                                    .Value(detail.FacilityId.ToString())
+                                                    .DataTextField("FacilityName")
+                                                    .DataValueField("FacilityId")
+                                                    .DataSource(source =>
+                                                    {
+                                                        source.Read(read =>
+                                                        {
+                                                            read.Action("GetFacility", "FunctionRoom");
+                                                        });
+                                                    })
+                                                    .HtmlAttributes(new { style = "width: 100%" })
+                                                    .OptionLabel("Select Facility")
+                                                    )
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label required">Room</label>
+                                                @(Html.Kendo().DropDownList()
+                                                    .Name("_roomId")
+                                                    .DataTextField("RoomName")
+                                                    .DataValueField("RoomId")
+                                                    .CascadeFrom("_facilityId")
+                                                    .Value(detail.RoomId.ToString())
+                                                    .DataSource(source =>
+                                                    {
+                                                        source.Read(read =>
+                                                        {
+                                                            read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
+                                                        }).ServerFiltering(true);
+                                                    })
+                                                    .HtmlAttributes(new { style = "width: 100%" })
+                                                    .OptionLabel("Select Room")
+                                                    )
+                                            </div>
+                                            <label class="form-label">Duration of Stay</label>
+                                            <div class="row mb-3">
+                                                <div class="col-lg-6">
+                                                    <label class="form-label required">Start Date </label>
+                                                    @(Html.Kendo().DateTimePicker()
+                                                        .Name("_startDate")
+                                                        .Value(detail.StartDate)
+                                                        .DateInput(true)
+                                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                        )
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <label class="form-label required">End Date </label>
+                                                    @(Html.Kendo().DateTimePicker()
+                                                        .Name("_endDate")
+                                                        .Value(detail.EndDate)
+                                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                        )
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-12">
+                                                <div>
+                                                    <label class="form-label">
+                                                        Purpose
+                                                        <span class="form-label-description">26/50</span>
+                                                    </label>
+                                                    <textarea class="form-control" rows="3" name="_purpose" asp-for="@detail.Purpose"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <a href="@Url.Action("FunctionRoom", "FunctionRoom")" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                                                Cancel
+                                            </a>
+                                            <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
+                                                Update
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

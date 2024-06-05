@@ -19,7 +19,7 @@
                         ACCOMMODATION
                     </div>
                     <h2 class="page-title">
-                        FUNCTION ROOM
+                        GUESTHOUSE
                     </h2>
                 </div>
                 <!-- Page title actions -->
@@ -141,8 +141,7 @@
                                     </div>
                                 </div>
                             </div>
-                            @(
-                                Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
+                            @(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
                                 .Name("scheduler")
                                 .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0))
                                 .EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0))
@@ -151,11 +150,16 @@
                                 .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
                                 .Views(views =>
                                 {
-                                    views.TimelineWorkWeekView(timeline => timeline.EventHeight(50));
+                                    views.TimelineWorkWeekView(timeline =>
+                                    {
+                                        timeline.EventHeight(50);
+                                        timeline.StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0));
+                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 18, 0, 0));
+                                    });
                                     views.TimelineMonthView(timeline =>
                                     {
                                         timeline.StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0));
-                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0));
+                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 18, 0, 0));
                                         timeline.MajorTick(60);
                                         timeline.EventHeight(50);
                                     });
@@ -171,8 +175,8 @@
                                     .DataValueField("FacilityId")
                                     .BindTo(facilities.Select(f => new
                                     {
-                                    FacilityId = f.FacilityId,
-                                    FacilityName = f.FacilityName
+                                        FacilityId = f.FacilityId,
+                                        FacilityName = f.FacilityName
                                     }));
 
                                     resource.Add(m => m.RoomId)
@@ -183,28 +187,31 @@
                                     .DataParentValueField("FacilityId")
                                     .BindTo(rooms.Select(r => new
                                     {
-                                    RoomId = r.RoomId,
-                                    RoomName = r.RoomName,
-                                    FacilityId = r.FacilityId
+                                        RoomId = r.RoomId,
+                                        RoomName = r.RoomName,
+                                        FacilityId = r.FacilityId
                                     }));
-
-
                                 })
-
                                 .DataSource(d => d
                                 .Model(m =>
                                 {
                                     m.Id(f => f.ReservationId);
                                     m.Field(f => f.Title).DefaultValue("No title");
+                                    m.Field(f => f.GUID);
                                     m.RecurrenceId(f => f.RecurrenceID);
                                     m.Field(f => f.Start);
                                     m.Field(f => f.End);
                                     m.Field(f => f.RoomId);
                                     m.Field(f => f.FacilityId);
                                 })
-                                .Read("ViewReservation", "Accommodation")
+                                .Read("ViewReservation", "FunctionRoom")
+                                .Update("ViewReservationDetails", "FunctionRoom")
                                 )
+                                .Events(events => events
+                                .DataBound("onDataBound")
+                                .Edit("onEditView"))
                                 )
+
                         </div>
                     </div>
                 </div>
@@ -220,7 +227,7 @@
                 <h5 class="modal-title">New Reservation</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="fcFRM1" asp-controller="Accommodation" asp-action="CreateReservation" method="post">
+            <form id="fcFRM1" asp-controller="FunctionRoom" asp-action="CreateReservation" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label required">Charge to Company:</label>

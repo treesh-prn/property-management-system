@@ -30,4 +30,82 @@
                 });
             });
         });
+function onDataBound(e) {
+    var scheduler = this;
+    var view = scheduler.view();
+    var events = scheduler.dataSource.view();
+
+    events.forEach(function (event) {
+        var element = view.element.find("[data-uid='" + event.uid + "']");
+        if (event.Status === 0) {
+            element.css("background-color", "blue");
+        } else if (event.Status === 1) {
+            element.css("background-color", "green");
+        } else if (event.Status === 2) {
+            element.css("background-color", "red");
+        }
+    });
+
+}
+
+function onEditView(e) {
+    e.preventDefault();
+    var scheduler = $("#scheduler").data("kendoScheduler");
+    var event = e.event;
+
+    if (!event.ReservationId) {
+        console.error("ReservationId is null or undefined.");
+        return;
+    }
+
+    var editUrl = '/FunctionRoom/ViewReservationDetails/' + event.GUID;
+    window.location.href = editUrl;
+}
+
+
+document.getElementById('add-row').addEventListener('click', function () {
+    var rowToClone = document.querySelector('#dynamic-rows .row');
+    var newRow = rowToClone.cloneNode(true);
+    newRow.classList.add('mt-3');
+
+    var textInput = newRow.querySelectorAll('input[type="text"');
+    textInput.forEach(function (input) {
+        input.value = '';
+    });
+
+    var labelsToRemove = newRow.querySelectorAll('label');
+    labelsToRemove.forEach(function (label) {
+        label.remove();
+    });
+
+    var buttonsToRemove = newRow.querySelectorAll('button');
+    buttonsToRemove.forEach(function (button) {
+        button.remove();
+    });
+
+    var removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.classList.add('btn', 'btn-danger', 'remove-row', 'ml-2', 'custom-padding');
+    removeButton.innerHTML = '<i class="ti ti-trash"></i>';
+    newRow.querySelector('.d-flex').appendChild(removeButton);
+
+    document.getElementById('dynamic-rows').appendChild(newRow);
+});
+
+document.getElementById('dynamic-rows').addEventListener('click', function (e) {
+    if (e.target.classList.contains('remove-row')) {
+        var rows = document.querySelectorAll('#dynamic-rows .row');
+        if (rows.length > 1) {
+            e.target.closest('.row').remove();
+        }
+    }
+});
+
+//filtering of Rooms Dropdownlist
+function filterRooms() {
+    return {
+        facilityId: $("#_facilityId").val()
+    };
+}
+
 

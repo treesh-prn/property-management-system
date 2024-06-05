@@ -20444,6 +20444,7 @@ a.badge {
 }
 
 .btn-danger {
+    margin-left: 10px;
     --tblr-btn-border-color: transparent;
     --tblr-btn-hover-border-color: transparent;
     --tblr-btn-active-border-color: transparent;
@@ -20455,7 +20456,8 @@ a.badge {
     --tblr-btn-active-bg: rgba(var(--tblr-danger-rgb), .8);
     --tblr-btn-disabled-bg: var(--tblr-danger);
     --tblr-btn-disabled-color: var(--tblr-danger-fg);
-    --tblr-btn-box-shadow: var(--tblr-shadow-button),var(--tblr-shadow-button-inset)
+    --tblr-btn-box-shadow: var(--tblr-shadow-button),var(--tblr-shadow-button-inset);
+    
 }
 
 .btn-outline-danger {
@@ -27996,4 +27998,8 @@ span.k-button-text{
 .table-borderless tbody tr th,
 .table-borderless tbody tr td {
     border: none;
+}
+
+.custom-padding{
+    padding: 10px;
 }

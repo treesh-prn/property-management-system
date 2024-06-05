@@ -20,7 +20,7 @@
                         Accommodation
                     </div>
                     <h2 class="page-title">
-                        Function Room Reservation
+                        Guesthouse Reservation
                     </h2>
 
                 </div>
@@ -87,7 +87,7 @@
                             <div class="card-header">
                                 <div>
                                     <h3 class="card-title">
-                                        Facility Reservation Form
+                                        Guesthouse Reservation Form
                                     </h3>
                                     <p class="card-subtitle">
                                     </p>
@@ -97,58 +97,38 @@
                                 <div class="modal-content">
                                     <form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post">
                                         <div class="modal-body">
-                                            <input type="hidden" class="form-control" name="_guid" asp-for="ReservationHeader.GUID">
+
                                             <input type="hidden" class="form-control" name="_reservationId" asp-for="ReservationHeader.ReservationId">
-                                            <div class="mb-3">
-                                                <label class="form-label">Guest Name</label>
-                                                <textarea class="form-control" rows="3" name="_guests" placeholder="Enter guest names separated by commas..."></textarea>
+                                            <div id="dynamic-rows">
+                                                <div class="row mb-3">
+                                                    <div class="col-lg-5">
+                                                        <label class="form-label">Guest Name</label>
+                                                        <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name">
+                                                    </div>
+                                                     <div class="col-lg-3">
+                                                        <label class="form-label">Company</label>
+                                                        <input type="text" class="form-control" name="_company[]" placeholder="Company">
+                                                    </div>
+                                                    <div class="col-lg-3">
+                                                        <label class="form-label">Relationship</label>
+                                                        <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable">
+                                                    </div>
+                                                    <div class="col-sm-1 d-flex align-items-end">
+                                                        <button type="button" id="add-row" class="btn btn-primary ml-2 custom-padding">
+                                                            <i class="ti ti-plus"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Facility</label>
-                                                @(
-                                                    Html.Kendo().DropDownList()
-                                                    .Name("_facilityId")
-                                                    .DataTextField("FacilityName")
-                                                    .DataValueField("FacilityId")
-
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("getFNList", "Facility");
-                                                        });
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Facility")
-
-                                                    )
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Room</label>
-                                                @(Html.Kendo().DropDownList()
-                                                    .Name("_roomId")
-                                                    .DataTextField("RoomName")
-                                                    .DataValueField("RoomId")
-                                                    .CascadeFrom("FacilityId")
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("GetFNRoomList", "Room");
-                                                        }).ServerFiltering(true);
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Room")
-                                                    )
-                                            </div>
-                                            <label class="form-label">Date of Activity</label>
-                                            <div class="form-selectgroup-boxes row mb-3">
+                                            <label class="form-label">Duration of Stay</label>
+                                            <div class="row mb-3">
                                                 <div class="col-lg-6">
                                                     <label class="form-label required">Start Date </label>
                                                     @(Html.Kendo().DateTimePicker()
                                                         .Name("_startDate")
-                                                        .Value(DateTime.Now.AddHours(7))
-                                                        .DateInput(true)
                                                         .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                                         )
@@ -157,7 +137,6 @@
                                                     <label class="form-label required">End Date </label>
                                                     @(Html.Kendo().DateTimePicker()
                                                         .Name("_endDate")
-                                                        .Value(DateTime.Now.AddHours(17))
                                                         .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                                         )

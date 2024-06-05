@@ -12,8 +12,8 @@ namespace PropertyManagementSystem.Models
         public int ReservationId { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        public string GuestName { get; set; }
-        public string Purpose { get; set; }
+        public string? GuestName { get; set; }
+        public string? Purpose { get; set; }
         public string? Company { get; set; }
         public string? Relationship { get; set; }
         public DateTime? DateAdded { get; set; }
@@ -21,6 +21,8 @@ namespace PropertyManagementSystem.Models
 
         public int RoomId { get; set; }
         public int FacilityId { get; set; }
+        public int NumberOfGuest {  get; set; }
+        public string? EquipmentNeeded {  get; set; }
 
         public GFMS_ReservationHeader ReservationHeader { get; set; }
     }

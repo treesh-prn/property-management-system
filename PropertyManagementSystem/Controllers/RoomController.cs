@@ -131,10 +131,10 @@ namespace PropertyManagementSystem.Controllers
             return Json(result);
 
         }
-        public IActionResult GetFNRoomList(int FacilityId)
+        public IActionResult GetFNRoomList(int facilityId)
         {
             var rooms = _context.Rooms
-                .Where(r => r.FacilityId == 1)
+                .Where(r => r.FacilityId == facilityId)
                 .Select(r => new
                 {
                     RoomId = r.RoomId,

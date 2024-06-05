@@ -6,9 +6,10 @@ namespace PropertyManagementSystem.Models
     public class ReservationViewModel : ISchedulerEvent
     {
         public GFMS_ReservationHeader ReservationHeader { get; set; }
-        public GFMS_ReservationDetails ReservationDetails { get; set; }
+        public List<GFMS_ReservationDetails> ReservationDetails { get; set; }
 
         public int FacilityId { get; set; }
+        public string FacilityName { get; set; }
         public int ReservationDetailId { get; set; }
         public int ReservationId { get; set; }
         public int RoomId { get; set; }
@@ -27,7 +28,7 @@ namespace PropertyManagementSystem.Models
         // Additional properties for the header model
         public string Requestor { get; set; }
         public string RequestorEmail { get; set; }
-        public string GUID { get; set; }
+        public string? GUID { get; set; }
         public int Status { get; set; }
         public DateTime? DateSubmitted { get; set; }
         public string? ReservationCode { get; set; }
@@ -35,11 +36,12 @@ namespace PropertyManagementSystem.Models
         public DateTime? ApprovedDateTime { get; set; }
         public string? ApproverEmail { get; set; }
         public int ChargeToCompany { get; set; }
-
+        public int NumberOfGuest { get; set; }
         public string Purpose { get; set; }
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public DateTime DateFiled { get; set; }
 
         //count for dashboard
         public int NewReservationsCount { get; set; }

@@ -26,9 +26,12 @@
 <body class="layout-fluid">
 
     <div class="page">
-
-        <partial name="_Navigation" />
-        <partial name="_Header" />
+        @if(ViewBag.IsErrorPage == null || ViewBag.IsErrorPage == false)
+        {
+            <partial name="_Navigation" />
+            <partial name="_Header" />
+        }
+        
         @RenderBody()
     </div>
 
