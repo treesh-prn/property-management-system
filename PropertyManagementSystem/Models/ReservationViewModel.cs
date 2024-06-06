@@ -1,5 +1,4 @@
 ﻿using Kendo.Mvc.UI;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace PropertyManagementSystem.Models
 {
@@ -38,6 +37,7 @@ namespace PropertyManagementSystem.Models
         public int ChargeToCompany { get; set; }
         public int NumberOfGuest { get; set; }
         public string Purpose { get; set; }
+        public string EquipmentNeeded {  get; set; }
 
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }

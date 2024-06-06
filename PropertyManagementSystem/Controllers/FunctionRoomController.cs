@@ -241,7 +241,7 @@ namespace PropertyManagementSystem.Controllers
             }
         }
 
-        public IActionResult CreateReservationDetails(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose)
+        public IActionResult CreateReservationDetails(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, string _equipment)
         {
             Console.WriteLine($"Start Date: {_startDate}");
             Console.WriteLine($"End Date: {_endDate}");
@@ -263,6 +263,7 @@ namespace PropertyManagementSystem.Controllers
                     StartDate = _startDate,
                     EndDate = _endDate,
                     Purpose = _purpose,
+                    EquipmentNeeded = _equipment,
                     DateAdded = DateTime.UtcNow,
                 };
 
@@ -282,7 +283,84 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("FunctionRoom", "FunctionRoom");
         }
 
+        /*EditReservation*/
 
+        [HttpPost]
+        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int RoomId, DateTime StartDate, DateTime EndDate, string Purpose, string EquipmentNeeded)
+        {
+            if (StartDate < new DateTime(1753, 1, 1) || StartDate > new DateTime(9999, 12, 31) ||
+                EndDate < new DateTime(1753, 1, 1) || EndDate > new DateTime(9999, 12, 31))
+            {
+                throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
+            }
+
+            var reservationDetail = _context.ReservationDetails.FirstOrDefault(rd => rd.ReservationDetailId == ReservationDetailId);
+            if (reservationDetail == null)
+            {
+                return NotFound("Reservation detail not found.");
+            }
+
+            reservationDetail.NumberOfGuest = NumberOfGuest;
+            reservationDetail.FacilityId = _facilityId;
+            reservationDetail.RoomId = RoomId;
+            reservationDetail.StartDate = StartDate;
+            reservationDetail.EndDate = EndDate;
+            reservationDetail.Purpose = Purpose;
+            reservationDetail.EquipmentNeeded = EquipmentNeeded;
+
+            try
+            {
+                _context.ReservationDetails.Update(reservationDetail);
+                _context.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"An error occurred while updating changes: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                throw;
+            }
+
+            return RedirectToAction("FunctionRoom", "FunctionRoom");
+        }
+
+        /*Delete*/
+        [HttpPost]
+        public IActionResult DeleteReservationDetail(int ReservationId)
+        {
+            try
+            {
+                var reservationDetail = _context.ReservationDetails
+                    .Include(rd => rd.ReservationHeader)
+                    .FirstOrDefault(rd => rd.ReservationId == ReservationId);
+
+                if (reservationDetail == null)
+                {
+                    return NotFound("Reservation detail not found.");
+                }
+
+
+                _context.ReservationDetails.Remove(reservationDetail);
+
+
+                var reservationHeader = reservationDetail.ReservationHeader;
+                if (reservationHeader != null)
+                {
+                    _context.ReservationHeaders.Remove(reservationHeader);
+                }
+
+                _context.SaveChanges();
+
+                return RedirectToAction("FunctionRoom", "FunctionRoom"); 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while deleting reservation detail: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
 
     }
 }

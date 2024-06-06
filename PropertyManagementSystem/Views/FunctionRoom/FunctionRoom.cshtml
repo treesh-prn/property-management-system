@@ -206,6 +206,7 @@
                                 })
                                 .Read("ViewReservation", "FunctionRoom")
                                 .Update("ViewReservationDetails", "FunctionRoom")
+                                .Destroy(destroy => destroy.Action("DeleteReservationDetail", "FunctionRoom"))
                                 )
                                 .Events(events => events
                                 .DataBound("onDataBound")
