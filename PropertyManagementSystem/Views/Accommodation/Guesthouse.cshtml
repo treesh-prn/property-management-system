@@ -141,10 +141,8 @@
                                     </div>
                                 </div>
                             </div>
-                            @(
-                                Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
+                            @(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
                                 .Name("scheduler")
-                                
                                 .MajorTick(1440)
                                 .MinorTickCount(1)
                                 .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
@@ -191,12 +189,12 @@
 
 
                                 })
-
                                 .DataSource(d => d
                                 .Model(m =>
                                 {
                                     m.Id(f => f.ReservationId);
                                     m.Field(f => f.Title).DefaultValue("No title");
+                                    m.Field(f => f.GUID);
                                     m.RecurrenceId(f => f.RecurrenceID);
                                     m.Field(f => f.Start);
                                     m.Field(f => f.End);
@@ -204,8 +202,11 @@
                                     m.Field(f => f.FacilityId);
                                 })
                                 .Read("ViewReservation", "Accommodation")
+                                .Update("ViewReservationDetails", "Accommodation")
                                 )
-                                .Events(events => events.DataBound("onDataBound"))
+                                .Events(events => events
+                                .DataBound("onDataBound")
+                                .Edit("onEditView"))
                                 )
                         </div>
                     </div>

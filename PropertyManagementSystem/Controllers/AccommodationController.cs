@@ -56,6 +56,57 @@ namespace PropertyManagementSystem.Controllers
             return View(viewModel);
         }
 
+        public IActionResult ViewReservationDetails(string Id)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(Id))
+                {
+                    return BadRequest("GUID cannot be null or empty");
+                }
+
+                Console.WriteLine($"Incoming GUID: {Id}");
+
+                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
+                if (reservationHeader == null)
+                {
+                    return NotFound("Reservation Header not found");
+                }
+
+                Console.WriteLine($"ReservationId: {reservationHeader.ReservationId}");
+                Console.WriteLine($"Type of reservationHeader.ReservationId: {reservationHeader.ReservationId.GetType()}");
+
+                if (reservationHeader.ReservationId.GetType() != typeof(int))
+                {
+                    throw new InvalidCastException("ReservationId is not of type int.");
+                }
+
+                var reservationDetails = _context.ReservationDetails
+                    .AsQueryable()
+                    .Where(x => x.ReservationId == reservationHeader.ReservationId)
+                    .ToList();
+
+                foreach (var detail in reservationDetails)
+                {
+                    Console.WriteLine($"Detail - ReservationDetailId: {detail.ReservationDetailId}, Type: {detail.ReservationDetailId.GetType()}");
+                    Console.WriteLine($"Detail - ReservationId: {detail.ReservationId}, Type: {detail.ReservationId.GetType()}");
+                }
+
+                var detailViewModel = new ReservationViewModel
+                {
+                    ReservationHeader = reservationHeader,
+                    ReservationDetails = reservationDetails
+                };
+
+                return View(detailViewModel);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
         {
             var reservations = (from resDetails in _context.ReservationDetails

@@ -74,19 +74,21 @@
                                     "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
                                     "# } #"
                                     ).Title("Active").Width(200);
-                                    columns.Bound(c => c.FacilityId)
-                                    .ClientTemplate(
-                                    "<div style='display: inline-block;'>" +
-                                    "   <a href='" + Url.Action("ViewFacility", "Facility", new { FacilityId = "#= FacilityId #" }) + "' class='k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success'><i class='ti ti-eye'></i>&nbsp;View</a>" +
-                                    "</div>" +
-                                    "<form class='delete-form' action='" + Url.Action("DeleteFacility", "Facility") + "' method='post' style='display: inline-block;'>" +
-                                    "   <button type='submit' class='k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger'><i class='ti ti-trash'></i>&nbsp;Delete</button>" +
-                                    "   <input type='hidden' name='FacilityId' value='#= FacilityId #' />" +
-                                    "</form>"
-                                    )
+                                    columns.Command(command =>
+                                    {
+                                    command.Custom("view")
+                                    .Text("<i class='ti ti-eye'></i>View")
+                                    .Click("onViewClick")
+                                    .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
+
+                                    command.Custom("delete")
+                                    .Text("<i class='ti ti-trash'></i> Delete")
+                                    .Click("onDeleteClick")
+                                    .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
+                                    })
                                     .Title("Actions")
-                                    .Exportable(false)
-                                    .Filterable(false);
+                                    .Exportable(false);
+
                                 })
                                 .Scrollable()
                                 .ToolBar(toolbar =>
@@ -98,11 +100,10 @@
                                 .Model(model => model.Id(p => p.FacilityId))
                                 .Group(group => group.Add(p => p.FacilityClassification))
                                 .Read(read => read.Action("getFacilities", "Facility"))
+
                                 .PageSize(50)
                                 )
-                            )
-
-
+                                )
                         </div>
                     </div>
                 </div>
@@ -111,8 +112,6 @@
     </div>
 
 </div>
-
-
 
 @*NEW FACILITY MODAL *@
 <div class="modal modal-blur fade" id="modal-newFacility" tabindex="-1" role="dialog" aria-hidden="true">
@@ -144,7 +143,7 @@
                         },
                         })
                             .HtmlAttributes(new { style = "width: 100%" })
-                        )
+                            )
                     </div>
                     <div class="mb-3">
                         <label class="form-label required">Status</label>
@@ -172,14 +171,14 @@
                         <span class="col">Is Active</span>
                         <span class="col-auto">
                             <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" id = "isActiveCheckbox" name="_isActive" type="checkbox" checked>
+                                <input class="form-check-input" id="isActiveCheckbox" name="_isActive" type="checkbox" checked>
                             </label>
                         </span>
                     </label>
-                 </div>
-                
-                 
-                 <div class="modal-footer">
+                </div>
+
+
+                <div class="modal-footer">
                     <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Save</button>
                 </div>
             </form>
@@ -187,3 +186,38 @@
     </div>
 </div>
 @*END - NEW FACILITY MODAL *@
+
+@*DELETE MODAL*@
+<div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
+                <h3>Are you sure?</h3>
+                <div class="text-secondary">Do you really want to remove this record? This action cannot be undone.</div>
+            </div>
+            <form id="delete-form" action="@Url.Action("DeleteFacility", "Facility")" method="post">
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row">
+                            <div class="col">
+                                <a href="#" class="btn w-100" data-bs-dismiss="modal">
+                                    Cancel
+                                </a>
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-danger w-100" id="confirm-delete">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="FacilityId" id="modal-facility-id" />
+            </form>
+        </div>
+    </div>
+</div>
+@*END DELETE MODAL*@

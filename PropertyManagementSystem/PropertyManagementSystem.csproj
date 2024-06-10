@@ -7,6 +7,9 @@
     <UserSecretsId>aspnet-PropertyManagementSystem-01e78dbb-6f51-419d-b141-250f22df5666</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <Content Remove="Views\Accommodation\ViewReservationDetails.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.24" />
@@ -19,5 +22,14 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Telerik.UI.for.AspNet.Core" Version="2022.1.301" />
+  </ItemGroup>
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Accommodation\ViewReservationDetails.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\Accommodation\ViewReservationDetails.cshtml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Views\Accommodation\ViewReservationDetails.cshtml" />
   </ItemGroup>
 </Project>

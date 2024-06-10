@@ -62,6 +62,20 @@ function onEditView(e) {
     window.location.href = editUrl;
 }
 
+function onEditViewG(e) {
+    e.preventDefault();
+    var scheduler = $("#scheduler").data("kendoScheduler");
+    var event = e.event;
+
+    if (!event.ReservationId) {
+        console.error("ReservationId is null or undefined.");
+        return;
+    }
+
+    var editUrl = '/Accommodation/ViewReservationDetails/' + event.GUID;
+    window.location.href = editUrl;
+}
+
 
 document.getElementById('add-row').addEventListener('click', function () {
     var rowToClone = document.querySelector('#dynamic-rows .row');
@@ -108,4 +122,47 @@ function filterRooms() {
     };
 }
 
+function onViewClick(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    if (dataItem) {
+        if (dataItem.RoomId) {
+            var roomId = dataItem.RoomId;
+            var url = '/Room/ViewGuestRoom?RoomId=' + roomId;
+            window.location.href = url;
+        }
+        else if (dataItem.FacilityId) {
+            var facilityId = dataItem.FacilityId;
+            var url = '/Facility/ViewFacility?FacilityId=' + facilityId;
+            window.location.href = url;
+        }
+        
+    }
+    
+}
 
+function onDeleteClick(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    if (dataItem) {
+        if (dataItem.RoomId) {
+            var roomId = dataItem.RoomId;
+            showDeleteConfirmationModalRoom(roomId);
+        }
+        else if (dataItem.FacilityId) {
+            var facilityId = dataItem.FacilityId;
+            showDeleteConfirmationModalFacility(facilityId);
+        }
+        
+    }
+}
+
+function showDeleteConfirmationModalRoom(roomId) {
+    $('#modal-danger').modal('show');
+    $('#modal-room-id').val(roomId);
+}
+
+function showDeleteConfirmationModalFacility(facilityId) {
+    $('#modal-danger').modal('show');
+    $('#modal-facility-id').val(facilityId);
+}
