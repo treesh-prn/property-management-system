@@ -5,12 +5,10 @@
 }
 
 <div class="page-wrapper">
-    <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <!-- Page pre-title -->
                     <div class="page-pretitle">
                         View Reservation
                     </div>
@@ -18,7 +16,6 @@
                         Reservation Details
                     </h2>
                 </div>
-                <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
                         <a href="@Url.Action("Guesthouse", "Accommodation")" class="btn btn-primary bg-green">
@@ -30,7 +27,6 @@
             </div>
         </div>
     </div>
-    <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards">
@@ -64,117 +60,97 @@
                 <div class="col-lg-9">
                     <div class="card">
                         <div class="card-header">
-                            <div>
-                                <h3 class="card-title">
-                                    Facilities Reservation Form
-                                </h3>
-                                <p class="card-subtitle">
-                                </p>
+                            <h3 class="card-title">
+                                Guesthouse Reservation Form
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="modal-content">
+                                <form asp-action="UpdateReservationDetails" asp-controller="Accommodation" method="post">
+                                    <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId">
+                                    <div class="modal-body">
+                                        <div class="row mb-3">
+                                            <div class="col-lg-5">
+                                                <label class="form-label">Guest Name</label>
+                                            </div>
+                                            <div class="col-lg-3">
+                                                <label class="form-label">Company</label>
+                                            </div>
+                                            <div class="col-lg-3">
+                                                <label class="form-label">Relationship</label>
+                                            </div>
+                                        </div>
+                                        <div id="dynamic-rows">
+                                            @foreach (var detail in Model.ReservationDetails)
+                                            {
+                                                <div class="row mb-3">
+                                                    <input type="hidden" class="form-control" name="@detail.ReservationDetailId" placeholder="Guest Name" value="@detail.ReservationDetailId">
+                                                    <div class="col-lg-5">
+                                                        @* <label class="form-label">Guest Name</label> *@
+                                                        <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" value="@detail.GuestName">
+                                                    </div>
+                                                    <div class="col-lg-3">
+                                                        @* <label class="form-label">Company</label> *@
+                                                        <input type="text" class="form-control" name="_company[]" placeholder="Company" value="@detail.Company">
+                                                    </div>
+                                                    <div class="col-lg-3">
+                                                        @* <label class="form-label">Relationship</label> *@
+                                                        <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable" value="@detail.Relationship">
+                                                    </div>
+                                                    <div class="col-sm-1 d-flex align-items-end">
+                                                        <button type="button" id="add-row" class="btn btn-primary ml-2 custom-padding">
+                                                            <i class="ti ti-plus"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="row mb-3">
+                                            <label class="form-label">Duration of Stay</label>
+                                            <div class="col-lg-6">
+                                                <label class="form-label required">Start Date</label>
+                                                @(
+                                                    Html.Kendo().DateTimePicker()
+                                                    .Name("StartDate")
+                                                    .Value(Model.ReservationDetails.FirstOrDefault()?.StartDate)
+                                                    .DateInput(true)
+                                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                    )
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <label class="form-label required">End Date</label>
+                                                @(
+                                                    Html.Kendo().DateTimePicker()
+                                                    .Name("EndDate")
+                                                    .Value(Model.ReservationDetails.FirstOrDefault()?.EndDate)
+                                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                    )
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-12">
+                                            <label class="form-label">
+                                                Purpose
+                                                <span class="form-label-description">26/50</span>
+                                            </label>
+                                            <textarea class="form-control" rows="3" name="Purpose">@Model.ReservationDetails.FirstOrDefault()?.Purpose</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="@Url.Action("Guesthouse", "Accommodation")" class="btn btn-link link-secondary">
+                                            Cancel
+                                        </a>
+                                        <button type="submit" class="btn btn-primary ms-auto">
+                                            Update
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                        @foreach (var detail in Model.ReservationDetails)
-                        {
-                            <div class="card-body">
-                                <div class="modal-content">
-                                    <form asp-action="EditReservationDetails" method="post">
-                                        <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
-                                        <input type="hidden" name="ReservationId" value="@detail.ReservationId">
-                                        <div class="modal-body">
-                                            <div id="dynamic-rows">
-                                                <div class="row mb-3">
-                                                    <label class="form-label">Number of Attendees</label>
-                                                    <input type="number" class="form-control" name="NumberOfGuest" placeholder="Number of Attendees" value="@detail.NumberOfGuest">
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Facility</label>
-                                                @(
-                                                    Html.Kendo().DropDownList()
-                                                    .Name("_facilityId")
-                                                    .Value(detail.FacilityId.ToString())
-                                                    .DataTextField("FacilityName")
-                                                    .DataValueField("FacilityId")
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("GetFacility", "FunctionRoom");
-                                                        });
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Facility")
-                                                    )
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Room</label>
-                                                @(Html.Kendo().DropDownList()
-                                                    .Name("_roomId")
-                                                    .Value(detail.RoomId.ToString())
-                                                    .DataTextField("RoomName")
-                                                    .DataValueField("RoomId")
-                                                    .CascadeFrom("_facilityId")
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
-                                                        }).ServerFiltering(true);
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Room")
-                                                    )
-                                            </div>
-                                            <label class="form-label">Duration of Stay</label>
-                                            <div class="row mb-3">
-                                                <div class="col-lg-6">
-                                                    <label class="form-label required">Start Date</label>
-                                                    @(
-                                                        Html.Kendo().DateTimePicker()
-                                                        .Name("StartDate")
-                                                        .Value(detail.StartDate)
-                                                        .DateInput(true)
-                                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                                        )
-                                                </div>
-                                                <div class="col-lg-6">
-                                                    <label class="form-label required">End Date</label>
-                                                    @(
-                                                        Html.Kendo().DateTimePicker()
-                                                        .Name("EndDate")
-                                                        .Value(detail.EndDate)
-                                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                                        )
-                                                </div>
-                                            </div>
-                                            <div class="row mb-3">
-                                                <label class="form-label">Equipment Needed</label>
-                                                <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded">
-                                            </div>
-                                            <div class="col-lg-12">
-                                                <div>
-                                                    <label class="form-label">
-                                                        Purpose
-                                                        <span class="form-label-description">26/50</span>
-                                                    </label>
-                                                    <textarea class="form-control" rows="3" name="Purpose">@detail.Purpose</textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <a href="@Url.Action("FunctionRoom", "FunctionRoom")" class="btn btn-link link-secondary">
-                                                Cancel
-                                            </a>
-                                            <button type="submit" class="btn btn-primary ms-auto">
-                                                Update
-                                            </button>
-                                        </div>
-                                    </form>
-
-                                </div>
-                            </div>
-                        }
                     </div>
                 </div>
             </div>

@@ -62,6 +62,8 @@ function onEditView(e) {
     window.location.href = editUrl;
 }
 
+
+
 function onEditViewG(e) {
     e.preventDefault();
     var scheduler = $("#scheduler").data("kendoScheduler");
@@ -82,7 +84,7 @@ document.getElementById('add-row').addEventListener('click', function () {
     var newRow = rowToClone.cloneNode(true);
     newRow.classList.add('mt-3');
 
-    var textInput = newRow.querySelectorAll('input[type="text"');
+    var textInput = newRow.querySelectorAll('input[type="text"]');
     textInput.forEach(function (input) {
         input.value = '';
     });

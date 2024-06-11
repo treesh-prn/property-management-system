@@ -7,6 +7,7 @@ using PropertyManagementSystem.Models;
 using System.Net.NetworkInformation;
 using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -17,6 +18,14 @@ namespace PropertyManagementSystem.Controllers
         public AccommodationController(DAL context)
         {
             _context = context;
+        }
+        public IActionResult GetFacility()
+        {
+            var facilities = _context.Facilities.AsQueryable().ToList();
+            return Json(facilities
+                .Select(c => new { FacilityId = c.FacilityId, FacilityName = c.FacilityName, FacilityClassification = c.FacilityClassification })
+                .Where(p => p.FacilityClassification == "GUESTHOUSE")
+                .OrderBy(o => o.FacilityName).ToList());
         }
         public IActionResult Guesthouse()
         {
@@ -42,8 +51,8 @@ namespace PropertyManagementSystem.Controllers
            .ToList();
 
             var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == 0);
-            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 1); 
-            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 0); 
+            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 1);
+            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 0);
 
             var viewModel = new ReservationViewModel
             {
@@ -56,41 +65,24 @@ namespace PropertyManagementSystem.Controllers
             return View(viewModel);
         }
 
-        public IActionResult ViewReservationDetails(string Id)
+        public IActionResult ViewReservationDetails(string id)
         {
             try
             {
-                if (string.IsNullOrEmpty(Id))
+                if (string.IsNullOrEmpty(id))
                 {
                     return BadRequest("GUID cannot be null or empty");
                 }
 
-                Console.WriteLine($"Incoming GUID: {Id}");
-
-                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
+                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == id);
                 if (reservationHeader == null)
                 {
                     return NotFound("Reservation Header not found");
                 }
 
-                Console.WriteLine($"ReservationId: {reservationHeader.ReservationId}");
-                Console.WriteLine($"Type of reservationHeader.ReservationId: {reservationHeader.ReservationId.GetType()}");
-
-                if (reservationHeader.ReservationId.GetType() != typeof(int))
-                {
-                    throw new InvalidCastException("ReservationId is not of type int.");
-                }
-
                 var reservationDetails = _context.ReservationDetails
-                    .AsQueryable()
                     .Where(x => x.ReservationId == reservationHeader.ReservationId)
                     .ToList();
-
-                foreach (var detail in reservationDetails)
-                {
-                    Console.WriteLine($"Detail - ReservationDetailId: {detail.ReservationDetailId}, Type: {detail.ReservationDetailId.GetType()}");
-                    Console.WriteLine($"Detail - ReservationId: {detail.ReservationId}, Type: {detail.ReservationId.GetType()}");
-                }
 
                 var detailViewModel = new ReservationViewModel
                 {
@@ -107,6 +99,7 @@ namespace PropertyManagementSystem.Controllers
             }
         }
 
+
         public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
         {
             var reservations = (from resDetails in _context.ReservationDetails
@@ -114,6 +107,7 @@ namespace PropertyManagementSystem.Controllers
                                 select new ReservationViewModel
                                 {
                                     ReservationId = resDetails.ReservationId,
+                                    GUID = resHeader.GUID,
                                     Requestor = resHeader.Requestor,
                                     ChargeToCompany = resHeader.ChargeToCompany,
                                     Status = resHeader.Status,
@@ -127,7 +121,8 @@ namespace PropertyManagementSystem.Controllers
             var groupedReservations = reservations.GroupBy(r => r.ReservationId)
                                                   .Select(group => new ReservationViewModel
                                                   {
-                                                      ReservationId = group.Key,                        
+                                                      ReservationId = group.Key,
+                                                      GUID = group.First().GUID,
                                                       Requestor = group.First().Requestor,
                                                       ChargeToCompany = group.First().ChargeToCompany,
                                                       Status = group.First().Status,
@@ -272,7 +267,10 @@ namespace PropertyManagementSystem.Controllers
 
         public ActionResult getGuestHouseReservation([DataSourceRequest] DataSourceRequest request)
         {
-            List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable().Where(x => x.Status == 0).ToList();
+            List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable()
+                .Where(x => x.Status == 0)
+                //.Where(x => x.)
+                .ToList();
             DataSourceResult result = _reservations.ToDataSourceResult(request, _reservation => new
             {
                 ReservationId = _reservation.ReservationId,
@@ -296,6 +294,106 @@ namespace PropertyManagementSystem.Controllers
 
             return View();
 
+        }
+        /*Update*/
+        [HttpPost]
+        public IActionResult UpdateReservationDetails(int reservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime startDate, DateTime endDate, string purpose)
+        {
+            if (startDate < new DateTime(1753, 1, 1) || startDate > new DateTime(9999, 12, 31) ||
+                endDate < new DateTime(1753, 1, 1) || endDate > new DateTime(9999, 12, 31))
+            {
+                throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
+            }
+            Console.WriteLine("Reservation Id: " + reservationId);
+            var existingReservationDetails = _context.ReservationDetails
+                .Where(rd => rd.ReservationId == reservationId)
+                .ToList();
+
+            for (int i = 0; i < existingReservationDetails.Count; i++)
+            {
+                var existingDetail = existingReservationDetails[i];
+
+                
+                var index = _guests.FindIndex(g => string.Equals(g, existingDetail.GuestName, StringComparison.OrdinalIgnoreCase));
+
+
+                if (index != -1)
+                {
+                    existingDetail.GuestName = _guests[index];
+                    existingDetail.Company = _company[index];
+                    existingDetail.Relationship = _relationship[index];
+                    existingDetail.StartDate = startDate;
+                    existingDetail.EndDate = endDate;
+                    existingDetail.Purpose = purpose;
+
+
+                    _context.ReservationDetails.Update(existingDetail);
+                }
+                else
+                {
+                    _context.ReservationDetails.Remove(existingDetail);
+                }
+            }
+
+
+            for (int i = 0; i < _guests.Count; i++)
+            {
+                var existingDetail = existingReservationDetails.FirstOrDefault(rd => string.Equals(rd.GuestName, _guests[i], StringComparison.OrdinalIgnoreCase));
+                if (existingDetail == null)
+                {
+                    GFMS_ReservationDetails newDetail = new GFMS_ReservationDetails
+                    {
+                        ReservationId = reservationId,
+                        GuestName = _guests[i],
+                        Company = _company[i],
+                        Relationship = _relationship[i],
+                        StartDate = startDate,
+                        EndDate = endDate,
+                        Purpose = purpose
+                    };
+
+                    _context.ReservationDetails.Add(newDetail);
+                }
+            }
+            _context.SaveChanges();
+            return RedirectToAction("Guesthouse", "Accommodation");
+        }
+
+        /*Delete*/
+        [HttpPost]
+        public IActionResult DeleteReservationDetail(int ReservationId)
+        {
+            try
+            {
+                Console.WriteLine(ReservationId);
+                var reservationDetail = _context.ReservationDetails
+                    .Include(rd => rd.ReservationHeader) 
+                    .Where(rd => rd.ReservationId == ReservationId).ToList();
+
+                if (reservationDetail == null)
+                {
+                    return NotFound("Reservation detail not found.");
+                }
+
+
+                _context.ReservationDetails.RemoveRange(reservationDetail);
+
+
+                var reservationHeader = reservationDetail.First().ReservationHeader;
+                if (reservationHeader != null)
+                {
+                    _context.ReservationHeaders.Remove(reservationHeader);
+                }
+
+                _context.SaveChanges();
+
+                return RedirectToAction("Guesthouse", "Accommodation"); 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while deleting reservation detail: {ex.Message}");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
     }

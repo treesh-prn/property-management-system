@@ -203,10 +203,11 @@
                                 })
                                 .Read("ViewReservation", "Accommodation")
                                 .Update("ViewReservationDetails", "Accommodation")
+                                .Destroy(destroy => destroy.Action("DeleteReservationDetail", "Accommodation"))
                                 )
                                 .Events(events => events
                                 .DataBound("onDataBound")
-                                .Edit("onEditView"))
+                                .Edit("onEditViewG"))
                                 )
                         </div>
                     </div>
