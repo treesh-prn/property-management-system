@@ -1,4 +1,5 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
 
 @{
     ViewData["Title"] = "Home Page";
@@ -7,6 +8,7 @@
     //var rooms = ViewData["Rooms"] as List<GFMS_Rooms>;
     //var facilityNames = ViewData["Facility"] as List<GFMS_Facility>;
 
+    var employee = await RoleService.GetUserName(User);
 }
 <div class="page-wrapper">
     <!-- Page header -->
@@ -16,17 +18,17 @@
                 <div class="col">
                     <!-- Page pre-title -->
                     <div class="page-pretitle">
-                        FACILITIES
+                        ACCOMMODATION
                     </div>
                     <h2 class="page-title">
-                        FUNCTION ROOM
+                        DORM and HOUSING
                     </h2>
                 </div>
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
                         <span class="d-none d-sm-inline">
-                            <a href="@Url.Action("ReservationList","Accommodation")" class="btn">
+                            <a href="@Url.Action("ReservationList","Dorm")" class="btn">
                                 Reservation List
                             </a>
                         </span>
@@ -143,24 +145,19 @@
                             </div>
                             @(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
                                 .Name("scheduler")
-                                .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0))
-                                .EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0))
-                                .MajorTick(60)
+                                .MajorTick(1440)
                                 .MinorTickCount(1)
                                 .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
                                 .Views(views =>
                                 {
-                                    views.TimelineWorkWeekView(timeline =>
+                                    views.TimelineWeekView(timeline =>
                                     {
                                         timeline.EventHeight(50);
-                                        timeline.StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0));
-                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 18, 0, 0));
                                     });
                                     views.TimelineMonthView(timeline =>
                                     {
-                                        timeline.StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0));
-                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 18, 0, 0));
-                                        timeline.MajorTick(60);
+
+                                        timeline.MajorTick(1440);
                                         timeline.EventHeight(50);
                                     });
                                 })
@@ -191,6 +188,8 @@
                                         RoomName = r.RoomName,
                                         FacilityId = r.FacilityId
                                     }));
+
+
                                 })
                                 .DataSource(d => d
                                 .Model(m =>
@@ -204,15 +203,14 @@
                                     m.Field(f => f.RoomId);
                                     m.Field(f => f.FacilityId);
                                 })
-                                .Read("ViewReservation", "FunctionRoom")
-                                .Update("ViewReservationDetails", "FunctionRoom")
-                                .Destroy(destroy => destroy.Action("DeleteReservationDetail", "FunctionRoom"))
+                                .Read("ViewReservation", "Dorm")
+                                .Update("ViewReservationDetails", "Dorm")
+                                .Destroy(destroy => destroy.Action("DeleteReservationDetail", "Dorm"))
                                 )
                                 .Events(events => events
                                 .DataBound("onDataBound")
-                                .Edit("onEditView"))
+                                .Edit("onEditViewG"))
                                 )
-
                         </div>
                     </div>
                 </div>
@@ -228,31 +226,31 @@
                 <h5 class="modal-title">New Reservation</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="fcFRM1" asp-controller="FunctionRoom" asp-action="CreateReservation" method="post">
+            <form id="fcFRM1" asp-controller="Dorm" asp-action="CreateReservation" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label required">Charge to Company:</label>
+                        <label class="form-label required">Requestor Name</label>
+                        <input class="form-control" name="_requestor" type="text" value="@employee.Fullname" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Requestor Email</label>
+                        <input class="form-control" name="_requestorEmail" type="email" required="required" value="@employee.Email" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Department</label>
                         @(Html.Kendo().DropDownList()
-                            .Name("_company")
-                            .DataTextField("Company")
+                            .Name("_department")
+                            .DataTextField("DepartmentName")
                             .DataValueField("Id")
                             .DataSource(source =>
                             {
                                 source.Read(read =>
                                 {
-                                    read.Action("getCompanies", "Global");
+                                    read.Action("getDepartments", "Global");
                                 });
                             })
                             .HtmlAttributes(new { style = "width: 100%" })
                             )
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Requestor Name</label>
-                        <input class="form-control" name="_requestor" type="text" required="required">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Requestor Email</label>
-                        <input class="form-control" name="_requestorEmail" type="email" required="required">
                     </div>
                 </div>
                 <div class="modal-footer">

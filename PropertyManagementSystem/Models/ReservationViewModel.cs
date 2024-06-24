@@ -5,13 +5,17 @@ namespace PropertyManagementSystem.Models
     public class ReservationViewModel : ISchedulerEvent
     {
         public GFMS_ReservationHeader? ReservationHeader { get; set; }
+        public Gen_Department? Department { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
 
 
         public int FacilityId { get; set; }
         public string? FacilityName { get; set; }
-        public int ReservationDetailId { get; set; }
+        public int? ReservationDetailId { get; set; }
         public int ReservationId { get; set; }
+        public string ReservationType { get; set; }
+        public string ContactNumber { get; set; }
+        public string DepartmentName { get; set; }
         public int RoomId { get; set; }
         public string? RoomName { get; set; }
         public DateTime Start { get; set; }

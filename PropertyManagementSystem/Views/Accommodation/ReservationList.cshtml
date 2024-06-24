@@ -50,29 +50,48 @@
                             </div>
                         </div>
                         <div class="card-body p-0">
-                            @( Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_ReservationHeader>()
-                                .Name("reservationGrid")
-                                .ToolBar(tools => tools.Excel())
-                                .Excel(excel => excel
-                                .FileName("Reservations.xlsx")
-                                .AllPages(true))
-                                .Columns(columns =>
-                                {
-                                    columns.Bound(c => c.ReservationId).Visible(false).Exportable(false);
-                                    columns.ForeignKey(c => c.ChargeToCompany , ds => ds.Read(r => r.Action("getCompanies", "Global")), "Id", "Company").Title("Charge To Company").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
-                                    columns.Bound(c => c.Requestor);
-                                    columns.Bound(c => c.RequestorEmail);
-                                    columns.Bound(c => c.Status).Hidden(true);
+                            @(
+                                Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_ReservationHeader>()
+                                        .Name("reservationGrid")
+                                        .ToolBar(tools => tools.Excel())
+                                        .Excel(excel => excel
+                                        .FileName("Reservations.xlsx")
+                                        .AllPages(true))
+                                        .Columns(columns =>
+                                        {
+                                            columns.Bound(c => c.ReservationId).Visible(false).Exportable(false);
+                                            columns.ForeignKey(c => c.ChargeToCompany , ds => ds.Read(r => r.Action("getCompanies", "Global")), "Id", "Company").Title("Charge To Company").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
+                                            columns.Bound(c => c.Requestor);
+                                            columns.Bound(c => c.RequestorEmail);
+                                            columns.Bound(c => c.Status).Hidden(true);
+                                            columns.Command(command =>
+                                            {
+                                                command.Custom("view")
+                                            .Text("<i class='ti ti-eye'></i>View")
+                                            .Click("onViewClickReservationList")
+                                            .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
+                                                command.Custom("delete")
+                                            .Text("<i class='ti ti-trash'></i> Delete")
+                                            .Click("onDeleteClick")
+                                            .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
+                                            })
+                                            .Title("Actions")
+                                            .Exportable(false);
 
-                                })
-                                .Scrollable()
-                                .ToolBar(toolbar =>
-                                {
-                                    toolbar.Search();
-                                })
-                                .DataSource(dataSource => dataSource
-                                .Ajax()
-                                .Model(model => model.Id(p => p.ReservationId))
+                                        })
+                                        .Scrollable()
+                                        .ToolBar(toolbar =>
+                                        {
+                                            toolbar.Search();
+                                        })
+                                        .DataSource(dataSource => dataSource
+                                        .Ajax()
+                                        .Model(model =>
+                                        {
+                                            model.Id(p => p.ReservationId);
+                                            model.Field(p => p.GUID);
+                                            model.Field(p => p.ReservationType);
+                                        })
                                 .Read(read => read.Action("getGuestHouseReservation", "Accommodation"))
                                 .PageSize(50)
                                 )

@@ -19,9 +19,11 @@ namespace PropertyManagementSystem.Data
             : base(options)
         {
         }
+        public virtual DbSet<Gen_Employee> Employees { get; set; }
+        public virtual DbSet<Gen_Department> Departments { get; set; }
+        public virtual DbSet<Gen_Company> Companies { get; set; }
         public virtual DbSet<GFMS_Facility> Facilities { get; set; }
         public virtual DbSet<GFMS_Rooms> Rooms { get; set; }
-        public virtual DbSet<Gen_Company> Companies { get; set; }
         public virtual DbSet<GFMS_ReservationHeader> ReservationHeaders { get; set; }
         public virtual DbSet<GFMS_ReservationDetails> ReservationDetails { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)

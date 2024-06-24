@@ -20,4 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Telerik.UI.for.AspNet.Core" Version="2022.1.301" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Uploads\" />
+  </ItemGroup>
 </Project>

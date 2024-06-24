@@ -27,7 +27,7 @@ namespace PropertyManagementSystem.Controllers
                 .Where(p => p.FacilityClassification == "GUESTHOUSE")
                 .OrderBy(o => o.FacilityName).ToList());
         }
-        public IActionResult Guesthouse()
+        public IActionResult Index()
         {
             var rooms = _context.Rooms
            .Include(r => r.Facility)
@@ -64,7 +64,17 @@ namespace PropertyManagementSystem.Controllers
 
             return View(viewModel);
         }
+        public IActionResult Guesthouse()
+        {
+            return View();
+        }
 
+        public IActionResult ReservationList()
+        {
+
+            return View();
+
+        }
         public IActionResult ViewReservationDetails(string id)
         {
             try
@@ -104,19 +114,36 @@ namespace PropertyManagementSystem.Controllers
         {
             var reservations = (from resDetails in _context.ReservationDetails
                                 join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
-                                select new ReservationViewModel
+                                select new
                                 {
-                                    ReservationId = resDetails.ReservationId,
-                                    GUID = resHeader.GUID,
-                                    Requestor = resHeader.Requestor,
-                                    ChargeToCompany = resHeader.ChargeToCompany,
-                                    Status = resHeader.Status,
-                                    Start = DateTime.SpecifyKind(resDetails.StartDate.Value, DateTimeKind.Utc),
-                                    End = DateTime.SpecifyKind(resDetails.EndDate.Value, DateTimeKind.Utc),
-                                    Title = resDetails.Purpose,
-                                    RoomId = resDetails.RoomId,
-                                    FacilityId = resDetails.FacilityId
-                                }).ToList();
+                                    resDetails.ReservationId,
+                                    resHeader.GUID,
+                                    resHeader.Requestor,
+                                    resHeader.ChargeToCompany,
+                                    resHeader.Status,
+                                    StartDate = resDetails.StartDate,
+                                    EndDate = resDetails.EndDate,
+                                    resDetails.Purpose,
+                                    resDetails.RoomId,
+                                    resDetails.FacilityId
+                                }).AsEnumerable()
+                                  .Select(r => new ReservationViewModel
+                                  {
+                                      ReservationId = r.ReservationId,
+                                      GUID = r.GUID,
+                                      Requestor = r.Requestor,
+                                      ChargeToCompany = r.ChargeToCompany,
+                                      Status = r.Status,
+                                      Start = r.StartDate.HasValue && DateTime.TryParse(r.StartDate.ToString(), out DateTime startDate)
+                                              ? DateTime.SpecifyKind(startDate, DateTimeKind.Utc)
+                                              : DateTime.MinValue,
+                                      End = r.EndDate.HasValue && DateTime.TryParse(r.EndDate.ToString(), out DateTime endDate)
+                                            ? DateTime.SpecifyKind(endDate, DateTimeKind.Utc)
+                                            : DateTime.MinValue,
+                                      Title = r.Purpose,
+                                      RoomId = r.RoomId,
+                                      FacilityId = r.FacilityId
+                                  }).ToList();
 
             var groupedReservations = reservations.GroupBy(r => r.ReservationId)
                                                   .Select(group => new ReservationViewModel
@@ -194,7 +221,6 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (InvalidCastException ex)
             {
-                // Log detailed error
                 Console.WriteLine($"InvalidCastException: {ex.Message}");
                 if (ex.InnerException != null)
                 {
@@ -204,7 +230,6 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                // Log any other exceptions
                 Console.WriteLine($"Exception: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
@@ -260,7 +285,7 @@ namespace PropertyManagementSystem.Controllers
                 throw;
             }
 
-            return RedirectToAction("Guesthouse", "Accommodation");
+            return RedirectToAction("Index", "Accommodation");
         }
 
 
@@ -269,8 +294,9 @@ namespace PropertyManagementSystem.Controllers
         {
             List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable()
                 .Where(x => x.Status == 0)
-                //.Where(x => x.)
+                .Where(X => X.ReservationType == "GH")
                 .ToList();
+
             DataSourceResult result = _reservations.ToDataSourceResult(request, _reservation => new
             {
                 ReservationId = _reservation.ReservationId,
@@ -284,17 +310,13 @@ namespace PropertyManagementSystem.Controllers
                 Approver = _reservation.Approver,
                 ApprovedDateTime = _reservation.ApprovedDateTime,
                 ApproverEmail = _reservation.ApproverEmail,
-                ChargeToCompany = _reservation.ChargeToCompany
-            });
+                ChargeToCompany = _reservation.ChargeToCompany,
+                ReservationType = _reservation.ReservationType
+            }) ;
             return Json(result);
 
         }
-        public IActionResult ReservationList()
-        {
 
-            return View();
-
-        }
         /*Update*/
         [HttpPost]
         public IActionResult UpdateReservationDetails(int reservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime startDate, DateTime endDate, string purpose)
@@ -313,7 +335,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 var existingDetail = existingReservationDetails[i];
 
-                
+
                 var index = _guests.FindIndex(g => string.Equals(g, existingDetail.GuestName, StringComparison.OrdinalIgnoreCase));
 
 
@@ -356,7 +378,7 @@ namespace PropertyManagementSystem.Controllers
                 }
             }
             _context.SaveChanges();
-            return RedirectToAction("Guesthouse", "Accommodation");
+            return RedirectToAction("Index", "Accommodation");
         }
 
         /*Delete*/
@@ -367,7 +389,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 Console.WriteLine(ReservationId);
                 var reservationDetail = _context.ReservationDetails
-                    .Include(rd => rd.ReservationHeader) 
+                    .Include(rd => rd.ReservationHeader)
                     .Where(rd => rd.ReservationId == ReservationId).ToList();
 
                 if (reservationDetail == null)
@@ -387,7 +409,7 @@ namespace PropertyManagementSystem.Controllers
 
                 _context.SaveChanges();
 
-                return RedirectToAction("Guesthouse", "Accommodation"); 
+                return RedirectToAction("Index", "Accommodation");
             }
             catch (Exception ex)
             {

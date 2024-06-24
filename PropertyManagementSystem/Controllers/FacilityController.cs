@@ -23,6 +23,8 @@ namespace PropertyManagementSystem.Controllers
 
         public IActionResult ViewFacility(int FacilityId)
         {
+
+
             var facilityDetails = _context.Facilities.FirstOrDefault(f => f.FacilityId == FacilityId);
             if (facilityDetails == null)
             {

@@ -20,12 +20,12 @@
                 </div>
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        <a href="@Url.Action("FunctionRoom", "FunctionRoom")" class="btn btn-primary bg-green">
+                    @* <div class="btn-list">
+                        <a href="@Url.Action("Index", "FunctionRoom")" class="btn btn-primary bg-green">
                             <i class="ti ti-arrow-left icon"></i>
                             Go Back
                         </a>
-                    </div>
+                    </div> *@
                 </div>
             </div>
         </div>
@@ -34,7 +34,7 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards">
-                <div class="col-md-3">
+                <div class="col-lg-3">
                     <div class="card text-center">
                         <div class="card-header card-header-light">
                             <h3 class="card-title">Reservation #@Model.ReservationHeader.ReservationId</h3>
@@ -163,7 +163,7 @@
                                             </div>
                                         </div>
                                         <div class="modal-footer">
-                                            <a href="@Url.Action("FunctionRoom", "FunctionRoom")" class="btn btn-link link-secondary">
+                                            <a href="@Url.Action("Index", "FunctionRoom")" class="btn btn-link link-secondary">
                                                 Cancel
                                             </a>
                                             <button type="submit" class="btn btn-primary ms-auto">

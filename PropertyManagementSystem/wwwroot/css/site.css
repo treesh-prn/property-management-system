@@ -27998,8 +27998,35 @@ span.k-button-text{
 .table-borderless tbody tr th,
 .table-borderless tbody tr td {
     border: none;
+    white-space: nowrap;
+    word-wrap: break-word;
 }
 
 .custom-padding{
     padding: 10px;
+}
+.form-selectgroup-label {
+    display: flex;
+    align-items: center;
+}
+
+.form-selectgroup-label-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-selectgroup-input:checked + .form-selectgroup-label .form-selectgroup-check {
+    background-color: #0d6efd;
+}
+
+.form-selectgroup-check {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.form-fieldset {
+    margin-bottom: 20px; /* Adjust the value as needed */
 }

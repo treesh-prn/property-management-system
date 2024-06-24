@@ -24,6 +24,25 @@ namespace PropertyManagementSystem.Models
         public int NumberOfGuest {  get; set; }
         public string? EquipmentNeeded {  get; set; }
 
+        public int? AppliedUnit {  get; set; }
+        public string? ContactNumber { get; set; }
+        public string? PermanentAddress { get; set; }
+        public string? CurrentAddress { get; set; }
+        public int? HomeOwnership {  get; set; }
+        public int? OwnedHouseLocation {  get; set; }
+        public string? SpecificLocation { get; set; }
+        public int? ModeOfTransportation { get; set; }
+        public string? VehicleType { get; set; }
+        public string? TravelTime { get; set; }
+        public string? Fare {  get; set; }
+        public string? CivilStatus { get; set; }
+        public string? FileAttachment {  get; set; }
+        public string? DependentName { get; set; }
+        public string? DependentAge { get; set; }
+        public string? StudyLocation { get; set; }
+        public string? WorkPosition { get; set; }
+
+
         public GFMS_ReservationHeader ReservationHeader { get; set; }
     }
 }

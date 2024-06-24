@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
+using System.IO;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -32,6 +33,15 @@ namespace PropertyManagementSystem.Controllers
             var unique = $"{guid1}";
             return unique;
         }
+
+        public JsonResult getDepartments()
+        {
+            var _deptList = _context.Departments.AsQueryable().ToList();
+
+            return Json(_deptList , new JsonSerializerSettings());
+        }
+
+ 
 
     }
 }

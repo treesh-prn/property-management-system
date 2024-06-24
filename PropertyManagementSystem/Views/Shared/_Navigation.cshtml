@@ -1,4 +1,11 @@
-﻿<div class="mb-3">
+﻿@inject PropertyManagementSystem.Services.IRoleService RoleService
+@using Microsoft.AspNetCore.Identity
+
+
+@{
+    var employee = await RoleService.GetUserName(User);
+}
+<div class="mb-3">
     <header class="navbar navbar-expand-md d-print-none" data-bs-theme="dark">
         <div class="container-xl">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu" aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
@@ -11,17 +18,24 @@
                 </a><small>Property Management System</small>
             </p>
             <div class="navbar-nav flex-row order-md-last">
-
+                
                 <div class="d-none d-md-flex">
                 </div>
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
-                        <span class="avatar">
+                        <span class="avatar me-3">
                             <span class="badge bg-success"></span>TP
                         </span>
                         <div class="d-none d-xl-block ps-2">
-                            <div>@User.Identity.Name</div>
-                            @*<div>Trisha Paran</div>*@
+                            @if(employee != null)
+                            {
+                                <div>@employee.Fullname</div>
+                            }
+                            
+                            <div class="mt-1 small text-secondary">
+                                <div>@User.Identity.Name</div>
+                            </div>
+                            
                             <div class="mt-1 small text-secondary">Role</div>
                         </div>
                     </a>
@@ -63,7 +77,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="@Url.Action("FunctionRoom", "FunctionRoom")">
+                                    <a class="nav-link" href="@Url.Action("Index", "FunctionRoom")">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-briefcase icon"></i>
                                         </span>
@@ -73,7 +87,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="@Url.Action("Guesthouse", "Accommodation")">
+                                    <a class="nav-link" href="@Url.Action("Index", "Accommodation")">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-door icon"></i>
                                         </span>
@@ -83,7 +97,7 @@
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="@Url.Action("FunctionRoom", "Accommodation")">
+                                    <a class="nav-link" href="@Url.Action("Index", "Dorm")">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-bed icon"></i>
                                         </span>
