@@ -37,11 +37,11 @@ function onDataBound(e) {
 
     events.forEach(function (event) {
         var element = view.element.find("[data-uid='" + event.uid + "']");
-        if (event.Status === 0) {
+        if (event.Status === "PENDING" || event.Status === "DRAFT") {
             element.css("background-color", "blue");
-        } else if (event.Status === 1) {
+        } else if (event.Status === "APPROVED") {
             element.css("background-color", "green");
-        } else if (event.Status === 2) {
+        } else if (event.Status === "CANCELLED") {
             element.css("background-color", "red");
         }
     });
@@ -108,8 +108,12 @@ function onViewClickReservationList(e) {
     e.preventDefault();
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
     if (dataItem) {
-        console.log(dataItem.ReservationType)
-        if (dataItem.ReservationType == "FN") {
+        console.log(dataItem.ReservationDetailId)
+        if (dataItem.ReservationType == "FN" && dataItem.ReservationDetailId == 0) {
+            var guid = dataItem.GUID;
+            var url = '/FunctionRoom/ReservationDetails/' + guid;
+            window.location.href = url;
+        } else {
             var guid = dataItem.GUID;
             var url = '/FunctionRoom/ViewReservationDetails/' + guid;
             window.location.href = url;
@@ -379,12 +383,28 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 function onSuccess(e) {
-    // Handle successful upload
     var filesList = $("#filesList");
     filesList.append("<li>" + e.response.fileName + "</li>");
 }
 
 function onError(e) {
-    // Handle upload error
     console.log("Upload error: " + e.XMLHttpRequest.statusText);
+}
+
+//for multiselect
+function addNew(EquipmentId, value) {
+    var widget = $("#" + EquipmentId).data("kendoMultiSelect");
+    var dataSource = widget.dataSource;
+
+    if (confirm("Are you sure you want to add '" + value + "' as a new item?")) {
+        var newItem = {
+            EquipmentId: dataSource.data().length + 1,  // Generate a new ID
+            EquipmentName: value
+        };
+        dataSource.add(newItem);
+        var currentValue = widget.value();
+        currentValue.push(newItem.EquipmentId);
+        widget.value(currentValue);
+        widget.trigger("change");
+    }
 }

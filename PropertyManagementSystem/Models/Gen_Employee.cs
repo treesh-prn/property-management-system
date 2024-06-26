@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PropertyManagementSystem.Models
@@ -18,6 +19,8 @@ namespace PropertyManagementSystem.Models
         public int? DepartmentId { get; set; }
         public int? SectionId { get; set; }
         public int? PositionId { get; set; }
+        public int EmploymentLevelId { get; set; }
+        public int EmploymentStatusId { get; set; }
         public string? Email { get; set; }
         public string? Title { get; set; }
         public string? Image { get; set; }

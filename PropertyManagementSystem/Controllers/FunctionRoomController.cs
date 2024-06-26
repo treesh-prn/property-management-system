@@ -41,9 +41,9 @@ namespace PropertyManagementSystem.Controllers
            })
             .ToList();
 
-            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == 0);
-            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 1);
-            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 0);
+            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING" || r.Status == "DRAFT");
+            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "APPROVED");
+            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING");
 
             var viewModel = new ReservationViewModel
             {
@@ -195,31 +195,50 @@ namespace PropertyManagementSystem.Controllers
         public ActionResult getFunctionRoomReservation([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.Status == 0)
+                .Where(x => x.Status == "PENDING" || x.Status == "DRAFT")
                 .Where(X => X.ReservationType == "FN")
                 .ToList();
+            List<ReservationViewModel> reservationViewModels = new List<ReservationViewModel>();
 
-            DataSourceResult result = _reservations.ToDataSourceResult(request, _reservation => new
+            foreach (var header in _reservations)
             {
-                ReservationId = _reservation.ReservationId,
-                DateFiled = _reservation.DateFiled,
-                Requestor = _reservation.Requestor,
-                RequestorEmail = _reservation.RequestorEmail,
-                GUID = _reservation.GUID,
-                Status = _reservation.Status,
-                DateSubmitted = _reservation.DateSubmitted,
-                ReservationCode = _reservation.ReservationCode,
-                Approver = _reservation.Approver,
-                ApprovedDateTime = _reservation.ApprovedDateTime,
-                ApproverEmail = _reservation.ApproverEmail,
-                ChargeToCompany = _reservation.ChargeToCompany,
-                ReservationType = _reservation.ReservationType,
+                var department = _context.Departments.FirstOrDefault(d => d.Id == header.Department);
+                var details = _context.ReservationDetails.Where(rd => rd.ReservationId == header.ReservationId).ToList();
+
+                var viewModel = new ReservationViewModel
+                {
+                    ReservationId = header.ReservationId,
+                    Requestor = header.Requestor,
+                    RequestorEmail = header.RequestorEmail,
+                    Status = header.Status,
+                    GUID = header.GUID,
+                    ChargeToCompany = header.ChargeToCompany,
+                    ReservationType = header.ReservationType,
+                    DepartmentName = department?.DepartmentName,
+                    ReservationDetailId = details.FirstOrDefault()?.ReservationDetailId ?? 0
+                };
+
+                reservationViewModels.Add(viewModel);
+            }
+
+            DataSourceResult result = reservationViewModels.ToDataSourceResult(request, model => new
+            {
+                model.ReservationId,
+                model.Requestor,
+                model.DepartmentName,
+                model.RequestorEmail,
+                model.Status,
+                model.GUID,
+                model.ChargeToCompany,
+                model.ReservationType,
+                model.ReservationDetailId
             });
+
             return Json(result);
 
         }
         [HttpPost]
-        public IActionResult CreateReservation(int _company, string _requestor, string _requestorEmail)
+        public IActionResult CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
         {
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
@@ -234,7 +253,8 @@ namespace PropertyManagementSystem.Controllers
                 ApproverEmail = "jerwin_alimuin@tecoindustrialpark.com",
                 DateFiled = DateTime.Now,
                 DateSubmitted = DateTime.Now,
-                Status = 0,
+                Status = "DRAFT",
+                Department = _department,
                 ReservationType = "FN"
 
             };
@@ -306,6 +326,7 @@ namespace PropertyManagementSystem.Controllers
 
             try
             {
+                var equipmentNeeded = _equipment?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 GFMS_ReservationDetails reservationDetails = new GFMS_ReservationDetails()
                 {
                     ReservationId = _reservationId,
@@ -315,8 +336,8 @@ namespace PropertyManagementSystem.Controllers
                     StartDate = _startDate,
                     EndDate = _endDate,
                     Purpose = _purpose,
-                    EquipmentNeeded = _equipment,
                     DateAdded = DateTime.UtcNow,
+                    EquipmentNeeded = string.Join(",", equipmentNeeded.Select(e => e.Trim()))
                 };
 
                 _context.ReservationDetails.Add(reservationDetails);
@@ -338,14 +359,14 @@ namespace PropertyManagementSystem.Controllers
         /*EditReservation*/
 
         [HttpPost]
-        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string Purpose, string EquipmentNeeded)
+        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string Purpose, string[] EquipmentNeeded)
         {
             if (StartDate < new DateTime(1753, 1, 1) || StartDate > new DateTime(9999, 12, 31) ||
                 EndDate < new DateTime(1753, 1, 1) || EndDate > new DateTime(9999, 12, 31))
             {
                 throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
             }
-            Console.WriteLine("RoomID: " + _roomId);
+
             var reservationDetail = _context.ReservationDetails.FirstOrDefault(rd => rd.ReservationDetailId == ReservationDetailId);
             if (reservationDetail == null)
             {
@@ -358,7 +379,15 @@ namespace PropertyManagementSystem.Controllers
             reservationDetail.StartDate = StartDate;
             reservationDetail.EndDate = EndDate;
             reservationDetail.Purpose = Purpose;
-            reservationDetail.EquipmentNeeded = EquipmentNeeded;
+
+            if (EquipmentNeeded != null && EquipmentNeeded.Any())
+            {
+                reservationDetail.EquipmentNeeded = string.Join(",", EquipmentNeeded.Select(e => e.Trim()));
+            }
+            else
+            {
+                reservationDetail.EquipmentNeeded = string.Empty;
+            }
 
             try
             {
@@ -377,6 +406,8 @@ namespace PropertyManagementSystem.Controllers
 
             return RedirectToAction("Index", "FunctionRoom");
         }
+
+
 
         /*Delete*/
         [HttpPost]

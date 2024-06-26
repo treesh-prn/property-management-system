@@ -16,7 +16,7 @@ namespace PropertyManagementSystem.Models
         public string? Requestor { get; set; }
         public string? RequestorEmail { get; set; }
         public string? GUID { get; set; }
-        public int Status { get; set; }
+        public string? Status { get; set; }
         [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:dd/MM/yyyy}")]
         [Column(TypeName = "DateTime")]
         public DateTime? DateSubmitted { get; set; }

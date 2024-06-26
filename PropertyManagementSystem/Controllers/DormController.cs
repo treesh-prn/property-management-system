@@ -42,9 +42,10 @@ namespace PropertyManagementSystem.Controllers
            })
             .ToList();
 
-            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == 0);
-            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 2);
-            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 0);
+            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING" || r.Status == "DRAFT");
+            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "APPROVED");
+            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING");
+
 
             var viewModel = new ReservationViewModel
             {
@@ -155,7 +156,7 @@ namespace PropertyManagementSystem.Controllers
         public ActionResult getDormReservation([DataSourceRequest] DataSourceRequest request)
         {
             var reservationHeaders = _context.ReservationHeaders
-                .Where(x => x.Status == 0 && x.ReservationType == "DRM")
+                .Where(x => x.Status == "PENDING" && x.ReservationType == "DRM")
                 .ToList();
 
             List<ReservationViewModel> reservationViewModels = new List<ReservationViewModel>();
@@ -213,7 +214,8 @@ namespace PropertyManagementSystem.Controllers
                 ApproverEmail = "jerwin_alimuin@tecoindustrialpark.com",
                 DateFiled = DateTime.Now,
                 DateSubmitted = DateTime.Now,
-                Status = 0
+                Status = "DRAFT",
+                ReservationType = "GH",
 
             };
 

@@ -253,6 +253,22 @@
                         <input class="form-control" name="_requestor" type="text" value="@employee.Fullname" readonly>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label required">Department</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_department")
+                            .DataTextField("DepartmentName")
+                            .DataValueField("Id")
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("getDepartments", "Global");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label required">Requestor Email</label>
                         <input class="form-control" name="_requestorEmail" type="email" value="@employee.Email" readonly>
                     </div>

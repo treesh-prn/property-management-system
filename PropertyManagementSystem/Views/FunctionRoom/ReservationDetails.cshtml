@@ -101,45 +101,11 @@
                                             <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
                                             <div id="dynamic-rows">
                                                 <div class="row mb-3">
-                                                    <label class="form-label">Number of Attendees</label>
-                                                    <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees">
+                                                    <div class="col-lg-12">
+                                                        <label class="form-label">Number of Attendees</label>
+                                                        <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees">
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Facility</label>
-                                                @(
-                                                    Html.Kendo().DropDownList()
-                                                    .Name("_facilityId")
-                                                    .DataTextField("FacilityName")
-                                                    .DataValueField("FacilityId")
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("GetFacility", "FunctionRoom");
-                                                        });
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Facility")
-                                                    )
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Room</label>
-                                                @(Html.Kendo().DropDownList()
-                                                    .Name("_roomId")
-                                                    .DataTextField("RoomName")
-                                                    .DataValueField("RoomId")
-                                                    .CascadeFrom("_facilityId")
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
-                                                        }).ServerFiltering(true);
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Room")
-                                                    )
                                             </div>
                                             <label class="form-label">Duration of Stay</label>
                                             <div class="row mb-3">
@@ -164,8 +130,44 @@
                                                 </div>
                                             </div>
                                             <div class="row mb-3">
-                                                <label class="form-label">Equipment Needed</label>
-                                                <input type="text" class="form-control" name="_equipment" placeholder="EquipmentNeeded">
+                                                <div class="col-lg-12">
+                                                    <label class="form-label">Equipment Needed</label>
+                                                    @(Html.Kendo().MultiSelect()
+                                                        .Name("_equipment")
+                                                        .Placeholder("Please select needed equipment/s")
+                                                        .DownArrow(true)
+                                                        .NoDataTemplateId("noDataTemplate")
+                                                        .DataTextField("EquipmentName")
+                                                        .DataValueField("EquipmentId")
+                                                        .Filter("contains")
+                                                        .AutoBind(false)
+                                                        .DataSource(source =>
+                                                        {
+                                                            source.Read(read =>
+                                                            {
+                                                                read.Action("GetEquipments", "Global");
+                                                            });
+                                                        })
+                                                        )
+
+                                                    @* <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded"> *@
+                                                </div>
+                                            </div>
+                                            <div class="row mb-3">
+                                                <div class="col-lg-12">
+                                                    <div>
+                                                        <label class="form-label">
+                                                            Contact Number
+                                                        </label>
+                                                        <div class="input-group mb-2">
+                                                            <span class="input-group-text">
+                                                                +63
+                                                            </span>
+                                                            <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10">
+                                                        </div>
+
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="col-lg-12">
                                                 <div>

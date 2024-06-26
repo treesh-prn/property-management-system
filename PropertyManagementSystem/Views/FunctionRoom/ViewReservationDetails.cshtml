@@ -3,7 +3,6 @@
 @{
     ViewData["Title"] = "View Reservation Details";
 }
-
 <div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
@@ -21,10 +20,10 @@
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     @* <div class="btn-list">
-                        <a href="@Url.Action("Index", "FunctionRoom")" class="btn btn-primary bg-green">
-                            <i class="ti ti-arrow-left icon"></i>
-                            Go Back
-                        </a>
+                    <a href="@Url.Action("Index", "FunctionRoom")" class="btn btn-primary bg-green">
+                    <i class="ti ti-arrow-left icon"></i>
+                    Go Back
+                    </a>
                     </div> *@
                 </div>
             </div>
@@ -82,48 +81,13 @@
                                         <div class="modal-body">
                                             <div id="dynamic-rows">
                                                 <div class="row mb-3">
-                                                    <label class="form-label">Number of Attendees</label>
-                                                    <input type="number" class="form-control" name="NumberOfGuest" placeholder="Number of Attendees" value="@detail.NumberOfGuest">
+                                                    <div class="col-lg-12">
+                                                        <label class="form-label">Number of Attendees</label>
+                                                        <input type="number" class="form-control" name="NumberOfGuest" placeholder="Number of Attendees" value="@detail.NumberOfGuest">
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Facility</label>
-                                                @(
-                                                    Html.Kendo().DropDownList()
-                                                    .Name("_facilityId")
-                                                    .Value(detail.FacilityId.ToString())
-                                                    .DataTextField("FacilityName")
-                                                    .DataValueField("FacilityId")
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("GetFacility", "FunctionRoom");
-                                                        });
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Facility")
-                                                    )
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label required">Room</label>
-                                                @(Html.Kendo().DropDownList()
-                                                    .Name("_roomId")
-                                                    .Value(detail.RoomId.ToString())
-                                                    .DataTextField("RoomName")
-                                                    .DataValueField("RoomId")
-                                                    .CascadeFrom("_facilityId")
-                                                    .DataSource(source =>
-                                                    {
-                                                        source.Read(read =>
-                                                        {
-                                                            read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
-                                                        }).ServerFiltering(true);
-                                                    })
-                                                    .HtmlAttributes(new { style = "width: 100%" })
-                                                    .OptionLabel("Select Room")
-                                                    )
-                                            </div>
+
                                             <label class="form-label">Duration of Stay</label>
                                             <div class="row mb-3">
                                                 <div class="col-lg-6">
@@ -149,8 +113,45 @@
                                                 </div>
                                             </div>
                                             <div class="row mb-3">
-                                                <label class="form-label">Equipment Needed</label>
-                                                <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded">
+                                                <div class="col-lg-12">
+                                                    <label class="form-label">Equipment Needed</label>
+                                                    @(Html.Kendo().MultiSelect()
+                                                        .Name("EquipmentNeeded")
+                                                        .Placeholder("Please select needed equipment/s")
+                                                        .DownArrow(true)
+                                                        .NoDataTemplateId("noDataTemplate")
+                                                        .DataTextField("EquipmentName")
+                                                        .DataValueField("EquipmentId")
+                                                        .Value(detail.EquipmentNeeded?.Split(new[]{','}, StringSplitOptions.RemoveEmptyEntries))
+                                                        .Filter("contains")
+                                                        .AutoBind(false)
+                                                        .DataSource(source =>
+                                                        {
+                                                            source.Read(read =>
+                                                            {
+                                                                read.Action("GetEquipments", "Global");
+                                                            });
+                                                        })
+                                                        )
+
+                                                    @* <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded"> *@
+                                                </div>
+                                            </div>
+                                            <div class="row mb-3">
+                                                <div class="col-lg-12">
+                                                    <div>
+                                                        <label class="form-label">
+                                                            Contact Number
+                                                        </label>
+                                                        <div class="input-group mb-2">
+                                                            <span class="input-group-text">
+                                                                +63
+                                                            </span>
+                                                            <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10">
+                                                        </div>
+
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="col-lg-12">
                                                 <div>
@@ -181,3 +182,14 @@
         </div>
     </div>
 </div>
+<script id="noDataTemplate" type="text/x-kendo-tmpl">
+    <div class="kd-nodata-wrapper">
+        # var value = instance.input.val(); #
+        # var id = instance.element[0].id; #
+        <div>
+            No data found. Do you want to add new item - '#: value #' ?
+        </div>
+    </div>
+    <br />
+    <button class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" onclick="addNew('#: id #', '#: value #')" ontouchend="addNew('#: id #', '#: value #')">Add new item</button>
+</script>

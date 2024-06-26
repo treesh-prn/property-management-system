@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
+using PropertyManagementSystem.Models;
 using System.IO;
 
 namespace PropertyManagementSystem.Controllers
@@ -41,7 +42,20 @@ namespace PropertyManagementSystem.Controllers
             return Json(_deptList , new JsonSerializerSettings());
         }
 
- 
+        public ActionResult GetEquipments()
+        {
+            List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();
+            List<equipmentList> _eqList = new List<equipmentList>();
+            foreach(var item in _Equipments)
+            {
+                _eqList.Add(new equipmentList
+                {
+                    EquipmentId = item.EquipmentId,
+                    EquipmentName = item.EquipmentName,
+                });
+            }
+            return Json(_eqList);
+        }
 
     }
 }

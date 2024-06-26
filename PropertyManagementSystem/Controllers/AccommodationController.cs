@@ -7,7 +7,6 @@ using PropertyManagementSystem.Models;
 using System.Net.NetworkInformation;
 using System;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -50,9 +49,10 @@ namespace PropertyManagementSystem.Controllers
            })
            .ToList();
 
-            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == 0);
-            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 1);
-            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == 0);
+            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING" || r.Status == "DRAFT");
+            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "APPROVED");
+            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING");
+
 
             var viewModel = new ReservationViewModel
             {
@@ -180,7 +180,8 @@ namespace PropertyManagementSystem.Controllers
                 ApproverEmail = "jerwin_alimuin@tecoindustrialpark.com",
                 DateFiled = DateTime.Now,
                 DateSubmitted = DateTime.Now,
-                Status = 0
+                Status = "DRAFT",
+                ReservationType = "GH",
 
             };
 
@@ -293,7 +294,7 @@ namespace PropertyManagementSystem.Controllers
         public ActionResult getGuestHouseReservation([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.Status == 0)
+                .Where(x => x.Status == "PENDING" || x.Status == "DRAFT")
                 .Where(X => X.ReservationType == "GH")
                 .ToList();
 

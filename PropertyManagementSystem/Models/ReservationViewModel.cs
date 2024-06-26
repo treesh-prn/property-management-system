@@ -34,7 +34,7 @@ namespace PropertyManagementSystem.Models
         public string? RequestorEmail { get; set; }
         public string? GUID { get; set; }
         public string? GuestName { get; set; }
-        public int Status { get; set; }
+        public string? Status { get; set; }
         public DateTime? DateSubmitted { get; set; }
         public string? ReservationCode { get; set; }
         public string? Approver { get; set; }

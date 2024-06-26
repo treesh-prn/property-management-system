@@ -7,8 +7,8 @@ namespace PropertyManagementSystem.Services
 {
     public interface IRoleService
     {
-        //Task<IEnumerable<string>> GetRolesAsync(ClaimsPrincipal user);
-        //Task<string> GetActiveRolesAsync(ClaimsPrincipal user);
+        Task<IEnumerable<string>> GetRolesAsync(ClaimsPrincipal user);
+        Task<string> GetActiveRoleAsync(ClaimsPrincipal user);
         Task<Gen_Employee> GetUserName(ClaimsPrincipal user);
     }
     public class RoleService : IRoleService
@@ -21,14 +21,36 @@ namespace PropertyManagementSystem.Services
             _user = user;
             _context = context;
         }
+        public async Task<IEnumerable<string>> GetRolesAsync(ClaimsPrincipal user)
+        {
+            var applicationUser = await _user.GetUserAsync(user);
+            var userRoles = await _user.GetRolesAsync(applicationUser);
+            var gfmsRoles = userRoles.Where(r => r.StartsWith("GFMS"));
+            return gfmsRoles;
+        }
+
+        public async Task<string> GetActiveRoleAsync(ClaimsPrincipal user)
+        {
+            var applicationUser = await _user.GetUserAsync(user);
+            var userClaims = await _user.GetClaimsAsync(applicationUser);
+            var activeRole = userClaims.FirstOrDefault(c => c.Type == "GFMS.Active Role")?.Value;
+            return activeRole;
+        }
+
 
         public async Task<Gen_Employee> GetUserName(ClaimsPrincipal user)
         {
             var empUser = await _user.GetUserAsync(user);
-            
-            Gen_Employee employee = _context.Employees.Where(e => e.UserId == empUser.Id).FirstOrDefault();
 
-            return employee;
+            // Ensure empUser is not null before proceeding
+            if (empUser != null)
+            {
+                Gen_Employee employee = _context.Employees.FirstOrDefault(e => e.UserId == empUser.Id);
+                return employee;
+            }
+
+            return null; // or handle the case where empUser is null
         }
+
     }
 }
