@@ -1,12 +1,13 @@
 ﻿@inject PropertyManagementSystem.Services.IRoleService RoleService
+@inject SignInManager<IdentityUser> SignInManager
 @using Microsoft.AspNetCore.Identity
 
 @{
     var employee = await RoleService.GetUserName(User);
     var gfmsRoles = await RoleService.GetRolesAsync(User);
     var activeRole = await RoleService.GetActiveRoleAsync(User);
+    var isAuthenticated = User.Identity.IsAuthenticated;
 }
-
 <div class="mb-3">
     <header class="navbar navbar-expand-md d-print-none" data-bs-theme="dark">
         <div class="container-xl">
@@ -21,45 +22,54 @@
             <div class="navbar-nav flex-row order-md-last">
                 <div class="d-none d-md-flex">
                 </div>
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
-                        <span class="avatar me-3">
-                            <span class="badge bg-success"></span>TP
-                        </span>
-                        <div class="d-none d-xl-block ps-2">
-                            @if (employee != null)
-                            {
-                                <div>@employee.Fullname</div>
-                            }
-                            <div class="mt-1 small text-secondary">
-                                <div>@User.Identity.Name</div>
-                            </div>
-                            <div class="mt-1 small text-secondary">
-                                <div>
-                                    @if (gfmsRoles != null && gfmsRoles.Any())
-                                    {
-                                        @foreach (var role in gfmsRoles)
+                @if (isAuthenticated)
+                {
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
+                            <span class="avatar me-3">
+                                <span class="badge bg-success"></span>TP
+                            </span>
+                            <div class="d-none d-xl-block ps-2">
+                                @if (employee != null)
+                                {
+                                    <div>@employee.Fullname</div>
+                                }
+                                <div class="mt-1 small text-secondary">
+                                    <div>@User.Identity.Name</div>
+                                </div>
+                                <div class="mt-1 small text-secondary">
+                                    <div>
+                                        @if (gfmsRoles != null && gfmsRoles.Any())
                                         {
-                                            <span>@role</span>
+                                            @foreach (var role in gfmsRoles)
+                                            {
+                                                <span>@role</span>
+                                            }
                                         }
-                                    }
-                                    else
-                                    {
-                                        <span>No roles assigned</span>
-                                    }
+                                        else
+                                        {
+                                            <span>No roles assigned</span>
+                                        }
+                                    </div>
                                 </div>
                             </div>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                            <a href="#" class="dropdown-item">Status</a>
+                            <a href="./profile.html" class="dropdown-item">Profile</a>
+                            <a href="#" class="dropdown-item">Feedback</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="./settings.html" class="dropdown-item">Settings</a>
+                            <form method="post">
+                                <a asp-area="Identity" asp-page="/Account/Login" class="dropdown-item">Logout</a>
+                            </form>
                         </div>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                        <a href="#" class="dropdown-item">Status</a>
-                        <a href="./profile.html" class="dropdown-item">Profile</a>
-                        <a href="#" class="dropdown-item">Feedback</a>
-                        <div class="dropdown-divider"></div>
-                        <a href="./settings.html" class="dropdown-item">Settings</a>
-                        <a href="./sign-in.html" class="dropdown-item">Logout</a>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <partial name="_LoginPartial" />
+                }
             </div>
         </div>
     </header>

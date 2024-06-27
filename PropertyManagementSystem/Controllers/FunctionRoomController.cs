@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
+using PropertyManagementSystem.Services;
 using System.Reflection.PortableExecutable;
 
 namespace PropertyManagementSystem.Controllers
@@ -13,10 +14,12 @@ namespace PropertyManagementSystem.Controllers
     public class FunctionRoomController : Controller
     {
         private readonly DAL _context;
+        private readonly IRoleService _roleService;
 
-        public FunctionRoomController(DAL context)
+        public FunctionRoomController(DAL context, IRoleService roleService)
         {
             _context = context;
+            _roleService = roleService;
         }
         public IActionResult Index()
         {
@@ -192,15 +195,31 @@ namespace PropertyManagementSystem.Controllers
             }
             return Json(rooms.Select(p => new { RoomId = p.RoomId, RoomName = p.RoomName }).ToList());
         }
-        public ActionResult getFunctionRoomReservation([DataSourceRequest] DataSourceRequest request)
+        public ActionResult GetFunctionRoomReservation([DataSourceRequest] DataSourceRequest request, string gridType)
         {
-            List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.Status == "PENDING" || x.Status == "DRAFT")
-                .Where(X => X.ReservationType == "FN")
-                .ToList();
-            List<ReservationViewModel> reservationViewModels = new List<ReservationViewModel>();
+            Task<Gen_Employee> employeeTask = _roleService.GetUserName(User);
+            var employee = employeeTask.Result;
 
-            foreach (var header in _reservations)
+            var query = _context.ReservationHeaders.AsQueryable()
+                .Where(x => x.Status == "PENDING" || x.Status == "DRAFT")
+                .Where(x => x.ReservationType == "FN");
+
+            if (gridType == "myReservation")
+            {
+                query = query.Where(x => x.Requestor == employee.Fullname);
+            }
+            else if (gridType == "reservationApproval")
+            {
+                if (User.IsInRole("GFMS.Department Head"))
+                {
+                    query = query.Where(x => x.Approver == employee.Fullname);
+                }
+            }
+
+            var reservationHeaders = query.ToList();
+            var reservationViewModels = new List<ReservationViewModel>();
+
+            foreach (var header in reservationHeaders)
             {
                 var department = _context.Departments.FirstOrDefault(d => d.Id == header.Department);
                 var details = _context.ReservationDetails.Where(rd => rd.ReservationId == header.ReservationId).ToList();
@@ -235,8 +254,8 @@ namespace PropertyManagementSystem.Controllers
             });
 
             return Json(result);
-
         }
+
         [HttpPost]
         public IActionResult CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
         {
