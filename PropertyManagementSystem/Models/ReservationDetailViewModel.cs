@@ -6,6 +6,7 @@
         public Gen_Department Gen_Department { get; set; }
         public List<GFMS_ReservationDetails> ReservationDetails { get; set; }
         public int NumberOfGuest {  get; set; }
+        public bool CanEdit { get; set; }
 
     }
 }

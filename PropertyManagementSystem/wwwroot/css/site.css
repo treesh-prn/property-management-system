@@ -28030,3 +28030,9 @@ span.k-button-text{
 .form-fieldset {
     margin-bottom: 20px; /* Adjust the value as needed */
 }
+
+.k-grid-header .k-header {
+    text-align: center;
+}
+
+

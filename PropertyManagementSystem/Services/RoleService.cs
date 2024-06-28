@@ -41,6 +41,7 @@ namespace PropertyManagementSystem.Services
         public async Task<Gen_Employee> GetUserName(ClaimsPrincipal user)
         {
             var empUser = await _user.GetUserAsync(user);
+            Console.WriteLine("User Role:" + user.IsInRole);
 
             // Ensure empUser is not null before proceeding
             if (empUser != null)

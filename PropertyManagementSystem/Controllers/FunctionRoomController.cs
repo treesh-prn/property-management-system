@@ -66,7 +66,6 @@ namespace PropertyManagementSystem.Controllers
         }
         public IActionResult ReservationList()
         {
-
             return View();
 
         }
@@ -111,7 +110,8 @@ namespace PropertyManagementSystem.Controllers
                 var detailViewModel = new ReservationViewModel
                 {
                    ReservationHeader = reservationHeader,
-                   ReservationDetails = reservationDetails
+                   ReservationDetails = reservationDetails,
+
                 };
 
                 return View(detailViewModel);
@@ -201,7 +201,7 @@ namespace PropertyManagementSystem.Controllers
             var employee = employeeTask.Result;
 
             var query = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.Status == "PENDING" || x.Status == "DRAFT")
+                //.Where(x => x.Status == "PENDING" || x.Status == "DRAFT")
                 .Where(x => x.ReservationType == "FN");
 
             if (gridType == "myReservation")
@@ -212,7 +212,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 if (User.IsInRole("GFMS.Department Head"))
                 {
-                    query = query.Where(x => x.Approver == employee.Fullname);
+                    query = query.Where(x => x.Approver == employee.Fullname &&  x.Status == "FOR DEPARTMENT HEAD'S APPROVAL");
                 }
             }
 
@@ -233,7 +233,7 @@ namespace PropertyManagementSystem.Controllers
                     GUID = header.GUID,
                     ChargeToCompany = header.ChargeToCompany,
                     ReservationType = header.ReservationType,
-                    DepartmentName = department?.DepartmentName,
+                    DepartmentName = department?.DepartmentCode,
                     ReservationDetailId = details.FirstOrDefault()?.ReservationDetailId ?? 0
                 };
 
@@ -255,6 +255,7 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(result);
         }
+
 
         [HttpPost]
         public IActionResult CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
@@ -332,7 +333,7 @@ namespace PropertyManagementSystem.Controllers
             }
         }
 
-        public IActionResult CreateReservationDetails(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, string _equipment)
+        public IActionResult CreateReservationDetails(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, string _equipment, string _contactNumber)
         {
             Console.WriteLine($"Start Date: {_startDate}");
             Console.WriteLine($"End Date: {_endDate}");
@@ -356,10 +357,18 @@ namespace PropertyManagementSystem.Controllers
                     EndDate = _endDate,
                     Purpose = _purpose,
                     DateAdded = DateTime.UtcNow,
-                    EquipmentNeeded = string.Join(",", equipmentNeeded.Select(e => e.Trim()))
+                    EquipmentNeeded = string.Join(",", equipmentNeeded.Select(e => e.Trim())),
+                    ContactNumber = _contactNumber
                 };
 
                 _context.ReservationDetails.Add(reservationDetails);
+
+                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
+                if (reservationHeader != null)
+                {
+                    reservationHeader.Status = "PENDING";
+                }
+
                 _context.SaveChanges();
             }
             catch (DbUpdateException ex)
@@ -375,10 +384,11 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("Index", "FunctionRoom");
         }
 
+
         /*EditReservation*/
 
         [HttpPost]
-        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string Purpose, string[] EquipmentNeeded)
+        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string Purpose, string[] EquipmentNeeded, string _contactNumber)
         {
             if (StartDate < new DateTime(1753, 1, 1) || StartDate > new DateTime(9999, 12, 31) ||
                 EndDate < new DateTime(1753, 1, 1) || EndDate > new DateTime(9999, 12, 31))
@@ -397,6 +407,7 @@ namespace PropertyManagementSystem.Controllers
             reservationDetail.RoomId = _roomId;
             reservationDetail.StartDate = StartDate;
             reservationDetail.EndDate = EndDate;
+            reservationDetail.ContactNumber = _contactNumber;
             reservationDetail.Purpose = Purpose;
 
             if (EquipmentNeeded != null && EquipmentNeeded.Any())
@@ -463,6 +474,43 @@ namespace PropertyManagementSystem.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        //
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateReservationStatus(int ReservationId, string action)
+        {
+
+            if (ReservationId <= 0 || string.IsNullOrEmpty(action))
+            {
+                return BadRequest("Invalid parameters."); 
+            }
+
+            var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
+
+            if (reservation == null)
+            {
+                return NotFound(); 
+            }
+
+            if (action == "Approve")
+            {
+                reservation.Status = "APPROVED";
+            }
+            else if (action == "Reject")
+            {
+                reservation.Status = "DISAPPROVED";
+            }
+            else
+            {
+                return BadRequest("Invalid action."); 
+            }
+
+            _context.SaveChanges(); 
+
+            return RedirectToAction("Index", "FunctionRoom"); 
+        }
+
 
     }
 }
