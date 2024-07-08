@@ -109,15 +109,11 @@ function onViewClickReservationList(e) {
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
     if (dataItem) {
         console.log(dataItem.ReservationDetailId)
-        if (dataItem.ReservationType == "FN" && dataItem.ReservationDetailId == 0) {
-            var guid = dataItem.GUID;
-            var url = '/FunctionRoom/ReservationDetails/' + guid;
-            window.location.href = url;
-        } else {
+        if (dataItem.ReservationType == "FN") {
             var guid = dataItem.GUID;
             var url = '/FunctionRoom/ViewReservationDetails/' + guid;
             window.location.href = url;
-        }
+        } 
         if (dataItem.ReservationType == "GH") {
             var guid = dataItem.GUID;
             var url = '/Accommodation/ViewReservationDetails/' + guid;
@@ -408,3 +404,13 @@ function addNew(EquipmentId, value) {
         widget.trigger("change");
     }
 }
+
+//alert
+document.getElementById('showAlertButton').addEventListener('click', function () {
+    var alertBox = document.getElementById('customAlert');
+    alertBox.style.display = 'block';
+
+    setTimeout(function () {
+        alertBox.style.display = 'none';
+    }, 3000); 
+});

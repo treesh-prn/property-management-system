@@ -27962,7 +27962,6 @@ img {
 .k-grid-content .k-button.k-grid-View {
     background-color: #206BC4;
     border: 1px solid #206BC4;
-    border-radius: 4px;
     padding: 8px 16px;
     margin: 4px 7px 2px 15px;
     font-size: 14px;
@@ -28002,6 +28001,14 @@ span.k-button-text{
     word-wrap: break-word;
 }
 
+.k-grid-norecords {
+    text-align: center;
+    font-size: 15px;
+    color: #999;
+    padding: 20px;
+}
+
+
 .custom-padding{
     padding: 10px;
 }
@@ -28031,8 +28038,7 @@ span.k-button-text{
     margin-bottom: 20px; /* Adjust the value as needed */
 }
 
-.k-grid-header .k-header {
-    text-align: center;
+#customAlert {
+    display: none;
 }
-
 

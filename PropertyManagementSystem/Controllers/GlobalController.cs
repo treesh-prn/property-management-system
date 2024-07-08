@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
@@ -56,6 +57,23 @@ namespace PropertyManagementSystem.Controllers
             }
             return Json(_eqList);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CancelReservation(int ReservationId, string Remarks)
+        {
+            var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                reservation.Status = "CANCELLED";
+                reservation.Remarks = Remarks;
+                _context.SaveChanges();
+            }
 
+            return RedirectToAction("ReservationList","FunctionRoom");
+        }
     }
 }

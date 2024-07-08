@@ -80,37 +80,44 @@
                                 </p>
                             </div>
                         </div>
-                        @foreach (var detail in Model.ReservationDetails)
-                        {
-                            <div class="card-body">
-                                <div class="modal-content">
-
+                        <div class="card-body">
+                            <div class="modal-content">
+                                @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status == "DRAFT")
+                                {
+                                    <partial name="Shared/_draft"/>
+                                }
+                                @foreach (var detail in Model.ReservationDetails)
+                                {
                                     @if (User.IsInRole("GFMS.Requestor"))
                                     {
-                                        @if (Model.ReservationHeader.Requestor != employee.Fullname && Model.Status == "PENDING")
+                                        <partial name="Shared/_view" />
+                                    }
+                                    else if (User.IsInRole("GFMS.Department Head"))
+                                    {
+                                        @if (Model.ReservationHeader.Requestor == employee.Fullname)
                                         {
-                                            <partial name="DepartmentHead/_pending" />
+                                            <partial name="Shared/_view" />
                                         }
-                                        else
+                                        else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
                                         {
-                                            <partial name="DepartmentHead/_approval" />
+                                            <partial name="Shared/DepartmentHead/_pending" />
                                         }
                                     }
-                                    else if(User.IsInRole("GFMS.Department Head"))
+                                    else if(User.IsInRole("GFMS.Admin Approver"))
                                     {
-                                        @if (Model.ReservationHeader.Requestor != employee.Fullname && Model.Status == "PENDING")
+                                        @if (Model.ReservationHeader.Requestor == employee.Fullname)
                                         {
-                                            <partial name="DepartmentHead/_pending" />
+                                            <partial name="Shared/_view" />
                                         }
                                         else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
                                         {
-                                            <partial name="DepartmentHead/_approval" />
-                                        } 
+                                            <partial name="Shared/AdminApprover/_pending" />
+                                        }
                                     }
-                                   
-                                </div>
+
+                                }
                             </div>
-                        }
+                        </div>
                     </div>
                 </div>
             </div>
