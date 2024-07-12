@@ -41,7 +41,7 @@ function onDataBound(e) {
             element.css("background-color", "blue");
         } else if (event.Status === "APPROVED") {
             element.css("background-color", "green");
-        } else if (event.Status === "CANCELLED") {
+        } else if (event.Status === "CANCELLED" || event.Status === "DISAPPROVED") {
             element.css("background-color", "red");
         }
     });

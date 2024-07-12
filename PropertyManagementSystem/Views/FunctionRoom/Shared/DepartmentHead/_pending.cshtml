@@ -3,7 +3,6 @@
 {
     <form asp-action="UpdateReservationStatus" method="post">
         @Html.AntiForgeryToken()
-        PENDING
         <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
         <input type="hidden" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">
@@ -42,6 +41,50 @@
                         )
                 </div>
             </div>
+            @if (User.IsInRole("GFMS.Admin Manager"))
+            {
+                <div class="row mb-3">
+                    <div class="col-lg-6">
+                        <label class="form-label required">Facility</label>
+                        @(
+                            Html.Kendo().DropDownList()
+                            .Name("_facilityId")
+                            .DataTextField("FacilityName")
+                            .DataValueField("FacilityId")
+                            .Value(detail.FacilityId.ToString())
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("GetFacility", "FunctionRoom");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%", @readonly = "readonly" })
+                            .OptionLabel("Select Facility")
+                            )
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label required">Room</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_roomId")
+                            .DataTextField("RoomName")
+                            .DataValueField("RoomId")
+                            .Value(detail.RoomId.ToString())
+
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
+                                }).ServerFiltering(true);
+                            })
+                            .HtmlAttributes(new { style = "width: 100%", @readonly = "readonly" })
+                            .OptionLabel("Select Room")
+                            )
+                    </div>
+                </div>
+
+            }
             <div class="row mb-3">
                 <div class="col-lg-12">
                     <label class="form-label">Equipment Needed</label>

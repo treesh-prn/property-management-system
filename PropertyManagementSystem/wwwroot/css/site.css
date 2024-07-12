@@ -494,7 +494,7 @@ select {
 }
 
     select:disabled {
-        opacity: 1
+        opacity: .5
     }
 
 [list]:not([type=date]):not([type=datetime-local]):not([type=month]):not([type=week]):not([type=time])::-webkit-calendar-picker-indicator {
@@ -2702,6 +2702,8 @@ progress {
     --tblr-table-hover-color: inherit;
     --tblr-table-hover-bg: rgba(0, 0, 0, 0.075);
     width: 100%;
+    text-align: left;
+    font-size: 0.85rem;
     margin-bottom: 1rem;
     color: var(--tblr-table-color);
     vertical-align: top;
@@ -2962,7 +2964,7 @@ progress {
     padding: .4375rem .75rem;
     font-family: var(--tblr-font-sans-serif);
     font-size: .875rem;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 1.4285714286;
     color: inherit;
     background-color: var(--tblr-bg-forms);
@@ -3030,7 +3032,7 @@ progress {
 }
 
 .form-control:disabled {
-    background-color: var(--tblr-bg-surface-secondary);
+    background-color: var(--tblr-muted-lt);
     opacity: 1
 }
 
@@ -3672,7 +3674,7 @@ textarea.form-control-lg {
     align-items: center;
     padding: .4375rem .75rem;
     font-size: .875rem;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 1.4285714286;
     color: var(--tblr-muted);
     text-align: center;
@@ -28041,4 +28043,3 @@ span.k-button-text{
 #customAlert {
     display: none;
 }
-

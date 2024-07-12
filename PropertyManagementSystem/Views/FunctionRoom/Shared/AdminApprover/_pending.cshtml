@@ -90,7 +90,7 @@
                 Go Back
             </a>
             <div class="ms-auto">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-danger-@detail.ReservationDetailId">
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-danger-@detail.ReservationDetailId">
                     <i class="ti ti-ban m-1"></i> Disapprove
                 </button>
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-assign-@detail.ReservationDetailId">
@@ -101,7 +101,7 @@
     </form>
 @*ASSIGN FACILITY MODAL*@
     <div class="modal modal-blur fade" id="modal-assign-@detail.ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Facility Assignment</h5>
@@ -158,7 +158,7 @@
 @*END OF MODAL*@
 @*CANCEL MODAL*@
     <div class="modal modal-blur fade" id="modal-danger-@detail.ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
             <div class="modal-content">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 <div class="modal-status bg-danger"></div>
@@ -171,7 +171,7 @@
                     @Html.AntiForgeryToken()
                     <div class="m-1">
                         <div>
-                            <label class="form-label">Reason <span class="form-label-description"></span></label>
+                            <label class="form-label">Remarks <span class="form-label-description"></span></label>
                             <textarea class="form-control" rows="2" name="Remarks" required></textarea>
                         </div>
                     </div>
@@ -185,7 +185,7 @@
                                     </a>
                                 </div>
                                 <div class="col">
-                                    <button type="submit" name="action" value="Reject" class="btn btn-red m-1">
+                                    <button type="submit" name="action" value="Reject" class="btn btn-danger w-100">
                                         <i class="ti ti-ban m-1"></i> Disapprove
                                     </button>
                                 </div>

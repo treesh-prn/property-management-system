@@ -125,30 +125,37 @@
                                         </span>
                                     </a>
                                 </li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle" href="#navbar-third" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
-                                        <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <i class="ti ti-settings icon"></i>
-                                        </span>
-                                        <span class="nav-link-title">
-                                            <strong>Setup </strong>
-                                        </span>
-                                    </a>
-                                    <div class="dropdown-menu" id="maintenance">
-                                        <a class="dropdown-item" href="@Url.Action("GuestRoom", "Room")">
-                                            <strong>Guest Room</strong>
+                                @if (User.IsInRole("GFMS.System Admin") || User.IsInRole("GFMS.Admin Approver") || User.IsInRole("GFMS.Admin Manager"))
+                                {
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#navbar-third" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                                <i class="ti ti-settings icon"></i>
+                                            </span>
+                                            <span class="nav-link-title">
+                                                <strong>Setup </strong>
+                                            </span>
                                         </a>
-                                        <a class="dropdown-item" href="@Url.Action("FunctionRoom", "Room")">
-                                            <strong>Function Room</strong>
-                                        </a>
-                                        <a class="dropdown-item" href="@Url.Action("DormRoom", "Room")">
-                                            <strong>Dorm Room</strong>
-                                        </a>
-                                        <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
-                                            <strong>Facilities</strong>
-                                        </a>
-                                    </div>
-                                </li>
+                                        <div class="dropdown-menu" id="maintenance">
+                                            <a class="dropdown-item" href="@Url.Action("GuestRoom", "Room")">
+                                                <strong>Guest Room</strong>
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("FunctionRoom", "Room")">
+                                                <strong>Function Room</strong>
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("DormRoom", "Room")">
+                                                <strong>Dorm Room</strong>
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
+                                                <strong>Facilities</strong>
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
+                                                <strong>Equipments</strong>
+                                            </a>
+                                        </div>
+                                    </li>
+                                }
+                               
                             </ul>
                         </div>
                         <div class="col-2 d-none d-xxl-block">

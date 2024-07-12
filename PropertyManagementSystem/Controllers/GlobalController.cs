@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.IO;
+using System.Security.Claims;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -38,6 +39,7 @@ namespace PropertyManagementSystem.Controllers
 
         public JsonResult getDepartments()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var _deptList = _context.Departments.AsQueryable().ToList();
 
             return Json(_deptList , new JsonSerializerSettings());

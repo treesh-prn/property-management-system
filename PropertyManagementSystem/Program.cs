@@ -31,6 +31,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 
 
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddControllersWithViews();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
