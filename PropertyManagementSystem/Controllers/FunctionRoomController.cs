@@ -362,30 +362,48 @@ namespace PropertyManagementSystem.Controllers
 
                 _context.ReservationDetails.Add(reservationDetails);
 
+                var roomName = _context.Rooms.Where(r => r.RoomId == _roomId).Select(r => r.RoomName).FirstOrDefault();
+                var facilityName = _context.Facilities.Where(f => f.FacilityId == _facilityId).Select(f => f.FacilityName).FirstOrDefault();
                 var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
                 if (reservationHeader != null)
                 {
                     if (User.IsInRole("GFMS.Admin Approver"))
                     {
                         reservationHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
+                        if (reservationHeader != null)
+                        {
+                            await _emailService.SendReservationApprovalEmail(
+                                reservationHeader,
+                                reservationHeader.RequestorEmail,
+                                _startDate.ToString(),
+                                _endDate.ToString(),
+                                _numOfGuests,
+                                facilityName,
+                                roomName,
+                                _purpose
+                            );
+                        }
                     }
                     else
                     {
                         reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
+                        if (reservationHeader != null)
+                        {
+                            await _emailService.SendReservationApprovalEmail(
+                                reservationHeader,
+                                reservationHeader.RequestorEmail,
+                                _startDate.ToString(),
+                                _endDate.ToString(),
+                                _numOfGuests,
+                                facilityName,
+                                roomName,
+                                _purpose
+                            );
+                        }
                     }
                 }
                 _context.SaveChanges();
-                if (reservationHeader != null)
-                {
-                    await _emailService.SendReservationApprovalEmail(
-                        reservationHeader,
-                        reservationHeader.RequestorEmail, 
-                        _startDate.ToString(),
-                        _endDate.ToString(),  
-                        _numOfGuests,
-                        _purpose
-                    );
-                }
+               
 
             }
             catch (DbUpdateException ex)
@@ -531,15 +549,36 @@ namespace PropertyManagementSystem.Controllers
                        roomName,
                        reservationDetails.Purpose
                    );
+
+                await _emailService.SendReservationApprovalEmail(
+                      reservation,
+                      reservation.RequestorEmail,
+                      reservationDetails.StartDate.ToString(),
+                      reservationDetails.EndDate.ToString(),
+                      reservationDetails.NumberOfGuest,
+                      facilityName,
+                      roomName,
+                      reservationDetails.Purpose
+                  );
             }
             else if (action == "Approve" && reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
             {
                 reservation.Status = "APPROVED";
+                reservation.ApprovedBy = empName.Fullname;
+                await _emailService.SendApprovalNotification(
+                     reservation,
+                     reservation.RequestorEmail
+                 );
             }
             else if (action == "Reject")
             {
                 reservation.Status = "DISAPPROVED";
                 reservation.Remarks = Remarks;
+                reservation.ApprovedBy = empName.Fullname;
+                await _emailService.SendDisapprovalNotification(
+                      reservation,
+                      reservation.RequestorEmail
+                  );
             }
             else
             {
