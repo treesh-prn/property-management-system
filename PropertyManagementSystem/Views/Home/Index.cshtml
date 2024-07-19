@@ -19,7 +19,7 @@
                 <div class="col">
                     <!-- Page pre-title -->
                     <div class="page-pretitle">
-                     HOME
+                        HOME
                     </div>
                     <h2 class="page-title">
                         DASHBOARD
@@ -28,7 +28,6 @@
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
-               
                     </div>
                 </div>
             </div>
@@ -51,7 +50,7 @@
                                         </div>
                                         <div class="col">
                                             <div class="font-weight-medium">
-                                               : Total Venue
+                                                : Total Venue
                                             </div>
                                             <div class="text-secondary">
                                                 12 waiting reservation
@@ -124,76 +123,44 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-12">
-                            @(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
-                                .Name("scheduler")
-                                .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0))
-                                .MajorTick(60)
-                                .MinorTickCount(1)
-                                .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
-                                .Views(views =>
-                                {
-                                    views.TimelineMonthView(timeline =>
-                                    {
-                                        timeline.StartTime(new DateTime(2022, 6, 13, 00, 00, 00));
-                                        timeline.EndTime(new DateTime(2022, 6, 13, 00, 00, 00));
-                                        timeline.MajorTick(1440);
-                                        timeline.EventHeight(50);
-                                    });
-                                })
-                                .Timezone("Etc/UTC")
-                                .Group(g => g.Resources("Rooms", "Facilities").Orientation(SchedulerGroupOrientation.Vertical))
-                                .Resources(resource =>
-                                {
-                                    resource.Add(m => m.FacilityId)
-                                    .Title("Facility")
-                                    .Name("Facilities")
-                                    .DataTextField("FacilityName")
-                                    .DataValueField("FacilityId")
-                                    .BindTo(facilities.Select(f => new
-                                    {
-                                        FacilityId = f.FacilityId,
-                                        FacilityName = f.FacilityName
-                                    }));
-
-                                    resource.Add(m => m.RoomId)
-                                    .Title("Room")
-                                    .Name("Rooms")
-                                    .DataTextField("RoomName")
-                                    .DataValueField("RoomId")
-                                    .DataParentValueField("FacilityId")
-                                    .BindTo(rooms.Select(r => new
-                                    {
-                                        RoomId = r.RoomId,
-                                        RoomName = r.RoomName,
-                                        FacilityId = r.FacilityId
-                                    }));
-                                })
-                                .DataSource(d => d
-                                .Model(m =>
-                                {
-                                    m.Id(f => f.ReservationId);
-                                    m.Field(f => f.Title).DefaultValue("No title");
-                                    m.Field(f => f.GUID);
-                                    m.RecurrenceId(f => f.RecurrenceID);
-                                    m.Field(f => f.Start);
-                                    m.Field(f => f.End);
-                                    m.Field(f => f.RoomId);
-                                    m.Field(f => f.FacilityId);
-                                })
-                                .Read("ViewReservation", "FunctionRoom")
-                                .Update("ViewReservationDetails", "FunctionRoom")
-                                .Destroy(destroy => destroy.Action("DeleteReservationDetail", "FunctionRoom"))
-                                )
-                                .Events(events => events
-                                .DataBound("onDataBound")
-                                .Edit("onEditView"))
-                                )
+                        <div class="card">
+                            <div class="card-header">
+                                <ul class="nav nav-tabs card-header-tabs">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" data-bs-toggle="tab" href="#fnRoom">
+                                            <b>FUNCTION ROOM</b>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#ghRoom">
+                                            <b>GUEST ROOM</b>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#drmRoom">
+                                            <b>DORM ROOM</b>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <h3 class="card-title"></h3>
+                                <div class="card-actions">
+                                </div>
+                            </div>
+                            <div class="card-body p-0 tab-content">
+                                <div id="fnRoom" class="tab-pane active">
+                                    <partial name="Shared/_fnRoom" />
+                                </div>
+                                <div id="ghRoom" class="tab-pane fade">
+                                    <partial name="Shared/_ghRoom" />
+                                </div>
+                                <div id="drmRoom" class="tab-pane fade">
+                                    @*insert calendar here*@
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-  
 </div>

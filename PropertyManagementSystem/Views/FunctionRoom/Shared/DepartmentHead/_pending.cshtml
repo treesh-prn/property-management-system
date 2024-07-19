@@ -3,6 +3,7 @@
 {
     <form asp-action="UpdateReservationStatus" method="post">
         @Html.AntiForgeryToken()
+        pending
         <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
         <input type="hidden" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">

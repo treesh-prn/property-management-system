@@ -4,7 +4,7 @@
     <form asp-action="UpdateReservationStatus" method="post">
         @Html.AntiForgeryToken()
         <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
-        <input type="hidden" name="ReservationId" value="@detail.ReservationId">
+        <input type="hidden" id="ReservationId" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">
             <div id="dynamic-rows">
                 <div class="row mb-3">
@@ -49,13 +49,12 @@
                         .Name("_facilityId")
                         .DataTextField("FacilityName")
                         .DataValueField("FacilityId")
-                        .Enable(false)
                         .Value(detail.FacilityId.ToString())
                         .DataSource(source =>
                         {
                             source.Read(read =>
                             {
-                                read.Action("GetFacility", "FunctionRoom");
+                                read.Action("GetFacility", "Global").Data("filterFacilities");
                             });
                         })
                         .HtmlAttributes(new { style = "width: 100%" })
@@ -68,13 +67,12 @@
                         .Name("_roomId")
                         .DataTextField("RoomName")
                         .DataValueField("RoomId")
-                        .Enable(false)
                         .Value(detail.RoomId.ToString())
                         .DataSource(source =>
                         {
                             source.Read(read =>
                             {
-                                read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
+                                read.Action("GetRoom", "Global").Data("filterRooms");
                             }).ServerFiltering(true);
                         })
                         .HtmlAttributes(new { style = "width: 100%" })
@@ -120,9 +118,6 @@
                     <label class="form-label">Purpose <span class="form-label-description">26/50</span></label>
                     <textarea class="form-control" rows="3" name="Purpose" disabled>@detail.Purpose</textarea>
                 </div>
-            </div>
-            <div class>
-
             </div>
         </div>
         <div class="modal-footer">
@@ -182,15 +177,3 @@
     </div>
 @*CANCEL DELETE MODAL*@
 }
-@*Alert*@
-<div id="customAlert" class="alert alert-success" role="alert">
-    <div class="d-flex">
-        <div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 12l5 5l10 -10" /></svg>
-        </div>
-        <div>
-            <h4 class="alert-title">Success!</h4>
-            <div class="text-secondary">Facility has been assigned to reservation!</div>
-        </div>
-    </div>
-</div>

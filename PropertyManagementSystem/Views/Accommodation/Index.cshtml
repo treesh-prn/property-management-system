@@ -1,6 +1,5 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
 @inject PropertyManagementSystem.Services.IRoleService RoleService
-
 @{
     ViewData["Title"] = "Home Page";
     var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms>;
@@ -32,12 +31,9 @@
                                 Reservation List
                             </a>
                         </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservation">
                             <i class="ti ti-plus"></i>
                             Create New Reservation
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create New Reservation">
-                            <i class="ti ti-plus"></i>
                         </a>
                     </div>
                 </div>
@@ -156,7 +152,6 @@
                                     });
                                     views.TimelineMonthView(timeline =>
                                     {
-
                                         timeline.MajorTick(1440);
                                         timeline.EventHeight(50);
                                     });
@@ -175,7 +170,6 @@
                                         FacilityId = f.FacilityId,
                                         FacilityName = f.FacilityName
                                     }));
-
                                     resource.Add(m => m.RoomId)
                                     .Title("Room")
                                     .Name("Rooms")
@@ -188,8 +182,6 @@
                                         RoomName = r.RoomName,
                                         FacilityId = r.FacilityId
                                     }));
-
-
                                 })
                                 .DataSource(d => d
                                 .Model(m =>
@@ -218,46 +210,4 @@
         </div>
     </div>
 </div>
-@*NEW ROOM MODAL *@
-<div class="modal modal-blur fade" id="modal-newReservatoion" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">New Reservation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="fcFRM1" asp-controller="Accommodation" asp-action="CreateReservation" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label required">Charge to Company:</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_company")
-                            .DataTextField("Company")
-                            .DataValueField("Id")
-                            .DataSource(source =>
-                            {
-                                source.Read(read =>
-                                {
-                                    read.Action("getCompanies", "Global");
-                                });
-                            })
-                            .HtmlAttributes(new { style = "width: 100%" })
-                            )
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Requestor Name</label>
-                        <input class="form-control" name="_requestor" type="text" value="@employee.Fullname" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Requestor Email</label>
-                        <input class="form-control" name="_requestorEmail" type="email" required="required" value="@employee.Email" readonly>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@*END - NEW Room MODAL *@
+<partial name="Shared/_newReservation" />

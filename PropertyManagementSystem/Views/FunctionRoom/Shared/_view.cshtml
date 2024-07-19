@@ -1,7 +1,12 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
+    var employee = await RoleService.GetUserName(User);
+}
 @foreach (var detail in Model.ReservationDetails)
 {
     <form asp-action="CancelReservation" method="post">
+       
         <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
         <input type="hidden" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">
@@ -52,7 +57,7 @@
                         )
                 </div>
             </div>
-            @if (User.IsInRole("GFMS.Admin Approver") || Model.ReservationHeader.Status == "APPROVED")
+            @if (User.IsInRole("GFMS.Admin Approver") || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED")
             {
                 <div class="row mb-3">
                     <div class="col-lg-6">
@@ -135,7 +140,7 @@
         </div>
         <div class="modal-footer">
             <div class="ms-auto">
-                @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
+                @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
                 {
                     <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
                         <span>
@@ -159,7 +164,7 @@
     </form>
 @*CANCEL MODAL*@
     <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
             <div class="modal-content">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 <div class="modal-status bg-danger"></div>
@@ -186,7 +191,7 @@
                                         </a>
                                     </div>
                                     <div class="col">
-                                        <button type="button" class="btn btn-danger w-100" id="confirm-delete">
+                                        <button type="submit" class="btn btn-danger w-100" id="confirm-delete">
                                             Cancel
                                         </button>
                                     </div>

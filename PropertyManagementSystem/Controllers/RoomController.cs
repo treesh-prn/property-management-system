@@ -220,30 +220,37 @@ namespace PropertyManagementSystem.Controllers
         }
 
         /*Update*/
-        [HttpGet]
-        public IActionResult EditGHRoom(int RoomId)
-        {
-            GFMS_Rooms room = _context.Rooms.Find(RoomId);
-            if (room == null)
-            {
-                return NotFound();
-            }
-
-            return View(room);
-        }
 
         [HttpPost]
-        public IActionResult EditGHRoom(GFMS_Rooms room)
+        public IActionResult EditGHRoom(GFMS_Rooms room, int _roomId, string _roomName, int _facility, string _roomStatus, int _capacity, bool _isActive)
         {
-            if (ModelState.IsValid)
+            var ghRoom = _context.Rooms.FirstOrDefault(gh => gh.RoomId == _roomId);
+            if (ghRoom == null)
             {
-                _context.Rooms.Update(room);
-                _context.SaveChanges();
-
-                string redirectUrl = Url.Action("ViewGuestRoom", "Room", new { RoomId = room.RoomId });
-                return Redirect(redirectUrl);
+                return NotFound("Reservation detail not found.");
             }
-            return View(room);
+            ghRoom.RoomName = _roomName;
+            ghRoom.FacilityId = _facility;
+            ghRoom.RoomStatus = _roomStatus;
+            ghRoom.Capacity = _capacity;
+            ghRoom.isActive = _isActive;
+
+            try
+            {
+                _context.Rooms.Update(ghRoom);
+                _context.SaveChanges();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine($"An error occurred while updating changes: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                throw;
+            }
+            string redirectUrl = Url.Action("ViewGuestRoom", "Room", new { RoomId = _roomId });
+            return Redirect(redirectUrl);
         }
 
         /*Delete*/

@@ -45,6 +45,70 @@ namespace PropertyManagementSystem.Controllers
             return Json(_deptList , new JsonSerializerSettings());
         }
 
+        public IActionResult GetFacility(int ReservationId)
+        {
+            var reservation = _context.ReservationDetails
+                .FirstOrDefault(r => r.ReservationId == ReservationId);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            var startDate = reservation.StartDate;
+            var endDate = reservation.EndDate;
+
+            var facilities = _context.Facilities
+                .Where(f => f.FacilityClassification == "FUNCTION ROOM")
+                .Select(f => new
+                {
+                    Facility = f,
+                    AvailableRooms = f.Rooms.Where(room =>
+                        !_context.ReservationDetails.Any(rd =>
+                            rd.RoomId == room.RoomId &&
+                            ((rd.StartDate <= startDate && rd.EndDate > startDate) ||
+                             (rd.StartDate <= endDate && rd.EndDate >= endDate) ||
+                             (rd.StartDate >= startDate && rd.EndDate <= endDate))))
+                })
+                .Where(f => f.AvailableRooms.Any())
+                .Select(f => new
+                {
+                    FacilityId = f.Facility.FacilityId,
+                    FacilityName = f.Facility.FacilityName,
+                    FacilityClass = f.Facility.FacilityClassification
+                })
+                .OrderBy(f => f.FacilityName)
+                .ToList();
+
+            return Json(facilities);
+        }
+
+
+        public IActionResult GetRoom(int? facilityId, int ReservationId)
+        {
+            var reservation = _context.ReservationDetails
+                .FirstOrDefault(r => r.ReservationId == ReservationId);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            var startDate = reservation.StartDate;
+            var endDate = reservation.EndDate;
+
+            var rooms = _context.Rooms
+                .Where(room => room.FacilityId == facilityId &&
+                               !_context.ReservationDetails.Any(rd =>
+                                   rd.RoomId == room.RoomId &&
+                                   ((rd.StartDate <= startDate && rd.EndDate > startDate) ||
+                                    (rd.StartDate <= endDate && rd.EndDate >= endDate) ||
+                                    (rd.StartDate >= startDate && rd.EndDate <= endDate))))
+                .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
+                .ToList();
+
+            return Json(rooms);
+        }
         public ActionResult GetEquipments()
         {
             List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();

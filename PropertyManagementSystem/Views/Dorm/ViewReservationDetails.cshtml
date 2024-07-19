@@ -300,7 +300,7 @@
                                                                 </div>
                                                                 <div class="col-lg-6">
                                                                     <label class="form-label">Fare</label>
-                                                                    <input type="text" id="fare" class="form-control" name="_fare" placeholder="Fare" asp-for="@Model.ReservationDetails.FirstOrDefault().Fare">
+                                                                    <input type="text" id="fare" class="form-control" name="_fare" placeholder="Fare" asp-for="@Model.ReservationDetails.FirstOrDefault().Fare" value="@Model.ReservationDetails.FirstOrDefault().Fare">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -446,7 +446,7 @@
                                             </div>
 
                                             <div class="modal-footer">
-                                                <a href="@Url.Action("Index", "Dorm")" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                                                <a href="@Url.Action("Index", "Dorm")" class="btn btn-link link-secondary">
                                                     Cancel
                                                 </a>
                                                 <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">

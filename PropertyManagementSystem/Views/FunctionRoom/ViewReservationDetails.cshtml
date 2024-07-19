@@ -84,7 +84,6 @@
                                     </tr>
                                 </tbody>
                             </table>
-
                     </div>
                 </div>
                 <div class="col-lg-9">
@@ -94,8 +93,6 @@
                                 <h3 class="card-title">
                                     Facilities Reservation Details
                                 </h3>
-                                <p class="card-subtitle">
-                                </p>
                             </div>
                         </div>
                         <div class="card-body">
@@ -108,7 +105,14 @@
                                 {
                                     @if (User.IsInRole("GFMS.Requestor"))
                                     {
-                                        <partial name="Shared/_view" />
+                                        @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
+                                        {
+                                            <partial name="Shared/_update" />
+                                        }
+                                        else
+                                        {
+                                            <partial name="Shared/_view" />
+                                        }
                                     }
                                     else if (User.IsInRole("GFMS.Department Head"))
                                     {
@@ -120,6 +124,10 @@
                                         {
                                             <partial name="Shared/DepartmentHead/_pending" />
                                         }
+                                        else if (Model.ReservationHeader.Approver == employee.Fullname)
+                                        {
+                                            <partial name="Shared/_view" />
+                                        }
                                     }
                                     else if(User.IsInRole("GFMS.Admin Approver"))
                                     {
@@ -127,13 +135,13 @@
                                         {
                                             <partial name="Shared/_view" />
                                         }
-                                        else if (User.IsInRole("GFMS.Admin Approver") && Model.ReservationHeader.Status == "DRAFT")
-                                        {
-                                            <partial name="Shared/AdminApprover/_pending" />
-                                        }
                                         else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
                                         {
-                                            <partial name="Shared/AdminApprover/_pending" />
+                                            <partial name="Shared/AdminApprover/_pending"/>
+                                        }
+                                        else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                                        {
+                                            <partial name="Shared/_view" />
                                         }
                                     }
                                     else if(User.IsInRole("GFMS.Admin Manager"))
@@ -146,6 +154,14 @@
                                         {
                                             <partial name="Shared/AdminManager/_pending" />
                                         }
+                                        else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                                        {
+                                            <partial name="Shared/_view" />
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <partial name="Shared/_view" />
                                     }
                                 }
                             </div>
@@ -156,14 +172,3 @@
         </div>
     </div>
 </div>
-<script id="noDataTemplate" type="text/x-kendo-tmpl">
-    <div class="kd-nodata-wrapper">
-        # var value = instance.input.val(); #
-        # var id = instance.element[0].id; #
-        <div>
-            No data found. Do you want to add new item - '#: value #' ?
-        </div>
-    </div>
-    <br />
-    <button class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" onclick="addNew('#: id #', '#: value #')" ontouchend="addNew('#: id #', '#: value #')">Add new item</button>
-</script>

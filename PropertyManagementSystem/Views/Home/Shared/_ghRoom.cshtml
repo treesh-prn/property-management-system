@@ -1,0 +1,40 @@
+﻿@(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
+        .Name("GHscheduler")
+        .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1, 7, 0, 0))
+        .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
+        .Views(views =>
+        {
+            views.DayView();
+            views.WeekView();
+            views.WorkWeekView();
+            views.MonthView(week =>
+            {
+                week.Selected(true);
+            });
+            views.AgendaView();
+        })
+        .Timezone("Etc/UTC")
+        .Group(g => g.Resources("Rooms", "Facilities").Orientation(SchedulerGroupOrientation.Vertical))
+        .DataSource(d => d
+        .Model(m =>
+        {
+            m.Id(f => f.ReservationId);
+            m.Field(f => f.Title).DefaultValue("No title");
+            m.Field(f => f.Purpose);
+            m.Field(f => f.GUID);
+            m.RecurrenceId(f => f.RecurrenceID);
+            m.Field(f => f.Start);
+            m.Field(f => f.End);
+            m.Field(f => f.StartDate);
+            m.Field(f => f.RoomId);
+            m.Field(f => f.FacilityId);
+            m.Field(f => f.RoomName);
+        })
+        .Read("ViewReservation", "Accommodation")
+        .Update("ViewReservationDetails", "Accommodation")
+        .Destroy(destroy => destroy.Action("DeleteReservationDetail", "Accommodation"))
+        )
+        .Events(events => events
+        .DataBound("onDataBound")
+        .Edit("onEditView"))
+)

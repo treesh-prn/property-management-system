@@ -57,7 +57,25 @@
                 <div class="col-lg-3">
                     <div class="card text-center">
                         <div class="card-header card-header-light">
-                            <h3 class="card-title">Application #@Model.ReservationHeader.ReservationId</h3>
+                            <h3 class="card-title">@Model.ReservationHeader.ReservationCode</h3>
+                            <div class="ms-auto">
+                                @if (Model.ReservationHeader.Status == "APPROVED")
+                                {
+                                    <span class='status status-teal'><span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status</span>
+                                }
+                                else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                                {
+                                    <span class='status status-teal'><span class='status-dot status-dot-animated'></span>FOR APPROVAL</span>
+                                }
+                                else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
+                                {
+                                    <span class='status status-red'><span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status</span>
+                                }
+                                else
+                                {
+                                    <span class='status status-blue'><span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status</span>
+                                }
+                            </div>
                         </div>
                         <img class="img-responsive2 mx-auto" src="@Url.Content("~/img/calendar.jpg")" alt="Reservation Image">
                         <div class="card-body">
