@@ -1,8 +1,42 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
-
+    var alertMessage = TempData["AlertMessage"] as string;
+    var alertSubMessage = TempData["AlertSubMessage"] as string;
+    var alertType = TempData["AlertType"] as string;
 }
 <div class="page-wrapper">
+    @if (!string.IsNullOrEmpty(alertMessage))
+    {
+        <div class="col-lg-6 ms-auto alert alert-@alertType alert-dismissible fade show custom-alert" role="alert">
+            <div class="d-flex">
+                <div>
+                    @if (alertType == "success")
+                    {
+                        <!-- Download SVG icon from http://tabler-icons.io/i/check -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 12l5 5l10 -10" />
+                        </svg>
+                    }
+                    else if (alertType == "error")
+                    {
+                        <!-- Error icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <circle cx="12" cy="12" r="9" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    }
+                </div>
+                <div>
+                    <h4 class="alert-title">@alertMessage</h4>
+                    <div class="text-secondary">@alertSubMessage</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">

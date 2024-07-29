@@ -91,19 +91,15 @@
                         </div>
                         <div class="card-body">
                             <div class="modal-content">
-                                @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status == "DRAFT")
+                                @if (User.IsInRole("GFMS.Requestor"))
                                 {
-                                    <partial name="Shared/_draft" />
-                                }
-                                else if (User.IsInRole("GFMS.Requestor"))
-                                {
-                                    @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
+                                    @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
                                     {
                                         <partial name="Shared/_update" />
                                     }
                                     else
                                     {
-                                        <partial name="Shared/_view" />
+                                        <partial name="Shared/_draft" />
                                     }
                                 }
                                 else if (User.IsInRole("GFMS.Department Head"))
@@ -116,6 +112,10 @@
                                     {
                                         <partial name="Shared/DepartmentHead/_pending" />
                                     }
+                                    else if (Model.ReservationHeader.Approver == employee.Fullname)
+                                    {
+                                        <partial name="Shared/_view" />
+                                    }
                                 }
                                 else if (User.IsInRole("GFMS.Admin Approver"))
                                 {
@@ -123,13 +123,13 @@
                                     {
                                         <partial name="Shared/_view" />
                                     }
-                                    else if (User.IsInRole("GFMS.Admin Approver") && Model.ReservationHeader.Status == "DRAFT")
-                                    {
-                                        <partial name="Shared/AdminApprover/_pending" />
-                                    }
                                     else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
                                     {
                                         <partial name="Shared/AdminApprover/_pending" />
+                                    }
+                                    else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                                    {
+                                        <partial name="Shared/_view" />
                                     }
                                 }
                                 else if (User.IsInRole("GFMS.Admin Manager"))
@@ -142,6 +142,14 @@
                                     {
                                         <partial name="Shared/AdminManager/_pending" />
                                     }
+                                    else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                                    {
+                                        <partial name="Shared/_view" />
+                                    }
+                                }
+                                else
+                                {
+                                    <partial name="Shared/_view" />
                                 }
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
 @foreach (var detail in Model.ReservationDetails)
 {
+    
     <form asp-action="EditReservationDetails" method="post">
         <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
         <input type="hidden" name="ReservationId" value="@detail.ReservationId">
@@ -187,6 +188,7 @@
                             </div>
                         </div>
                     </div>
+                    <input type="hidden" name="reservationType" value="@Model.ReservationHeader.ReservationType" />
                     <input type="hidden" name="ReservationId" value="@detail.ReservationId" />
                 </form>
             </div>

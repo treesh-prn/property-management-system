@@ -36,7 +36,7 @@
         <div class="row mb-3">
             <label class="form-label">Duration of Stay</label>
             <div class="col-lg-6">
-                <label class="form-label required">Check in</label>
+                <label class="form-label required">Arrival Date and Time</label>
                 @(
                     Html.Kendo().DateTimePicker()
                     .Name("StartDate")
@@ -48,7 +48,7 @@
                     )
             </div>
             <div class="col-lg-6">
-                <label class="form-label required">Check out</label>
+                <label class="form-label required">Departure Date and Time</label>
                 @(
                     Html.Kendo().DateTimePicker()
                     .Name("EndDate")

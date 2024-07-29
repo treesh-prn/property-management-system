@@ -55,8 +55,6 @@ function onDataBound(e) {
     });
 }
 
-
-
 function onEditView(e) {
     e.preventDefault();
     var scheduler = $("#scheduler").data("kendoScheduler");
@@ -73,7 +71,7 @@ function onEditView(e) {
 
 function onEditViewG(e) {
     e.preventDefault();
-    var scheduler = $("#scheduler").data("kendoScheduler");
+    var scheduler = $("#GHscheduler").data("kendoScheduler");
     var event = e.event;
 
     if (!event.ReservationId) {
@@ -84,11 +82,23 @@ function onEditViewG(e) {
     var editUrl = '/Accommodation/ViewReservationDetails/' + event.GUID;
     window.location.href = editUrl;
 }
+
+function onRoomsDataBound(e) {
+    var dropdownlist = this;
+    var selectedValue = dropdownlist.value();
+
+    if (selectedValue) {
+        dropdownlist.ul.find("li[data-value='" + selectedValue + "']").addClass("k-state-disabled");
+    }
+}
+
 //filtering of Facilities DropdownList
 function filterFacilities() {
+    
     return {
-        ReservationId: $("#ReservationId").val()
+        reservationDetailId: $("#reservationDetailId").val()
     };
+    console.log(reservationDetailId);
 }
 //filtering of Rooms Dropdownlist
 function filterRooms() {
@@ -97,18 +107,34 @@ function filterRooms() {
         ReservationId: $("#ReservationId").val()
     };
 }
+function onFacilityChange(e) {
+    var selectedFacilityId = e.sender.value();
+    var resDetail = e.sender.element.attr('name')
+    var reservationDetailId = resDetail.split('_').pop();
 
-function filterRooms2(reservationDetailId) {
-    var facilityId = $('#_facilityId_' + reservationDetailId).val();
-
-    console.log("Detail ID: ", reservationDetailId);
-    console.log("Facility ID: ", facilityId);
-
-    return {
-        facilityId: facilityId
-    };
+    var inputId = 'hiddenFacilityId_' + reservationDetailId;
+    $('#' + inputId).val(selectedFacilityId);
 }
 
+function onRoomChange(e) {
+    var selectedRoomId = e.sender.value();
+    var resDetail = e.sender.element.attr('name')
+    var reservationDetailId = resDetail.split('_').pop();
+
+    var inputId = 'hiddenRoomId_' + reservationDetailId;
+    $('#' + inputId).val(selectedRoomId );
+    
+}
+function filterRooms2(reservationDetailId) {
+    var facilityId = $(`#_facilityId_${reservationDetailId}`).val();
+    var inputId = 'hiddenRoomId_' + reservationDetailId;
+    console.log(facilityId);
+    console.log(inputId);
+    return {
+        facilityId: facilityId,
+        reservationDetailId: reservationDetailId
+    };
+}
 //alert
 $(document).ready(function () {
     window.setTimeout(function () {

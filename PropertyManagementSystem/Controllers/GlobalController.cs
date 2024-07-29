@@ -25,7 +25,7 @@ namespace PropertyManagementSystem.Controllers
 
         public JsonResult getCompanies()
         {
-            var _companyList = _context.Companies.AsQueryable().ToList();
+            var _companyList = _context.Companies.Select(c => new { c.Id, Company = c.Company.ToUpper(), CompanyCode = c.CompanyCode}).AsQueryable().ToList();
 
             return Json(_companyList , new JsonSerializerSettings());
         }
@@ -82,12 +82,10 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(facilities);
         }
-
-
-        public IActionResult GetRoom(int? facilityId, int ReservationId)
+        public IActionResult GetRoom(int? facilityId, int reservationId)
         {
             var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationId == ReservationId);
+                .FirstOrDefault(r => r.ReservationId == reservationId);
 
             if (reservation == null)
             {
@@ -107,8 +105,136 @@ namespace PropertyManagementSystem.Controllers
                 .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
                 .ToList();
 
+            // Add the initially selected room if it's not already in the list
+            var selectedRoom = _context.Rooms
+                .Where(room => room.RoomId == reservation.RoomId)
+                .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
+                .FirstOrDefault();
+
+            if (selectedRoom != null && !rooms.Any(r => r.RoomId == selectedRoom.RoomId))
+            {
+                rooms.Insert(0, selectedRoom);
+            }
+
             return Json(rooms);
         }
+        public IActionResult GetGH(int reservationDetailId)
+        {
+            var reservation = _context.ReservationDetails
+                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            var startDate = reservation.StartDate;
+            var endDate = reservation.EndDate;
+
+            var facilities = _context.Facilities
+                .Where(f => f.FacilityClassification == "GUESTHOUSE")
+                .Select(f => new
+                {
+                    Facility = f,
+                    AvailableRooms = f.Rooms.Where(room =>
+                        room.isActive == false ||
+
+                        !_context.ReservationDetails
+                            .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                            .Any(joined =>
+                                joined.rd.RoomId == room.RoomId &&
+                                joined.rh.Status != "CANCELLED" &&
+                                joined.rh.Status != "DISAPPROVED" &&
+                                ((joined.rd.StartDate <= startDate && joined.rd.EndDate > startDate) ||
+                                 (joined.rd.StartDate <= endDate && joined.rd.EndDate >= endDate) ||
+                                 (joined.rd.StartDate >= startDate && joined.rd.EndDate <= endDate))) &&
+                        _context.ReservationDetails
+                            .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                            .Where(joined =>
+                                joined.rd.RoomId == room.RoomId &&
+                                joined.rh.Status != "CANCELLED" &&
+                                joined.rh.Status != "DISAPPROVED" &&
+                                ((joined.rd.StartDate <= startDate && joined.rd.EndDate > startDate) ||
+                                 (joined.rd.StartDate <= endDate && joined.rd.EndDate >= endDate) ||
+                                 (joined.rd.StartDate >= startDate && joined.rd.EndDate <= endDate)))
+                            .Select(joined => joined.rd.GuestName)
+                            .Count() < room.Capacity)
+                })
+                .Where(f => f.AvailableRooms.Any())
+                .Select(f => new
+                {
+                    FacilityId = f.Facility.FacilityId,
+                    FacilityName = f.Facility.FacilityName,
+                    FacilityClass = f.Facility.FacilityClassification
+                })
+                .OrderBy(f => f.FacilityName)
+                .ToList();
+
+            return Json(facilities);
+        }
+
+        public IActionResult GetGHRoom(int? facilityId, int reservationDetailId)
+        {
+            Console.WriteLine(facilityId);
+            Console.WriteLine(reservationDetailId);
+
+            var reservation = _context.ReservationDetails
+                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            var startDate = reservation.StartDate;
+            var endDate = reservation.EndDate;
+
+            var rooms = _context.Rooms
+                .Where(room => room.FacilityId == facilityId)
+                .Select(room => new
+                {
+                    RoomId = room.RoomId,
+                    RoomName = room.RoomName,
+                    OccupiedGuestCount = _context.ReservationDetails
+                        .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                        .Where(joined =>
+                            room.isActive == false ||
+                            joined.rd.RoomId == room.RoomId &&
+                            joined.rh.Status != "CANCELLED" &&
+                            joined.rh.Status != "DISAPPROVED" &&
+                            ((joined.rd.StartDate <= startDate && joined.rd.EndDate > startDate) ||
+                             (joined.rd.StartDate <= endDate && joined.rd.EndDate >= endDate) ||
+                             (joined.rd.StartDate >= startDate && joined.rd.EndDate <= endDate)))
+                        .Select(joined => joined.rd.GuestName)
+                        .Count(),
+                    RoomCapacity = room.Capacity
+                })
+                .Where(room => room.OccupiedGuestCount < room.RoomCapacity)
+                .Select(room => new
+                {
+                    RoomId = room.RoomId,
+                    RoomName = room.RoomName
+                })
+                .ToList();
+
+            // Add the initially selected room if it's not already in the list
+            var selectedRoom = _context.Rooms
+                .Where(room => room.RoomId == reservation.RoomId)
+                .Select(room => new
+                {
+                    RoomId = room.RoomId,
+                    RoomName = room.RoomName
+                })
+                .FirstOrDefault();
+
+            if (selectedRoom != null && !rooms.Any(r => r.RoomId == selectedRoom.RoomId))
+            {
+                rooms.Insert(0, selectedRoom);
+            }
+
+            return Json(rooms);
+        }
+
         public ActionResult GetEquipments()
         {
             List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();
@@ -125,8 +251,9 @@ namespace PropertyManagementSystem.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CancelReservation(int ReservationId, string Remarks)
+        public IActionResult CancelReservation(int ReservationId, string Remarks, string reservationType)
         {
+            Console.WriteLine("RESERVATION TYPE:" + reservationType);
             var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
             if (reservation == null)
             {
@@ -134,12 +261,30 @@ namespace PropertyManagementSystem.Controllers
             }
             else
             {
-                reservation.Status = "CANCELLED";
-                reservation.Remarks = Remarks;
-                _context.SaveChanges();
-            }
+                if (reservationType == "FN")
+                {
+                    reservation.Status = "CANCELLED";
+                    reservation.Remarks = Remarks;
+                    _context.SaveChanges();
 
-            return RedirectToAction("ReservationList","FunctionRoom");
+
+                    return RedirectToAction("ReservationList", "FunctionRoom");
+                }
+                else if(reservationType == "GH")
+                {
+                    reservation.Status = "CANCELLED";
+                    reservation.Remarks = Remarks;
+                    _context.SaveChanges();
+
+
+                    return RedirectToAction("ReservationList", "Accommodation");
+                }
+                else
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+            }
+            
         }
     }
 }

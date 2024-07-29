@@ -71,7 +71,7 @@
                             .DataTextField("RoomName")
                             .DataValueField("RoomId")
                             .Value(detail.RoomId.ToString())
-
+                            .CascadeFrom("_facilityId")
                             .DataSource(source =>
                             {
                                 source.Read(read =>

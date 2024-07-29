@@ -6,7 +6,6 @@
 @foreach (var detail in Model.ReservationDetails)
 {
     <form asp-action="CancelReservation" method="post">
-       
         <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
         <input type="hidden" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">
@@ -140,22 +139,30 @@
         </div>
         <div class="modal-footer">
             <div class="ms-auto">
-                @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
+                @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
                 {
-                    <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
-                        <span>
-                            <i class="ti ti-x m-1"></i>
-                        </span>
-                        Cancel
-                    </button>
-                    <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
-                        Go Back
-                    </a>
-
+                    @if(detail.StartDate >= DateTime.Today.AddHours(DateTime.Now.Hour - 1))
+                    {
+                        <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
+                            <span>
+                                <i class="ti ti-x m-1"></i>
+                            </span>
+                            Cancel
+                        </button>
+                        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                            Go Back
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                            Go Back
+                        </a>
+                    }
                 }
                 else
                 {
-                     <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                    <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
                         Go Back
                     </a>
                 }
@@ -198,6 +205,7 @@
                                 </div>
                             </div>
                         </div>
+                    <input type="hidden" name="reservationType" value="@Model.ReservationHeader.ReservationType" />
                     <input type="hidden" name="ReservationId" value="@detail.ReservationId" />
                 </form>
             </div>

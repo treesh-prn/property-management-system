@@ -57,7 +57,7 @@
                                 read.Action("GetFacility", "Global").Data("filterFacilities");
                             });
                         })
-                        .HtmlAttributes(new { style = "width: 100%" })
+                        .HtmlAttributes(new { style = "width: 100%"})
                         .OptionLabel("Select Facility")
                         )
                 </div>
@@ -68,6 +68,7 @@
                         .DataTextField("RoomName")
                         .DataValueField("RoomId")
                         .Value(detail.RoomId.ToString())
+                        .CascadeFrom("_facilityId")
                         .DataSource(source =>
                         {
                             source.Read(read =>
@@ -77,6 +78,7 @@
                         })
                         .HtmlAttributes(new { style = "width: 100%" })
                         .OptionLabel("Select Room")
+                        .Events(events => events.DataBound("onRoomsDataBound"))
                         )
                 </div>
             </div>
