@@ -57,8 +57,6 @@ namespace PropertyManagementSystem.Controllers
             List<facilityList> _facilityList = new List<facilityList>();
             foreach (var item in _Facilities)
             {
-
-
                 _facilityList.Add(new facilityList
                 {
                     FacilityId = item.FacilityId,

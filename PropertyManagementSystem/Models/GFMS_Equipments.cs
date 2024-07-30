@@ -7,14 +7,19 @@ namespace PropertyManagementSystem.Models
     public class GFMS_Equipments
     {
         [Key]
-        public int EquipmentId { get; set; }
+        public int Id { get; set; }
         public string? EquipmentName { get; set; }
-        public string? EquipmentStatus { get; set; }
+        public int? EquipmentQty { get; set; }
+        public int? PurchaseCost { get; set; }
+        public int? WholeDayCost { get; set; }
+        public int? HalfDayCost { get; set; }
+        public string? Remarks { get; set; }
+        public bool? isActive { get; set; }
     }
 
     public partial class equipmentList
     {
-        public int EquipmentId { get; set; }
+        public int Id { get; set; }
         public string EquipmentName { get; set; }
 
     }

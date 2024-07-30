@@ -243,7 +243,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 _eqList.Add(new equipmentList
                 {
-                    EquipmentId = item.EquipmentId,
+                    Id = item.Id,
                     EquipmentName = item.EquipmentName,
                 });
             }

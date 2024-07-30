@@ -170,6 +170,11 @@ function onViewClick(e) {
             var url = '/Facility/ViewFacility?FacilityId=' + facilityId;
             window.location.href = url;
         }
+        else if (dataItem.Id) {
+            var equipmentId = dataItem.Id;
+            var url = '/Equipment/ViewEquipment?Id=' + equipmentId;
+            window.location.href = url;
+        }
 
     }
 
@@ -219,6 +224,10 @@ function onDeleteClick(e) {
             var reservationId = dataItem.ReservationId;
             showDeleteConfirmationModalReservation(reservationId);
         }
+        else if (dataItem.Id) {
+            var equipmentId = dataItem.Id;
+            showDeleteConfirmationModalEquipment(equipmentId);
+        }
     }
 }
 
@@ -234,6 +243,10 @@ function showDeleteConfirmationModalFacility(facilityId) {
 function showDeleteConfirmationModalReservation(reservationId) {
     $('#modal-danger').modal('show');
     $('#modal-reservation-id').val(reservationId);
+}
+function showDeleteConfirmationModalEquipment(equipmentId) {
+    $('#modal-danger').modal('show');
+    $('#modal-equipment-id').val(equipmentId);
 }
 $(document).ready(function () {
     $('input[name="_homeOwnership"]').on('change', function () {

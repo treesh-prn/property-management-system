@@ -1,0 +1,209 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+
+}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        SETUP
+                    </div>
+                    <h2 class="page-title">
+                        EQUIPMENTS
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        @*   <span class="d-none d-sm-inline">
+                        <a href="#" class="btn">
+                        New view
+                        </a>
+                        </span>
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
+                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                        Create new report
+                        </a>
+                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
+                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                        </a> *@
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="col-lg-12 col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title"></h3>
+                            <div class="card-actions">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#modal-newFacility" class="btn btn-primary">
+                                    <i class="ti ti-home-plus icon"></i>
+                                    New Equipment
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            @(
+                                Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_Equipments>()
+                                .Name("equipmentGrid")
+                                .ToolBar(tools => tools.Excel())
+                                .Excel(excel => excel
+                                .FileName("Equipments.xlsx")
+                                .AllPages(true))
+                                .Columns(columns =>
+                                {
+                                    columns.Bound(c => c.Id).Visible(false).Exportable(false);
+                                    columns.Bound(c => c.EquipmentName);
+                                    columns.Bound(c => c.EquipmentQty);
+                                    columns.Bound(c => c.WholeDayCost);
+                                    columns.Bound(c => c.HalfDayCost);
+                                    columns.Bound(c => c.isActive).Hidden(true).ClientTemplate(
+                                    "# if(isActive) { #" +
+                                    "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Active</span>" +
+                                    "# } else { #" +
+                                    "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
+                                    "# } #"
+                                    ).Title("Active").Width(200);
+                                    columns.Command(command =>
+                                    {
+                                        command.Custom("view")
+                                    .Text("<i class='ti ti-eye'></i>View")
+                                    .Click("onViewClick")
+                                    .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
+
+                                        command.Custom("delete")
+                                    .Text("<i class='ti ti-trash'></i> Delete")
+                                    .Click("onDeleteClick")
+                                    .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
+                                    })
+                                    .Title("Actions")
+                                    .Exportable(false);
+
+                                })
+                                .Scrollable()
+                                .ToolBar(toolbar =>
+                                {
+                                    toolbar.Search();
+                                })
+                                .DataSource(dataSource => dataSource
+                                .Ajax()
+                                .Model(model => model.Id(p => p.Id))
+                                .Read(read => read.Action("getEquipments", "Equipment"))
+                                .PageSize(50)
+                                )
+                                )
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+@*NEW FACILITY MODAL *@
+<div class="modal modal-blur fade" id="modal-newFacility" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Equipment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="fcFRM1" asp-controller="Equipment" asp-action="newEquipments" enctype="multipart/form-data" method="post">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label class="form-label required">Equipment Name </label>
+                            <input class="form-control" name="_name" type="text" required="required">
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="form-label required">Equipment Qty</label>
+                            <input class="form-control" name="_quantity" type="number" required="required">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Purchase Cost</label>
+                        <input class="form-control" name="_purCost" type="number" required="required">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label class="form-label required">Half Day Cost</label>
+                            <input class="form-control" name="_halfCost" type="number" required="required">
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="form-label required">Whole Day Cost</label>
+                            <input class="form-control" name="_wholeCost" type="number" required="required">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div>
+                            <label class="form-label required">
+                                Remarks
+                            </label>
+                            <textarea class="form-control required" rows="2" name="_remarks"></textarea>
+                        </div>
+                    </div>
+                    <label class="row mb-3">
+                        <span class="col form-label required">Is Active</span>
+                        <span class="col-auto">
+                            <label class="form-check form-check-single form-switch">
+                                <input class="form-check-input" id="isActiveCheckbox" name="_isActive" type="checkbox" value="true" checked>
+                            </label>
+                        </span>
+                    </label>
+                </div>
+
+
+                <div class="modal-footer">
+                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@*END - NEW FACILITY MODAL *@
+
+@*DELETE MODAL*@
+<div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
+                <h3>Are you sure?</h3>
+                <div class="text-secondary">Do you really want to remove this record? This action cannot be undone.</div>
+            </div>
+            <form id="delete-form" action="@Url.Action("DeleteEquipment", "Equipment")" method="post">
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row">
+                            <div class="col">
+                                <a href="#" class="btn w-100" data-bs-dismiss="modal">
+                                    Cancel
+                                </a>
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-danger w-100" id="confirm-delete">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="Id" id="modal-equipment-id" />
+            </form>
+        </div>
+    </div>
+</div>
+@*END DELETE MODAL*@
