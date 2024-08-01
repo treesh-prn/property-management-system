@@ -105,7 +105,7 @@
                         .DownArrow(true)
                         .NoDataTemplateId("noDataTemplate")
                         .DataTextField("EquipmentName")
-                        .DataValueField("EquipmentId")
+                        .DataValueField("Id")
                         .Value(detail.EquipmentNeeded?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                         .Filter("contains")
                         .AutoBind(true)

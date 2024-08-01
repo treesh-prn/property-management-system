@@ -329,7 +329,7 @@ namespace PropertyManagementSystem.Controllers
             }
         }
 
-        public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, string _equipment, string _contactNumber, string _requestorEmail)
+        public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, List<string> _equipment, string _contactNumber, string _requestorEmail)
         {
             Console.WriteLine($"Requestor Email: {_requestorEmail}");
             Console.WriteLine($"Start Date: {_startDate}");
@@ -343,7 +343,8 @@ namespace PropertyManagementSystem.Controllers
 
             try
             {
-                var equipmentNeeded = _equipment?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                var equipmentNeeded = _equipment?.Select(e => e.Trim()).ToList();
+                Console.WriteLine("equipments: " + string.Join(", ", equipmentNeeded));
                 GFMS_ReservationDetails reservationDetails = new GFMS_ReservationDetails()
                 {
                     ReservationId = _reservationId,

@@ -102,9 +102,9 @@
                     .DownArrow(true)
                     .NoDataTemplateId("noDataTemplate")
                     .DataTextField("EquipmentName")
-                    .DataValueField("EquipmentId")
+                    .DataValueField("Id")
                     .Filter("contains")
-                    .AutoBind(false)
+                    .AutoBind(true)
                     .DataSource(source =>
                     {
                         source.Read(read =>
