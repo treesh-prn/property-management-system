@@ -77,35 +77,38 @@ namespace PropertyManagementSystem.Controllers
         {
             try
             {
-                var file = files.FirstOrDefault();
-                if (file != null)
+                List<string> uploadedFilePaths = new List<string>();
+
+                foreach (var file in files)
                 {
-                    string directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
-                    if (!Directory.Exists(directoryPath))
+                    if (file != null && file.Length > 0)
                     {
-                        Directory.CreateDirectory(directoryPath);
-                    }
+                        string directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Uploads");
+                        if (!Directory.Exists(directoryPath))
+                        {
+                            Directory.CreateDirectory(directoryPath);
+                        }
 
-                    var filepath = Path.Combine(directoryPath, file.FileName);
-                    using (var fs = new FileStream(filepath, FileMode.Append))
-                    {
-                        file.CopyTo(fs);
-                    }
-                    string relativePath = filepath.Replace(Directory.GetCurrentDirectory(), string.Empty).TrimStart(Path.DirectorySeparatorChar);
+                        var filepath = Path.Combine(directoryPath, file.FileName);
+                        using (var fs = new FileStream(filepath, FileMode.Append))
+                        {
+                            file.CopyTo(fs);
+                        }
+                        string relativePath = Path.Combine("/Uploads", file.FileName);
+                        uploadedFilePaths.Add(relativePath);
 
-                    return Json(new { success = true, fileUid = fileUid, chunkIndex = chunkIndex, filepath = relativePath});
+                        Console.WriteLine($"Uploaded file: {relativePath}");
+                    }
                 }
 
-                return Json(new { success = false });
+                return Json(new { success = true, fileUid = fileUid, chunkIndex = chunkIndex, filepaths = uploadedFilePaths });
             }
             catch (Exception ex)
             {
-                // Handle exceptions appropriately
                 Console.WriteLine($"Error uploading chunk: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
         }
-
 
         [HttpPost]
         public IActionResult Remove([FromBody] string[] files)
@@ -142,12 +145,17 @@ namespace PropertyManagementSystem.Controllers
                 var reservationDetails = _context.ReservationDetails
                     .Where(x => x.ReservationId == reservationHeader.ReservationId)
                     .ToList();
-
+                var employee = _context.Employees.FirstOrDefault(e => e.Email == reservationHeader.RequestorEmail);
+                Console.WriteLine("Employee:" + employee);
                 var department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
+                var position = _context.Positions.FirstOrDefault(p => p.Id == employee.PositionId);
+                var level = _context.EmploymentLevels.FirstOrDefault(l => l.Id == employee.EmploymentLevelId);
 
                 var detailViewModel = new ReservationViewModel
                 {
                     Department = department,
+                    EmploymentLevel = level,
+                    Position = position,
                     ReservationHeader = reservationHeader,
                     ReservationDetails = reservationDetails
                 };
@@ -161,11 +169,34 @@ namespace PropertyManagementSystem.Controllers
             }
         }
 
-        public ActionResult getDormReservation([DataSourceRequest] DataSourceRequest request)
+        public ActionResult getDormReservation([DataSourceRequest] DataSourceRequest request, string gridType)
         {
-            var reservationHeaders = _context.ReservationHeaders
-                .Where(x => x.ReservationType == "DRM")
-                .ToList();
+            Task<Gen_Employee> employeeTask = _roleService.GetUserName(User);
+            var employee = employeeTask.Result;
+
+            var query = _context.ReservationHeaders.AsQueryable()
+                .Where(x => x.ReservationType == "DRM");
+
+            if (gridType == "myReservation")
+            {
+                query = query.Where(x => x.Requestor == employee.Fullname);
+            }
+            else if (gridType == "reservationApproval")
+            {
+                if (User.IsInRole("GFMS.Department Head"))
+                {
+                    query = query.Where(x => x.Approver == employee.Fullname && x.Status == "FOR DEPARTMENT HEAD'S APPROVAL");
+                }
+                else if (User.IsInRole("GFMS.Admin Approver"))
+                {
+                    query = query.Where(x => x.Status == "FOR ADMIN APPROVER'S APPROVAL");
+                }
+                else if (User.IsInRole("GFMS.Admin Manager"))
+                {
+                    query = query.Where(x => x.Status == "FOR ADMIN MANAGER'S APPROVAL");
+                }
+            }
+            var reservationHeaders = query.ToList();
 
             List<ReservationViewModel> reservationViewModels = new List<ReservationViewModel>();
 
@@ -183,7 +214,7 @@ namespace PropertyManagementSystem.Controllers
                     Status = header.Status,
                     GUID = header.GUID,
                     ReservationType = header.ReservationType,
-                    DepartmentName = department?.DepartmentName,
+                    DepartmentName = department?.DepartmentCode,
                     ReservationDetailId = details.FirstOrDefault()?.ReservationDetailId ?? 0
                 };
 
@@ -312,7 +343,7 @@ namespace PropertyManagementSystem.Controllers
         }
 
         /*Create*/
-        public IActionResult CreateReservationDetails(int _reservationId, int _unitApplied, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, string[] _dependents, string[] _age, string[] _location, string[] _position, string filepath)
+        public IActionResult CreateReservationDetails(int _reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, string[] _dependents, string[] _age, string[] _location, string[] _position, string filepath)
         {
             try
             {
@@ -326,6 +357,7 @@ namespace PropertyManagementSystem.Controllers
                         {
                             ReservationId = _reservationId,
                             AppliedUnit = _unitApplied,
+                            ScheduleType = _schedType,
                             ContactNumber = _contactNumber,
                             PermanentAddress = _permanentAdd,
                             CurrentAddress = _currentAdd,
@@ -346,6 +378,8 @@ namespace PropertyManagementSystem.Controllers
                         };
 
                         _context.ReservationDetails.Add(reservationDetails);
+                        var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
+                        reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
                     }
 
                     _context.SaveChanges();
@@ -365,7 +399,7 @@ namespace PropertyManagementSystem.Controllers
         }
         /*Update*/
         [HttpPost]
-        public IActionResult UpdateReservationDetails(int reservationId, int _unitApplied, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, List<string> _dependents, List<string> _age, List<string> _location, List<string> _position, string filepath)
+        public IActionResult UpdateReservationDetails(int reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, List<string> _dependents, List<string> _age, List<string> _location, List<string> _position, string filepath)
         {
             List<string> filePaths = new List<string>();
             Console.WriteLine("Reservation Id: " + reservationId);
@@ -386,6 +420,7 @@ namespace PropertyManagementSystem.Controllers
                 if (index != -1)
                 {
                     existingDetail.AppliedUnit = _unitApplied;
+                    existingDetail.ScheduleType = _schedType;
                     existingDetail.ContactNumber = _contactNumber;
                     existingDetail.PermanentAddress = _permanentAdd;
                     existingDetail.CurrentAddress = _currentAdd;
@@ -420,6 +455,7 @@ namespace PropertyManagementSystem.Controllers
                     {
                         ReservationId = reservationId,
                         AppliedUnit = _unitApplied,
+                        ScheduleType = _schedType,
                         ContactNumber = _contactNumber,
                         PermanentAddress = _permanentAdd,
                         CurrentAddress = _currentAdd,
@@ -444,7 +480,6 @@ namespace PropertyManagementSystem.Controllers
             _context.SaveChanges();
             return RedirectToAction("ReservationList", "Dorm");
         }
-
         /*Delete*/
         public IActionResult DeleteReservationDetail(int ReservationId)
         {
@@ -479,6 +514,103 @@ namespace PropertyManagementSystem.Controllers
                 Console.WriteLine($"An error occurred while deleting reservation detail: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, string action, int _facilityId, int _roomId, string Remarks, bool _isCritical, bool _isOnCall, string _deptRemarks)
+        {
+            Console.WriteLine("ReservationId: " + ReservationId);
+            
+
+            if (ReservationId <= 0 || string.IsNullOrEmpty(action))
+            {
+                return BadRequest("Invalid parameters.");
+            }
+
+            var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
+            var reservationDetails = _context.ReservationDetails.FirstOrDefault(r => r.ReservationId == reservation.ReservationId);
+            var roomName = _context.Rooms.Where(r => r.RoomId == _roomId).Select(r => r.RoomName).FirstOrDefault();
+            var facilityName = _context.Facilities.Where(f => f.FacilityId == _facilityId).Select(f => f.FacilityName).FirstOrDefault();
+            var empName = _context.Employees.FirstOrDefault(e => e.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            if (action == "Approve" && reservation.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
+            {
+                reservation.Status = "FOR ADMIN MANAGER'S APPROVAL";
+                reservationDetails.DeptHeadRemarks = _deptRemarks;
+                reservationDetails.isCritical = _isCritical;
+                reservationDetails.isOnCall = _isOnCall;
+                TempData["AlertMessage"] = "Approved!";
+                TempData["AlertSubMessage"] = "Reservation has been approved";
+                TempData["AlertType"] = "success";
+            }
+            else if (action == "Approve" && reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
+            {
+                reservation.Status = "FOR ADMIN APPROVER'S APPROVAL";
+                reservation.ApprovedBy = empName.Fullname;
+
+                TempData["AlertMessage"] = "Approved!";
+                TempData["AlertSubMessage"] = "Reservation has been approved";
+                TempData["AlertType"] = "success";
+
+                /*await _emailService.SendApprovalNotification(
+                     reservation,
+                     reservation.RequestorEmail
+                 );*/
+            }
+            else if (action == "Approve" && reservation.Status == "FOR ADMIN APPROVER'S APPROVAL")
+            {
+                reservation.Status = "APPROVED";
+                reservationDetails.FacilityId = _facilityId;
+                reservationDetails.RoomId = _roomId;
+                reservation.ApprovedBy = empName.Fullname;
+
+                TempData["AlertMessage"] = "Room details assigned successfully!";
+                TempData["AlertSubMessage"] = "Rooms are assigned to reservation";
+                TempData["AlertType"] = "success";
+
+                /*await _emailService.RoomAssignmentApprovalEmail(
+                       reservation,
+                       reservation.RequestorEmail,
+                       reservationDetails.StartDate.ToString(),
+                       reservationDetails.EndDate.ToString(),
+                       reservationDetails.NumberOfGuest,
+                       facilityName,
+                       roomName,
+                       reservationDetails.Purpose
+                   );
+
+                await _emailService.SendReservationApprovalEmail(
+                      reservation,
+                      reservation.RequestorEmail,
+                      reservationDetails.StartDate.ToString(),
+                      reservationDetails.EndDate.ToString(),
+                      reservationDetails.NumberOfGuest,
+                      facilityName,
+                      roomName,
+                      reservationDetails.Purpose
+                  );*/
+            }
+            else if (action == "Reject")
+            {
+                reservation.Status = "DISAPPROVED";
+                reservation.Remarks = Remarks;
+                reservation.ApprovedBy = empName.Fullname;
+                await _emailService.SendDisapprovalNotification(
+                      reservation,
+                      reservation.RequestorEmail
+                  );
+            }
+            else
+            {
+                return BadRequest("Invalid action.");
+            }
+            _context.SaveChanges();
+
+            return RedirectToAction("ReservationList", "Dorm");
         }
 
     }

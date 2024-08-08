@@ -29,6 +29,7 @@ namespace PropertyManagementSystem.Data
         public virtual DbSet<GFMS_Equipments> Equipments { get; set; }
         public virtual DbSet<GFMS_ReservationHeader> ReservationHeaders { get; set; }
         public virtual DbSet<GFMS_ReservationDetails> ReservationDetails { get; set; }
+        public virtual DbSet<HRIS_EmploymentLevel> EmploymentLevels { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GFMS_Rooms>()
@@ -51,8 +52,6 @@ namespace PropertyManagementSystem.Data
             modelBuilder.Entity<GFMS_ReservationDetails>()
             .Property(e => e.EndDate)
             .HasColumnType("datetime");
-
-
         }
     }
 

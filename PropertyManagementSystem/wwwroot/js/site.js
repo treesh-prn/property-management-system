@@ -104,7 +104,7 @@ function filterFacilities() {
 function filterRooms() {
     return {
         facilityId: $("#_facilityId").val(),
-        ReservationId: $("#ReservationId").val()
+        reservationId: $("#ReservationId").val()
     };
 }
 function onFacilityChange(e) {
@@ -197,11 +197,6 @@ function onViewClickReservationList(e) {
         if (dataItem.ReservationType == "DRM") {
             var guid = dataItem.GUID;
             var url = '/Dorm/ViewReservationDetails/' + guid;
-            window.location.href = url;
-        }
-        if (dataItem.ReservationType == "DRM" && dataItem.ReservationDetailId == 0) {
-            var guid = dataItem.GUID;
-            var url = '/Dorm/ReservationDetails/' + guid;
             window.location.href = url;
         }
 
@@ -462,8 +457,20 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function onSuccess(e) {
-    var filesList = $("#filesList");
-    filesList.append("<li>" + e.response.fileName + "</li>");
+    if (e.response && e.response.success) {
+        // Store the file paths in the hidden input as a comma-separated string
+        var filePaths = e.response.filepaths.join(',');
+        $('#filePath').val(filePaths);
+
+
+        // Display links to the uploaded files
+        e.response.filepaths.forEach(function (path) {
+            var fileName = path.split('/').pop();
+            $('#fileLinksList').append('<li><a href="' + path + '" target="_blank">' + fileName + '</a></li>');
+        });
+
+        $('#uploadedFilesLinks').show();
+    }
 }
 
 function onError(e) {

@@ -29,6 +29,12 @@
     <PackageReference Include="Telerik.UI.for.AspNet.Core" Version="2022.1.301" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Uploads\" />
+    <Folder Include="wwwroot\Uploads\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="Views\Dorm\Shared\_newReservation.cshtml">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 </Project>

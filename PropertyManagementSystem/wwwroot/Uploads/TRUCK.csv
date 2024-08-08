@@ -1,0 +1,2 @@
+detail_id,scale_id,date_in,weigh_in,date_out,weigh_out,gross,tare,net_weight,bales,location,tonnage,com_id,com_remarks,with_special_price,moisture,quality,moisture_bales,reject_perct,reject_kg
+500230,470500,2024/07/29,"02:14:54 pm",2024/07/29,"04:14:03 pm",15010,0,15010,,NULL,,220,,0,0,NULL,NULL,NULL,NULL

@@ -6,6 +6,8 @@ namespace PropertyManagementSystem.Models
     {
         public GFMS_ReservationHeader? ReservationHeader { get; set; }
         public Gen_Department? Department { get; set; }
+        public Gen_Position? Position { get; set; }
+        public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
 
 
@@ -44,6 +46,8 @@ namespace PropertyManagementSystem.Models
         public int NumberOfGuest { get; set; }
         public string? Purpose { get; set; }
         public string? EquipmentNeeded {  get; set; }
+
+        public int? ScheduleType {  get; set; }
 
         public string StartDate { get; set; }
         public DateTime EndDate { get; set; }
