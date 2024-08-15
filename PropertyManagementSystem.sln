@@ -5,16 +5,29 @@ VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PropertyManagementSystem", "PropertyManagementSystem\PropertyManagementSystem.csproj", "{BB4CCE3B-01DF-4A3C-BE0D-84D867F06861}"
 EndProject
+Project("{F14B399A-7131-4C87-9E4B-1186C45EF12D}") = "PMSReport", "PMSReport\PMSReport.rptproj", "{01BC642E-0C29-4321-B3F7-D1974FA29D20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		DebugLocal|Any CPU = DebugLocal|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{BB4CCE3B-01DF-4A3C-BE0D-84D867F06861}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BB4CCE3B-01DF-4A3C-BE0D-84D867F06861}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB4CCE3B-01DF-4A3C-BE0D-84D867F06861}.DebugLocal|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB4CCE3B-01DF-4A3C-BE0D-84D867F06861}.DebugLocal|Any CPU.Build.0 = Debug|Any CPU
 		{BB4CCE3B-01DF-4A3C-BE0D-84D867F06861}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB4CCE3B-01DF-4A3C-BE0D-84D867F06861}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Debug|Any CPU.ActiveCfg = Debug
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Debug|Any CPU.Build.0 = Debug
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Debug|Any CPU.Deploy.0 = Debug
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.DebugLocal|Any CPU.ActiveCfg = DebugLocal
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.DebugLocal|Any CPU.Build.0 = DebugLocal
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Release|Any CPU.ActiveCfg = Release
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Release|Any CPU.Build.0 = Release
+		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Release|Any CPU.Deploy.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

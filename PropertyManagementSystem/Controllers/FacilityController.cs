@@ -52,7 +52,7 @@ namespace PropertyManagementSystem.Controllers
         }
         public ActionResult getFacilityList()
         {
-            List<GFMS_Facility> _Facilities = _context.Facilities.AsQueryable().Where(x => x.FacilityClassification == "FACILITIES").ToList();
+            List<GFMS_Facility> _Facilities = _context.Facilities.AsQueryable().Where(x => x.FacilityClassification == "DORM").ToList();
 
             List<facilityList> _facilityList = new List<facilityList>();
             foreach (var item in _Facilities)

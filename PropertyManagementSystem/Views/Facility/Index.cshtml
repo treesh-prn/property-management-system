@@ -54,8 +54,7 @@
                             </div>
                         </div>
                         <div class="card-body p-0">
-                            @(
-                                Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_Facility>()
+                            @(Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_Facility>()
                                 .Name("facilityGrid")
                                 .ToolBar(tools => tools.Excel())
                                 .Excel(excel => excel
@@ -66,29 +65,28 @@
                                     columns.Bound(c => c.FacilityId).Visible(false).Exportable(false);
                                     columns.Bound(c => c.FacilityName);
                                     columns.Bound(c => c.FacilityLocation);
-                                    columns.Bound(c => c.FacilityClassification);
+                                    columns.Bound(c => c.FacilityClassification).Title("FacilityClassification");
                                     columns.Bound(c => c.isActive).Hidden(true).ClientTemplate(
                                     "# if(isActive) { #" +
-                                    "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Active</span>" +
+                                    "<span class='status status-teal'><span class='status-dot status-dot-animated'></span>Active</span>" +
                                     "# } else { #" +
-                                    "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
+                                    "<span class='status status-red'><span class='status-dot status-dot-animated'></span>Inactive</span>" +
                                     "# } #"
                                     ).Title("Active").Width(200);
                                     columns.Command(command =>
                                     {
-                                    command.Custom("view")
+                                        command.Custom("view")
                                     .Text("<i class='ti ti-eye'></i>View")
                                     .Click("onViewClick")
                                     .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
 
-                                    command.Custom("delete")
+                                        command.Custom("delete")
                                     .Text("<i class='ti ti-trash'></i> Delete")
                                     .Click("onDeleteClick")
                                     .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
                                     })
                                     .Title("Actions")
                                     .Exportable(false);
-
                                 })
                                 .Scrollable()
                                 .ToolBar(toolbar =>
@@ -100,10 +98,10 @@
                                 .Model(model => model.Id(p => p.FacilityId))
                                 .Group(group => group.Add(p => p.FacilityClassification))
                                 .Read(read => read.Action("getFacilities", "Facility"))
-
                                 .PageSize(50)
                                 )
                                 )
+
                         </div>
                     </div>
                 </div>

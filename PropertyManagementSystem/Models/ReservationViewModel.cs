@@ -13,6 +13,7 @@ namespace PropertyManagementSystem.Models
 
         public int FacilityId { get; set; }
         public string? FacilityName { get; set; }
+        public string? FacilityLocation { get; set; }
         public int? ReservationDetailId { get; set; }
         public int ReservationId { get; set; }
         public string ReservationType { get; set; }
@@ -59,7 +60,5 @@ namespace PropertyManagementSystem.Models
         public int OccupiedRoomsCount { get; set; }
         public int AvailableRoomsCount { get; set; }
         public IEnumerable<ReservationViewModel>? Reservations { get; set; }
-
-
     }
 }

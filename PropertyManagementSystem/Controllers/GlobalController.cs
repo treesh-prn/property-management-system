@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Kendo.Mvc.Extensions;
+using Kendo.Mvc.UI;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
@@ -402,6 +404,20 @@ namespace PropertyManagementSystem.Controllers
                 }
             }
             
+        }
+        public ActionResult getDormList([DataSourceRequest] DataSourceRequest request)
+        {
+            List<GFMS_Facility> _Facilities = _context.Facilities.Where(f => f.FacilityClassification == "DORM").ToList();
+            DataSourceResult result = _Facilities.ToDataSourceResult(request, _Facility => new
+            {
+                FacilityId = _Facility.FacilityId,
+                FacilityName = _Facility.FacilityName,
+                FacilityClassification = _Facility.FacilityClassification,
+                FacilityLocation = _Facility.FacilityLocation,
+                isActive = _Facility.isActive
+            });
+            return Json(result);
+
         }
     }
 }

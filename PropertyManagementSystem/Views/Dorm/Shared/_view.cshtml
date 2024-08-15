@@ -37,6 +37,50 @@
                     </label>
                 </div>
             </div>
+            @if (User.IsInRole("GFMS.Admin Approver") || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED")
+            {
+                <div class="row mb-3">
+                    <div class="col-lg-6">
+                        <label class="form-label">Facility</label>
+                        @(
+                            Html.Kendo().DropDownList()
+                            .Name("_facilityId")
+                            .DataTextField("FacilityName")
+                            .DataValueField("FacilityId")
+                            .Value(Model.ReservationDetails.FirstOrDefault().FacilityId.ToString())
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("GetDorm", "Dorm").Data("filterFacilities");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
+                            .OptionLabel("Select Facility")
+                            )
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label">Room</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_roomId")
+                            .DataTextField("RoomName")
+                            .DataValueField("RoomId")
+                            .CascadeFrom("_facilityId")
+                            .Value(Model.ReservationDetails.FirstOrDefault().RoomId.ToString())
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
+                                }).ServerFiltering(true);
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
+                            .OptionLabel("Select Room")
+                            )
+                    </div>
+                </div>
+
+            }
             <div class="row mb-3">
                 <div class="col-lg-6">
                     <label class="form-label">Schedule Type</label>
@@ -232,7 +276,7 @@
                         <div class="row mb-4">
                             <div class="col">
                                 <label class="form-label mb-2">Type of Vehicle</label>
-                                <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Type of Vehicle" asp-for="@Model.ReservationDetails.FirstOrDefault().VehicleType" disabled>
+                                <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Type of Vehicle" asp-for="@Model.ReservationDetails.FirstOrDefault().VehicleType" readonly>
                             </div>
                         </div>
                     </div>

@@ -54,7 +54,6 @@ function onDataBound(e) {
         element.find(".k-event-template").text(newTitle);
     });
 }
-
 function onEditView(e) {
     e.preventDefault();
     var scheduler = $("#scheduler").data("kendoScheduler");
@@ -80,6 +79,19 @@ function onEditViewG(e) {
     }
 
     var editUrl = '/Accommodation/ViewReservationDetails/' + event.GUID;
+    window.location.href = editUrl;
+}
+function onEditViewD(e) {
+    e.preventDefault();
+    var scheduler = $("#scheduler").data("kendoScheduler");
+    var event = e.event;
+
+    if (!event.ReservationId) {
+        console.error("ReservationId is null or undefined.");
+        return;
+    }
+
+    var editUrl = '/Dorm/ViewReservationDetails/' + event.GUID;
     window.location.href = editUrl;
 }
 
@@ -494,4 +506,6 @@ function addNew(EquipmentId, value) {
         widget.trigger("change");
     }
 }
-
+function dataBound() {
+    this.expandRow(this.tbody.find("tr.k-master-row").first());
+}
