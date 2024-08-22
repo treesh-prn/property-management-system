@@ -1,0 +1,184 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+
+}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        ACCOMMODATION
+                    </div>
+                    <h2 class="page-title">
+                        FUNCTION ROOM
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <span class="d-none d-sm-inline">
+                            <a href="@Url.Action("ReservationList","Accommodation")" class="btn">
+                                Reservation List
+                            </a>
+                        </span>
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
+                            <i class="ti ti-plus"></i>
+                            Create New Reservation
+                        </a>
+                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create New Reservation">
+                            <i class="ti ti-plus"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="row row-deck row-cards">
+                    <div class="col-12">
+                        <div class="row row-cards">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-primary text-white avatar">
+                                                    <i class="ti ti-user-star" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                    3
+                                                </div>
+                                                <div class="text-secondary">
+                                                    New Reservations
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-success text-white avatar">
+                                                    <i class="ti ti-friends" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                    10
+                                                </div>
+                                                <div class="text-secondary">
+                                                    Active Guest Count
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-danger text-white avatar">
+                                                    <i class="ti ti-bed" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                    5
+                                                </div>
+                                                <div class="text-secondary">
+                                                    Occupied Rooms
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-warning text-white avatar">
+                                                    <i class="ti ti-home" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                    10
+                                                </div>
+                                                <div class="text-secondary">
+                                                    Available Room
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+@*NEW ROOM MODAL *@
+<div class="modal modal-blur fade" id="modal-newReservatoion" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Reservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="fcFRM1" asp-controller="Accommodation" asp-action="newReservation" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label required">Charge to Company:</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_company")
+                            .DataTextField("Company")
+                            .DataValueField("Id")
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("getCompanies", "Global");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
+                    </div>
+                </div>
+
+
+                <div class="modal-footer">
+                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@*END - NEW Room MODAL *@

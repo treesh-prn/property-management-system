@@ -8,7 +8,7 @@ namespace PropertyManagementSystem.Models
     {
         [Key]
         public int FacilityId { get; set; }
-
+        public string? FacilityClassification { get; set; }
         public string? FacilityName { get; set; }
         public string? FacilityLocation { get; set; }
         public bool? isActive { get; set; }

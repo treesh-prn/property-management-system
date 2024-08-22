@@ -66,8 +66,27 @@
                                     columns.Bound(c => c.FacilityId).Visible(false).Exportable(false);
                                     columns.Bound(c => c.FacilityName);
                                     columns.Bound(c => c.FacilityLocation);
-                                    columns.Bound(c => c.isActive).Width(100);
-                                   
+                                    columns.Bound(c => c.FacilityClassification);
+                                    columns.Bound(c => c.isActive).Hidden(true).ClientTemplate(
+                                    "# if(isActive) { #" +
+                                    "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Active</span>" +
+                                    "# } else { #" +
+                                    "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
+                                    "# } #"
+                                    ).Title("Active").Width(200);
+                                    columns.Bound(c => c.FacilityId)
+                                    .ClientTemplate(
+                                    "<div style='display: inline-block;'>" +
+                                    "   <a href='" + Url.Action("ViewFacility", "Facility", new { FacilityId = "#= FacilityId #" }) + "' class='k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success'><i class='ti ti-eye'></i>&nbsp;View</a>" +
+                                    "</div>" +
+                                    "<form class='delete-form' action='" + Url.Action("DeleteFacility", "Facility") + "' method='post' style='display: inline-block;'>" +
+                                    "   <button type='submit' class='k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger'><i class='ti ti-trash'></i>&nbsp;Delete</button>" +
+                                    "   <input type='hidden' name='FacilityId' value='#= FacilityId #' />" +
+                                    "</form>"
+                                    )
+                                    .Title("Actions")
+                                    .Exportable(false)
+                                    .Filterable(false);
                                 })
                                 .Scrollable()
                                 .ToolBar(toolbar =>
@@ -77,6 +96,7 @@
                                 .DataSource(dataSource => dataSource
                                 .Ajax()
                                 .Model(model => model.Id(p => p.FacilityId))
+                                .Group(group => group.Add(p => p.FacilityClassification))
                                 .Read(read => read.Action("getFacilities", "Facility"))
                                 .PageSize(50)
                                 )
@@ -109,14 +129,50 @@
                         <input class="form-control" name="_name" type="text" required="required">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label required">Location</label>
-                        <input class="form-control" name="_location" type="text" required="required">
+                        <label class="form-label required">Facility Location</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_location")
+                            .BindTo(new List<SelectListItem>
+                        {
+                        new SelectListItem() {
+                        Text = "MILL",
+                        Value = "MILL"
+                        },
+                        new SelectListItem() {
+                        Text = "MAKATI",
+                        Value = "MAKATI"
+                        },
+                        })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                        )
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Status</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_classification")
+                            .BindTo(new List<SelectListItem>
+                        {
+                        new SelectListItem() {
+                        Text = "FACILITIES",
+                        Value = "FACILITIES"
+                        },
+                        new SelectListItem() {
+                        Text = "GUESTHOUSE",
+                        Value = "GUESTHOUSE"
+                        },
+                        new SelectListItem() {
+                        Text = "DORM",
+                        Value = "DORM"
+                        },
+                        })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
                     </div>
                     <label class="row">
                         <span class="col">Is Active</span>
                         <span class="col-auto">
                             <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" name="_isActive" type="checkbox" checked>
+                                <input class="form-check-input" id = "isActiveCheckbox" name="_isActive" type="checkbox" checked>
                             </label>
                         </span>
                     </label>

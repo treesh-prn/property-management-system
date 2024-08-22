@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace PropertyManagementSystem.Models
 {
@@ -10,6 +11,7 @@ namespace PropertyManagementSystem.Models
         public int RoomId { get; set; }
         [Required]
         public string RoomName { get; set; }
+        public string? RoomStatus { get; set; }
         public int FacilityId { get; set; }
         [Required]
         public int Capacity { get; set; }

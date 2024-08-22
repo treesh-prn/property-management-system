@@ -62,7 +62,7 @@
                                     columns.ForeignKey(c => c.ChargeToCompany , ds => ds.Read(r => r.Action("getCompanies", "Global")), "Id", "Company").Title("Charge To Company").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
                                     columns.Bound(c => c.Requestor);
                                     columns.Bound(c => c.RequestorEmail);
-                                    columns.Bound(c => c.Status);
+                                    columns.Bound(c => c.Status).Hidden(true);
 
                                 })
                                 .Scrollable()
