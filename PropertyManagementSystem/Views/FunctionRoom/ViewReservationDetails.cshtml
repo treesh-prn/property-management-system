@@ -1,0 +1,130 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+
+@{
+    ViewData["Title"] = "View Reservation Details";
+}
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@inject SignInManager<IdentityUser> SignInManager
+@using Microsoft.AspNetCore.Identity
+
+@{
+    var employee = await RoleService.GetUserName(User);
+    var gfmsRoles = await RoleService.GetRolesAsync(User);
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        View Reservation
+                    </div>
+                    <h2 class="page-title">
+                        Reservation Details
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    @* <div class="btn-list">
+                    <a href="@Url.Action("Index", "FunctionRoom")" class="btn btn-primary bg-green">
+                    <i class="ti ti-arrow-left icon"></i>
+                    Go Back
+                    </a>
+                    </div> *@
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-cards">
+                <div class="col-lg-3">
+                    <div class="card text-center">
+                        <div class="card-header card-header-light">
+                            <h3 class="card-title">Reservation #@Model.ReservationHeader.ReservationId</h3>
+                        </div>
+                        <img class="img-responsive2 mx-auto" src="@Url.Content("~/img/calendar.jpg")" alt="Reservation Image">
+                        <div class="card-body">
+                            <h5 class="card-title">Reservation Details</h5>
+                            <table class="table table-borderless text-left">
+                                <tbody>
+                                    <tr>
+                                        <th scope="row">Requestor</th>
+                                        <td>@Model.ReservationHeader.Requestor</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Email</th>
+                                        <td>@Model.ReservationHeader.RequestorEmail</td>
+                                    </tr>
+                                    <tr>
+                                        <th scope="row">Date Filed</th>
+                                        <td>@Model.ReservationHeader.DateFiled</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">
+                                    Facilities Reservation Details
+                                </h3>
+                                <p class="card-subtitle">
+                                </p>
+                            </div>
+                        </div>
+                        @foreach (var detail in Model.ReservationDetails)
+                        {
+                            <div class="card-body">
+                                <div class="modal-content">
+
+                                    @if (User.IsInRole("GFMS.Requestor"))
+                                    {
+                                        @if (Model.ReservationHeader.Requestor != employee.Fullname && Model.Status == "PENDING")
+                                        {
+                                            <partial name="DepartmentHead/_pending" />
+                                        }
+                                        else
+                                        {
+                                            <partial name="DepartmentHead/_approval" />
+                                        }
+                                    }
+                                    else if(User.IsInRole("GFMS.Department Head"))
+                                    {
+                                        @if (Model.ReservationHeader.Requestor != employee.Fullname && Model.Status == "PENDING")
+                                        {
+                                            <partial name="DepartmentHead/_pending" />
+                                        }
+                                        else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
+                                        {
+                                            <partial name="DepartmentHead/_approval" />
+                                        } 
+                                    }
+                                   
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script id="noDataTemplate" type="text/x-kendo-tmpl">
+    <div class="kd-nodata-wrapper">
+        # var value = instance.input.val(); #
+        # var id = instance.element[0].id; #
+        <div>
+            No data found. Do you want to add new item - '#: value #' ?
+        </div>
+    </div>
+    <br />
+    <button class="k-button k-button-solid-base k-button-solid k-button-md k-rounded-md" onclick="addNew('#: id #', '#: value #')" ontouchend="addNew('#: id #', '#: value #')">Add new item</button>
+</script>

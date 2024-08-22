@@ -12,5 +12,8 @@ namespace PropertyManagementSystem.Models
         public string? FacilityName { get; set; }
         public string? FacilityLocation { get; set; }
         public bool? isActive { get; set; }
+
+        public virtual ICollection<GFMS_Rooms> Rooms { get; set; }
+
     }
 }

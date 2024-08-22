@@ -1,13 +1,7 @@
 ﻿@model PropertyManagementSystem.Models.RoomViewModel;
 
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
 @{
     ViewData["Title"] = "Home Page";
-
 }
 <div class="page-wrapper">
     <!-- Page header -->
@@ -37,7 +31,6 @@
                             Dorm Room Details
                         </h2>
                     }
-
                 </div>
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
@@ -63,20 +56,6 @@
                                 Go Back
                             </a>
                         }
-                        @*   <span class="d-none d-sm-inline">
-                        <a href="#" class="btn">
-                        New view
-                        </a>
-                        </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        Create new report
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        </a> *@
                     </div>
                 </div>
             </div>
@@ -91,7 +70,6 @@
                         <div class="card-header card-header-light">
                             <h3 class="card-title">@Model.FacilityName</h3>
                         </div>
-                        @*<div class="img-responsive img-responsive-16x9 card-img-top" style="background-image: url(/img/guest-room.jpg)"></div>*@
                         @if (Model.RoomType.Equals(0))
                         {
                             <img class="img-responsive2" src="@Url.Content("~/img/guest-room.jpg")">
@@ -104,30 +82,32 @@
                         {
                             <img class="img-responsive2" src="@Url.Content("~/img/dorm-room.jpg")">
                         }
-                        
-                        @*<div class="card-body p-0">
-                            Lorem Ipsum Dolor Sit Amet
-                        </div>*@
                     </div>
                 </div>
                 <div class="col-lg-9">
                     <div class="card">
-                        <div class="card">
-                            <div class="card-header">
-                                <div>
-                                    <h3 class="card-title">
-                                        @Model.RoomName
-                                    </h3>
-                                    <p class="card-subtitle">
-                                    </p>
-                                </div>
-                                <div class="card-actions">
-                                    <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
+                        <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#details">
+                                        Details
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-bs-toggle="tab" href="#occupants">
+                                        Occupants
+                                    </a>
+                                </li>
+                                <li class="nav-item ms-auto">
+                                    <a id="editRoomButton" href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
                                         Edit Room
                                     </a>
-                                </div>
-                            </div>
-                            <div class="card-body">
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body tab-content">
+                            <div id="details" class="tab-pane fade show active">
+                                <div class="card-title">@Model.RoomName DETAILS</div>
                                 <div class="datagrid">
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Room Name</div>
@@ -208,17 +188,18 @@
                                                 <span class='status status-yellow'><span class='status-dot status-dot-animated'></span>Under Maintenance</span>
                                             </div>
                                         }
-
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Active Status</div>
                                         <div class="datagrid-content">
-                                             @if (Model.isActive.Equals(false))
+                                            @if (Model.isActive.Equals(false))
                                             {
                                                 <span class="status status-red">
                                                     Inactive
                                                 </span>
-                                            }else{
+                                            }
+                                            else
+                                            {
                                                 <span class="status status-green">
                                                     Active
                                                 </span>
@@ -227,8 +208,12 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="card-body p-0">
+                            <div id="occupants" class="tab-pane fade">
+                                <div class="card-title">Content of tab #2</div>
+                                <p class="text-secondary">
+                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci, alias aliquid distinctio dolorem expedita, fugiat hic magni molestiae molestias odit.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -267,7 +252,7 @@
                         <div class="mb-3">
                             <label class="form-label required">Status</label>
                             @(Html.Kendo().DropDownList()
-                                .Name("RoomStatus") 
+                                .Name("RoomStatus")
                                 .BindTo(new List<SelectListItem>
                             {
                             new SelectListItem() { Text = "Open", Value = "Open" },

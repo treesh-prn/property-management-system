@@ -77,19 +77,19 @@
                                     "<span class='status status-yellow''><span class='status-dot status-dot-animated'></span>Under Maintenance</span>" +
                                     "# } #"
                                     ).Title("Room Status");
-                                    columns.Bound(c => c.RoomId)
-                                    .ClientTemplate(
-                                    "<div style='display: inline-block;'>" +
-                                    "   <a href='" + Url.Action("ViewGuestRoom", "Room", new { RoomId = "#= RoomId #" }) + "' class='k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success'><i class='ti ti-eye'></i>&nbsp;View</a>" +
-                                    "</div>" +
-                                    "<form class='delete-form' action='" + Url.Action("DeleteDMRoom", "Room") + "' method='post' style='display: inline-block;'>" +
-                                    "   <button type='submit' class='k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger'><i class='ti ti-trash'></i>&nbsp;Delete</button>" +
-                                    "   <input type='hidden' name='RoomId' value='#= RoomId #' />" +
-                                    "</form>"
-                                    )
+                                    columns.Command(command =>
+                                    {
+                                        command.Custom("view")
+                                    .Text("<i class='ti ti-eye'></i>View")
+                                    .Click("onViewClick")
+                                    .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
+                                        command.Custom("delete")
+                                    .Text("<i class='ti ti-trash'></i> Delete")
+                                    .Click("onDeleteClick")
+                                    .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
+                                    })
                                     .Title("Actions")
-                                    .Exportable(false)
-                                    .Filterable(false);
+                                    .Exportable(false);
 
                                 })
                                 .Scrollable()
@@ -115,8 +115,6 @@
     </div>
 
 </div>
-
-
 
 @*NEW ROOM MODAL *@
 <div class="modal modal-blur fade" id="modal-newRoom" tabindex="-1" role="dialog" aria-hidden="true">
@@ -193,3 +191,37 @@
     </div>
 </div>
 @*END - NEW FACILITY MODAL *@
+@*DELETE MODAL*@
+<div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
+                <h3>Are you sure?</h3>
+                <div class="text-secondary">Do you really want to remove this record? This action cannot be undone.</div>
+            </div>
+            <form id="delete-form" action="@Url.Action("DeleteDMRoom", "Room")" method="post">
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <div class="row">
+                            <div class="col">
+                                <a href="#" class="btn w-100" data-bs-dismiss="modal">
+                                    Cancel
+                                </a>
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-danger w-100" id="confirm-delete">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="RoomId" id="modal-room-id" />
+            </form>
+        </div>
+    </div>
+</div>
+@*END DELETE MODAL*@

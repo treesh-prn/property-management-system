@@ -1,15 +1,17 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PropertyManagementSystem.Data;
+using PropertyManagementSystem.Models;
+using PropertyManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add framework services.
 builder.Services
-	.AddControllersWithViews()
-	// Maintain property names during serialization. See:
-	// https://github.com/aspnet/Announcements/issues/194
-	.AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver());
+    .AddControllersWithViews()
+    // Maintain property names during serialization. See:
+    // https://github.com/aspnet/Announcements/issues/194
+    .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver());
 // Add Kendo UI services to the services container
 builder.Services.AddKendo();
 
@@ -24,7 +26,11 @@ builder.Services.AddDbContext<DAL>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 
 var app = builder.Build();
@@ -52,6 +58,13 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "ReservationDetails",
+    pattern: "Accommodation/ReservationDetails/{Id}",
+    defaults: new { controller = "Accommodation", action = "ReservationDetails" }
+);
+
 app.MapRazorPages();
 
 app.Run();

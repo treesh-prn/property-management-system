@@ -7,6 +7,7 @@ namespace PropertyManagementSystem.Models
     [Table("GFMS_Rooms")]
     public partial class GFMS_Rooms
     {
+        public virtual GFMS_Facility Facility { get; set; }
         [Key]
         public int RoomId { get; set; }
         [Required]

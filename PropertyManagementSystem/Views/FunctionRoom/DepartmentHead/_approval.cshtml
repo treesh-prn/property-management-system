@@ -1,0 +1,98 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@foreach(var detail in Model.ReservationDetails)
+{
+    <form asp-action="EditReservationDetails" method="post">
+        <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
+        <input type="hidden" name="ReservationId" value="@detail.ReservationId">
+        <div class="modal-body">
+            <div id="dynamic-rows">
+                <div class="row mb-3">
+                    <div class="col-lg-12">
+                        <label class="form-label">Number of Attendees</label>
+                        <input type="number" class="form-control" name="NumberOfGuest" placeholder="Number of Attendees" value="@detail.NumberOfGuest">
+                    </div>
+                </div>
+            </div>
+
+            <label class="form-label">Duration of Stay</label>
+            <div class="row mb-3">
+                <div class="col-lg-6">
+                    <label class="form-label required">Start Date</label>
+                    @(
+                        Html.Kendo().DateTimePicker()
+                        .Name("StartDate")
+                        .Value(detail.StartDate)
+                        .DateInput(true)
+                        .Format("yyyy/MM/dd HH:mm:ss.fff")
+                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                        )
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label required">End Date</label>
+                    @(
+                        Html.Kendo().DateTimePicker()
+                        .Name("EndDate")
+                        .Value(detail.EndDate)
+                        .Format("yyyy/MM/dd HH:mm:ss.fff")
+                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                        )
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-lg-12">
+                    <label class="form-label">Equipment Needed</label>
+                    @(Html.Kendo().MultiSelect()
+                        .Name("EquipmentNeeded")
+                        .Placeholder("Please select needed equipment/s")
+                        .DownArrow(true)
+                        .NoDataTemplateId("noDataTemplate")
+                        .DataTextField("EquipmentName")
+                        .DataValueField("EquipmentId")
+                        .Value(detail.EquipmentNeeded?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                        .Filter("contains")
+                        .AutoBind(true)
+                        .DataSource(source =>
+                        {
+                            source.Read(read =>
+                            {
+                                read.Action("GetEquipments", "Global");
+                            });
+                        })
+                        )
+
+                    @* <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded"> *@
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-lg-12">
+                    <div>
+                        <label class="form-label">
+                            Contact Number
+                        </label>
+                        <div class="input-group mb-2">
+                            <span class="input-group-text">
+                                +63
+                            </span>
+                            <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" value="@detail.ContactNumber">
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div>
+                    <label class="form-label">
+                        Purpose
+                        <span class="form-label-description">26/50</span>
+                    </label>
+                    <textarea class="form-control" rows="3" name="Purpose">@detail.Purpose</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary ms-auto">
+                Close
+            </a>
+        </div>
+    </form>
+}
