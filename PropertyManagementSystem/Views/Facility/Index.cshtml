@@ -112,7 +112,6 @@
     </div>
 
 </div>
-
 @*NEW FACILITY MODAL *@
 <div class="modal modal-blur fade" id="modal-newFacility" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -124,7 +123,7 @@
             <form id="fcFRM1" asp-controller="Facility" asp-action="newFacility" enctype="multipart/form-data" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label required">Name </label>
+                        <label class="form-label required">Facility Name </label>
                         <input class="form-control" name="_name" type="text" required="required">
                     </div>
                     <div class="mb-3">
@@ -146,14 +145,14 @@
                             )
                     </div>
                     <div class="mb-3">
-                        <label class="form-label required">Status</label>
+                        <label class="form-label required">Category</label>
                         @(Html.Kendo().DropDownList()
                             .Name("_classification")
                             .BindTo(new List<SelectListItem>
                         {
                         new SelectListItem() {
-                        Text = "FACILITIES",
-                        Value = "FACILITIES"
+                        Text = "FUNCTION ROOM",
+                        Value = "FUNCTION ROOM"
                         },
                         new SelectListItem() {
                         Text = "GUESTHOUSE",
@@ -171,7 +170,7 @@
                         <span class="col">Is Active</span>
                         <span class="col-auto">
                             <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" id="isActiveCheckbox" name="_isActive" type="checkbox" checked>
+                                <input class="form-check-input" id="isActiveCheckbox" name="_isActive" type="checkbox" value="true" checked>
                             </label>
                         </span>
                     </label>

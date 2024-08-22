@@ -45,7 +45,7 @@ namespace PropertyManagementSystem.Models
         public string? Purpose { get; set; }
         public string? EquipmentNeeded {  get; set; }
 
-        public DateTime StartDate { get; set; }
+        public string StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime DateFiled { get; set; }
 

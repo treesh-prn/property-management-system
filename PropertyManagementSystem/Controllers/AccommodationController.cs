@@ -7,16 +7,25 @@ using PropertyManagementSystem.Models;
 using System.Net.NetworkInformation;
 using System;
 using Microsoft.EntityFrameworkCore;
+using PropertyManagementSystem.Services;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.Security.Claims;
 
 namespace PropertyManagementSystem.Controllers
 {
     public class AccommodationController : Controller
     {
         private readonly DAL _context;
+        private readonly IRoleService _roleService;
+        private readonly EmailService _emailService;
+        private readonly EmployeeService _employeeService;
 
-        public AccommodationController(DAL context)
+        public AccommodationController(DAL context, IRoleService roleService, EmailService emailService, EmployeeService employeeService)
         {
             _context = context;
+            _roleService = roleService;
+            _emailService = emailService;
+            _employeeService = employeeService;
         }
         public IActionResult GetFacility()
         {
@@ -25,6 +34,16 @@ namespace PropertyManagementSystem.Controllers
                 .Select(c => new { FacilityId = c.FacilityId, FacilityName = c.FacilityName, FacilityClassification = c.FacilityClassification })
                 .Where(p => p.FacilityClassification == "GUESTHOUSE")
                 .OrderBy(o => o.FacilityName).ToList());
+        }
+        public IActionResult GetRoom(int? facilityId)
+        {
+            Console.WriteLine("Facility Id: " + facilityId);
+            var rooms = _context.Rooms.AsQueryable();
+            if (facilityId.HasValue)
+            {
+                rooms = rooms.Where(p => p.FacilityId == facilityId.Value);
+            }
+            return Json(rooms.Select(p => new { RoomId = p.RoomId, RoomName = p.RoomName }).ToList());
         }
         public IActionResult Index()
         {
@@ -112,63 +131,108 @@ namespace PropertyManagementSystem.Controllers
 
         public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
         {
-            var reservations = (from resDetails in _context.ReservationDetails
-                                join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
-                                select new
-                                {
-                                    resDetails.ReservationId,
-                                    resHeader.GUID,
-                                    resHeader.Requestor,
-                                    resHeader.ChargeToCompany,
-                                    resHeader.Status,
-                                    StartDate = resDetails.StartDate,
-                                    EndDate = resDetails.EndDate,
-                                    resDetails.Purpose,
-                                    resDetails.RoomId,
-                                    resDetails.FacilityId
-                                }).AsEnumerable()
-                                  .Select(r => new ReservationViewModel
-                                  {
-                                      ReservationId = r.ReservationId,
-                                      GUID = r.GUID,
-                                      Requestor = r.Requestor,
-                                      ChargeToCompany = r.ChargeToCompany,
-                                      Status = r.Status,
-                                      Start = r.StartDate.HasValue && DateTime.TryParse(r.StartDate.ToString(), out DateTime startDate)
-                                              ? DateTime.SpecifyKind(startDate, DateTimeKind.Utc)
-                                              : DateTime.MinValue,
-                                      End = r.EndDate.HasValue && DateTime.TryParse(r.EndDate.ToString(), out DateTime endDate)
-                                            ? DateTime.SpecifyKind(endDate, DateTimeKind.Utc)
-                                            : DateTime.MinValue,
-                                      Title = r.Purpose,
-                                      RoomId = r.RoomId,
-                                      FacilityId = r.FacilityId
-                                  }).ToList();
+            var currUser = User.Identity.Name;
+            Console.WriteLine("Current User: " + currUser);
+            bool isRequestor = User.IsInRole("GFMS.Requestor");
+            bool isDeptHead = User.IsInRole("GFMS.Department Head");
 
-            var groupedReservations = reservations.GroupBy(r => r.ReservationId)
-                                                  .Select(group => new ReservationViewModel
-                                                  {
-                                                      ReservationId = group.Key,
-                                                      GUID = group.First().GUID,
-                                                      Requestor = group.First().Requestor,
-                                                      ChargeToCompany = group.First().ChargeToCompany,
-                                                      Status = group.First().Status,
-                                                      Start = group.First().Start,
-                                                      End = group.First().End,
-                                                      Title = group.First().Title,
-                                                      RoomId = group.First().RoomId,
-                                                      FacilityId = group.First().FacilityId
-                                                  }).ToList();
+            var reservationsQuery = from resDetails in _context.ReservationDetails
+                                    join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
+                                    join room in _context.Rooms on resDetails.RoomId equals room.RoomId
+                                    join facility in _context.Facilities on resDetails.FacilityId equals facility.FacilityId
+                                    select new
+                                    {
+                                        resDetails.ReservationId,
+                                        resHeader.GUID,
+                                        resHeader.Requestor,
+                                        resHeader.RequestorEmail,
+                                        resHeader.ChargeToCompany,
+                                        resHeader.Status,
+                                        resHeader.ReservationType,
+                                        resDetails.StartDate,
+                                        resDetails.EndDate,
+                                        resDetails.Purpose,
+                                        resDetails.RoomId,
+                                        resDetails.FacilityId,
+                                        RoomName = room.RoomName,
+                                        FacilityName = facility.FacilityName
+                                    };
+
+            if (isRequestor || isDeptHead)
+            {
+                reservationsQuery = reservationsQuery.Where(r => r.RequestorEmail == currUser && r.ReservationType == "GH");
+            }
+
+            var reservationList = reservationsQuery.ToList();
+
+            var groupedReservations = reservationList.GroupBy(r => r.ReservationId)
+                                                     .Select(group => {
+                                                         var firstItem = group.First();
+                                                         DateTime startDate;
+                                                         DateTime endDate;
+
+                                                         var Start = firstItem.StartDate.HasValue && DateTime.TryParse(firstItem.StartDate.ToString(), out startDate)
+                                                             ? DateTime.SpecifyKind(startDate, DateTimeKind.Utc)
+                                                             : DateTime.MinValue;
+
+                                                         var End = firstItem.EndDate.HasValue && DateTime.TryParse(firstItem.EndDate.ToString(), out endDate)
+                                                             ? DateTime.SpecifyKind(endDate, DateTimeKind.Utc)
+                                                             : DateTime.MinValue;
+
+                                                         return new ReservationViewModel
+                                                         {
+                                                             ReservationId = group.Key,
+                                                             GUID = firstItem.GUID,
+                                                             Requestor = firstItem.Requestor,
+                                                             ChargeToCompany = firstItem.ChargeToCompany,
+                                                             Status = firstItem.Status,
+                                                             Start = Start,
+                                                             End = End,
+                                                             Title = firstItem.Purpose,
+                                                             Purpose = firstItem.Purpose,
+                                                             StartDate = firstItem.StartDate.HasValue ? firstItem.StartDate.Value.ToShortTimeString() : "",
+                                                             RoomId = firstItem.RoomId,
+                                                             FacilityId = firstItem.FacilityId,
+                                                             RoomName = firstItem.RoomName,
+                                                             FacilityName = firstItem.FacilityName,
+                                                         };
+                                                     }).ToList();
 
             return Json(groupedReservations.ToDataSourceResult(request));
         }
 
 
-        [HttpPost]
-        public IActionResult CreateReservation(int _company, string _requestor, string _requestorEmail)
+        private string GenerateReservationCode()
         {
+            int year = DateTime.Now.Year;
+            int sequenceNumber = 1;
+
+            var lastReservation = _context.ReservationHeaders.Where(r => r.ReservationType == "GH").Count();
+            if (lastReservation != null)
+            {
+                sequenceNumber = lastReservation + 1;
+            }
+
+            return $"RSQ-GH-{year}-{sequenceNumber:D4}";
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Console.WriteLine("User Id: " + userId);
+            Console.WriteLine("Department Id: " + _department);
+
+            var (managerEmail, managerFullName) = await _employeeService.GetManagerInfo(userId);
+
+            if (managerEmail == null || managerFullName == null)
+            {
+                return NotFound("Manager not found for the given department.");
+            }
+
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
+            var reservationCode = GenerateReservationCode();
 
             GFMS_ReservationHeader _reservation = new GFMS_ReservationHeader()
             {
@@ -176,20 +240,20 @@ namespace PropertyManagementSystem.Controllers
                 ChargeToCompany = _company,
                 Requestor = _requestor,
                 RequestorEmail = _requestorEmail,
-                Approver = "Jerwin Alimuin",
-                ApproverEmail = "jerwin_alimuin@tecoindustrialpark.com",
+                Approver = managerFullName,
+                ApproverEmail = managerEmail,
                 DateFiled = DateTime.Now,
                 DateSubmitted = DateTime.Now,
                 Status = "DRAFT",
-                ReservationType = "GH",
-
+                Department = _department,
+                ReservationCode = reservationCode,
+                ReservationType = "GH"
             };
 
             _context.ReservationHeaders.Add(_reservation);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            return RedirectToAction("ReservationDetails", new { Id = unique });
-
+            return RedirectToAction("ViewReservationDetails", new { Id = unique });
         }
         public IActionResult ReservationDetails(string Id)
         {
@@ -235,8 +299,6 @@ namespace PropertyManagementSystem.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-
-
         public IActionResult CreateReservationDetails(int _reservationId, string[] _guests, string[] _company, string[] _relationship, DateTime _startDate, DateTime _endDate, string _purpose)
         {
             Console.WriteLine($"Start Date: {_startDate}");
@@ -262,8 +324,6 @@ namespace PropertyManagementSystem.Controllers
                             GuestName = _guests[i],
                             Company = _company[i],
                             Relationship = _relationship[i],
-                            FacilityId = 1003,
-                            RoomId = 1010,
                             StartDate = _startDate,
                             EndDate = _endDate,
                             Purpose = _purpose,
@@ -271,9 +331,26 @@ namespace PropertyManagementSystem.Controllers
                         };
 
                         _context.ReservationDetails.Add(reservationDetails);
+                        var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
+                        if (reservationHeader != null)
+                        {
+                            if (User.IsInRole("GFMS.Admin Approver"))
+                            {
+                                reservationHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
+                               
+                            }
+                            else
+                            {
+                                reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
+                                
+                            }
+                        }
                     }
 
                     _context.SaveChanges();
+                    TempData["AlertMessage"] = "Reservation details created successfully!";
+                    TempData["AlertSubMessage"] = "Your reservation has been saved";
+                    TempData["AlertType"] = "success";
                 }
             }
             catch (DbUpdateException ex)
@@ -283,39 +360,80 @@ namespace PropertyManagementSystem.Controllers
                 {
                     Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
                 }
+                TempData["AlertMessage"] = "An error occurred while saving changes.";
+                TempData["AlertSubMessage"] = "Something went wrong. Please try again.";
+                TempData["AlertType"] = "error";
                 throw;
             }
-
-            return RedirectToAction("Index", "Accommodation");
+            return RedirectToAction("ReservationList", "Accommodation");
         }
 
-
-
-        public ActionResult getGuestHouseReservation([DataSourceRequest] DataSourceRequest request)
+        public ActionResult getGuestHouseReservation([DataSourceRequest] DataSourceRequest request, string gridType)
         {
-            List<GFMS_ReservationHeader> _reservations = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.Status == "PENDING" || x.Status == "DRAFT")
-                .Where(X => X.ReservationType == "GH")
-                .ToList();
+            Task<Gen_Employee> employeeTask = _roleService.GetUserName(User);
+            var employee = employeeTask.Result;
 
-            DataSourceResult result = _reservations.ToDataSourceResult(request, _reservation => new
+            var query = _context.ReservationHeaders.AsQueryable()
+                .Where(x => x.ReservationType == "GH");
+
+            if (gridType == "myReservation")
             {
-                ReservationId = _reservation.ReservationId,
-                DateFiled = _reservation.DateFiled,
-                Requestor = _reservation.Requestor,
-                RequestorEmail = _reservation.RequestorEmail,
-                GUID = _reservation.GUID,
-                Status = _reservation.Status,
-                DateSubmitted = _reservation.DateSubmitted,
-                ReservationCode = _reservation.ReservationCode,
-                Approver = _reservation.Approver,
-                ApprovedDateTime = _reservation.ApprovedDateTime,
-                ApproverEmail = _reservation.ApproverEmail,
-                ChargeToCompany = _reservation.ChargeToCompany,
-                ReservationType = _reservation.ReservationType
-            }) ;
-            return Json(result);
+                query = query.Where(x => x.Requestor == employee.Fullname);
+            }
+            else if (gridType == "reservationApproval")
+            {
+                if (User.IsInRole("GFMS.Department Head"))
+                {
+                    query = query.Where(x => x.Approver == employee.Fullname && x.Status == "FOR DEPARTMENT HEAD'S APPROVAL");
+                }
+                else if (User.IsInRole("GFMS.Admin Approver"))
+                {
+                    query = query.Where(x => x.Status == "FOR ADMIN APPROVER'S APPROVAL");
+                }
+                else if (User.IsInRole("GFMS.Admin Manager"))
+                {
+                    query = query.Where(x => x.Status == "FOR ADMIN MANAGER'S APPROVAL");
+                }
+            }
 
+            var reservationHeaders = query.ToList();
+            var reservationViewModels = new List<ReservationViewModel>();
+            foreach (var header in reservationHeaders)
+            {
+                var department = _context.Departments.FirstOrDefault(d => d.Id == header.Department);
+                var details = _context.ReservationDetails.Where(rd => rd.ReservationId == header.ReservationId).ToList();
+
+                var viewModel = new ReservationViewModel
+                {
+                    ReservationId = header.ReservationId,
+                    Requestor = header.Requestor,
+                    RequestorEmail = header.RequestorEmail,
+                    ReservationCode = header.ReservationCode,
+                    Status = header.Status,
+                    GUID = header.GUID,
+                    ChargeToCompany = header.ChargeToCompany,
+                    ReservationType = header.ReservationType,
+                    DepartmentName = department?.DepartmentCode,
+                    ReservationDetailId = details.FirstOrDefault()?.ReservationDetailId ?? 0
+                };
+
+                reservationViewModels.Add(viewModel);
+            }
+
+            DataSourceResult result = reservationViewModels.ToDataSourceResult(request, model => new
+            {
+                model.ReservationId,
+                model.Requestor,
+                model.DepartmentName,
+                model.RequestorEmail,
+                model.ReservationCode,
+                model.Status,
+                model.GUID,
+                model.ChargeToCompany,
+                model.ReservationType,
+                model.ReservationDetailId
+            });
+            return Json(result);
         }
 
         /*Update*/
@@ -378,8 +496,11 @@ namespace PropertyManagementSystem.Controllers
                     _context.ReservationDetails.Add(newDetail);
                 }
             }
+            TempData["AlertMessage"] = "Reservation details updated successfully!";
+            TempData["AlertSubMessage"] = "Your reservation has been updated";
+            TempData["AlertType"] = "success";
             _context.SaveChanges();
-            return RedirectToAction("Index", "Accommodation");
+            return RedirectToAction("ReservationList", "Accommodation");
         }
 
         /*Delete*/
@@ -418,6 +539,83 @@ namespace PropertyManagementSystem.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+        [HttpPost]
+        public IActionResult UpdateReservationStatus(int ReservationId, string action, string Remarks, List<int> _facilityId, List<int> _roomId, List<int> ReservationDetailId)
+        {
+            Console.WriteLine("Reservation Id: " + ReservationId);
+            for (int i = 0; i < ReservationDetailId.Count; i++)
+            {
+                Console.WriteLine("Reservation Detail Id: " + ReservationDetailId[i]);
+                Console.WriteLine("Facility Id: " + _facilityId[i]);
+                Console.WriteLine("Room Id: " + _roomId[i]);
+            }
 
+            var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
+            var empName = _context.Employees.FirstOrDefault(e => e.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            if (reservation == null || empName == null)
+            {
+                return BadRequest("Invalid reservation or employee.");
+            }
+
+            if (action == "Approve")
+            {
+                if (reservation.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
+                {
+                    reservation.Status = "FOR ADMIN APPROVER'S APPROVAL";
+                }
+                else if (reservation.Status == "FOR ADMIN APPROVER'S APPROVAL")
+                {
+                    for (int i = 0; i < ReservationDetailId.Count; i++)
+                    {
+                        var detail = _context.ReservationDetails.FirstOrDefault(rd => rd.ReservationId == reservation.ReservationId && rd.ReservationDetailId == ReservationDetailId[i]);
+                        if (detail != null)
+                        {
+                            detail.FacilityId = _facilityId[i];
+                            detail.RoomId = _roomId[i];
+                        }
+                    }
+
+                    reservation.Status = "FOR ADMIN MANAGER'S APPROVAL";
+                    reservation.ApprovedBy = empName.Fullname;
+
+                    TempData["AlertMessage"] = "Room details assigned successfully!";
+                    TempData["AlertSubMessage"] = "Rooms are assigned to reservation";
+                    TempData["AlertType"] = "success";
+                }
+                else if (reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                {
+                    for (int i = 0; i < ReservationDetailId.Count; i++)
+                    {
+                        var detail = _context.ReservationDetails.FirstOrDefault(rd => rd.ReservationId == reservation.ReservationId && rd.ReservationDetailId == ReservationDetailId[i]);
+                        if (detail != null)
+                        {
+                            detail.FacilityId = _facilityId[i];
+                            detail.RoomId = _roomId[i];
+                        }
+                    }
+
+                    TempData["AlertMessage"] = "Approved!";
+                    TempData["AlertSubMessage"] = "Reservation has been approved";
+                    TempData["AlertType"] = "success";
+                    reservation.Status = "APPROVED";
+                    reservation.ApprovedBy = empName.Fullname;
+                }
+            }
+            else if (action == "Reject")
+            {
+                reservation.Status = "DISAPPROVED";
+                reservation.Remarks = Remarks;
+                reservation.ApprovedBy = empName.Fullname;
+            }
+            else
+            {
+                return BadRequest("Invalid action.");
+            }
+
+            _context.SaveChanges();
+
+            return RedirectToAction("ReservationList", "Accommodation");
+        }
     }
 }

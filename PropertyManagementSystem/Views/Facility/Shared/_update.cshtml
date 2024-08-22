@@ -1,0 +1,61 @@
+﻿@model PropertyManagementSystem.Models.GFMS_Facility;
+<form asp-action="EditFacility" asp-controller="Facility" method="post">
+    <input type="hidden" name="_facilityId" asp-for="FacilityId" />
+    <div class="mb-3">
+        <label class="form-label required">Facility Name </label>
+        <input class="form-control" name="_facilityName" type="text" required="required" asp-for="FacilityName">
+    </div>
+    <div class="mb-3">
+        <label class="form-label required">Facility Location</label>
+        @(Html.Kendo().DropDownList()
+            .Name("_facilityLocation")
+            .BindTo(new List<SelectListItem>
+        {
+        new SelectListItem() {
+        Text = "MILL",
+        Value = "MILL"
+        },
+        new SelectListItem() {
+        Text = "MAKATI",
+        Value = "MAKATI"
+        },
+        })
+            .Value(Model.FacilityLocation)
+            .HtmlAttributes(new { style = "width: 100%" })
+            )
+    </div>
+    <div class="mb-3">
+        <label class="form-label required">Facility Classification</label>
+        @(Html.Kendo().DropDownList()
+            .Name("_facilityClassification")
+            .BindTo(new List<SelectListItem>
+        {
+        new SelectListItem() {
+        Text = "FUNCTION ROOM",
+        Value = "FUNCTION ROOM"
+        },
+        new SelectListItem() {
+        Text = "GUESTHOUSE",
+        Value = "GUESTHOUSE"
+        },
+        new SelectListItem() {
+        Text = "DORM",
+        Value = "DORM"
+        },
+        })
+            .Value(Model.FacilityClassification)
+            .HtmlAttributes(new { style = "width: 100%" })
+            )
+    </div>
+    <label class="row">
+        <span class="col form-label">Is Active</span>
+        <span class="col-auto">
+            <label class="form-check form-check-single form-switch">
+                <input class="form-check-input" name="_isActive" type="checkbox" value="true" @(Model.isActive == true ? "checked" : "") />
+            </label>
+        </span>
+    </label>
+    <div class="mb-3 text-end">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>

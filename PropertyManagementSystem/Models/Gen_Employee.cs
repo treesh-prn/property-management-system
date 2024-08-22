@@ -22,7 +22,6 @@ namespace PropertyManagementSystem.Models
         public int EmploymentLevelId { get; set; }
         public int EmploymentStatusId { get; set; }
         public string? Email { get; set; }
-        public string? Title { get; set; }
         public string? Image { get; set; }
         public string? RFID { get; set; }
         public string? UserId { get; set; }

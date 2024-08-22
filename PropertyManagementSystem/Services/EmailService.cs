@@ -15,6 +15,8 @@ namespace PropertyManagementSystem.Services
             _config = config;
         }
 
+        string emailAdd = "trisha_paran@tecoindustrialpark.com";
+
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
             var emailMessage = new MimeMessage();
@@ -72,7 +74,7 @@ namespace PropertyManagementSystem.Services
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
 
-                await SendEmailAsync(requestorEmail, $"Reservation {reservationHeader.ReservationCode} has been created", emailBody);
+                await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been created", emailBody);
             }
 
 
@@ -96,7 +98,7 @@ namespace PropertyManagementSystem.Services
                 <p>Click here to <a href='https://localhost:7035/Identity/Account/Login'>login</a> and view the complete reservation details</p>
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
-            await SendEmailAsync(requestorEmail, $"Reservation {reservationHeader.ReservationCode} facility assignment", emailBody);
+            await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} facility assignment", emailBody);
         }
 
         public async Task SendApprovalNotification(GFMS_ReservationHeader reservationHeader, string requestorEmail)
@@ -110,7 +112,7 @@ namespace PropertyManagementSystem.Services
                 
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
-                await SendEmailAsync(requestorEmail, $"Reservation {reservationHeader.ReservationCode} has been approved", emailBody);
+                await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been approved", emailBody);
             }
             else
             {
@@ -122,7 +124,7 @@ namespace PropertyManagementSystem.Services
                 
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
-                await SendEmailAsync(requestorEmail, $"Reservation {reservationHeader.ReservationCode} has been approved", emailBody);
+                await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been approved", emailBody);
             }
         }
 
@@ -136,7 +138,7 @@ namespace PropertyManagementSystem.Services
                 
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
-            await SendEmailAsync(requestorEmail, $"Reservation {reservationHeader.ReservationCode} has been disapproved", emailBody);
+            await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been disapproved", emailBody);
         }
     }
 }

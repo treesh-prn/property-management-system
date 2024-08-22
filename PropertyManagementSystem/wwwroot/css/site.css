@@ -27996,6 +27996,14 @@ span.k-button-text{
     display: none;
 }
 
+.custom-alert {
+    position: absolute;
+    top: 10px;
+    left: 75%;
+    transform: translateX(-50%);
+    z-index: 1050;
+}
+
 .table-borderless tbody tr th,
 .table-borderless tbody tr td {
     border: none;
@@ -28039,7 +28047,6 @@ span.k-button-text{
 .form-fieldset {
     margin-bottom: 20px; /* Adjust the value as needed */
 }
-
-#customAlert {
-    display: none;
+.k-grid td, .k-grid th {
+    border-left-color: rgb(221, 228, 228 ) !important;
 }

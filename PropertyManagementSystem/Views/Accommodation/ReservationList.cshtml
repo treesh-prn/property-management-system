@@ -1,8 +1,42 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
-
+    var alertMessage = TempData["AlertMessage"] as string;
+    var alertSubMessage = TempData["AlertSubMessage"] as string;
+    var alertType = TempData["AlertType"] as string;
 }
 <div class="page-wrapper">
+    @if (!string.IsNullOrEmpty(alertMessage))
+    {
+        <div class="col-lg-6 ms-auto alert alert-@alertType alert-dismissible fade show custom-alert" role="alert">
+            <div class="d-flex">
+                <div>
+                    @if (alertType == "success")
+                    {
+                        <!-- Download SVG icon from http://tabler-icons.io/i/check -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M5 12l5 5l10 -10" />
+                        </svg>
+                    }
+                    else if (alertType == "error")
+                    {
+                        <!-- Error icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <circle cx="12" cy="12" r="9" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    }
+                </div>
+                <div>
+                    <h4 class="alert-title">@alertMessage</h4>
+                    <div class="text-secondary">@alertSubMessage</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -19,20 +53,10 @@
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
-                        @*   <span class="d-none d-sm-inline">
-                        <a href="#" class="btn">
-                        New view
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservation">
+                            <i class="ti ti-plus"></i>
+                            Create New Reservation
                         </a>
-                        </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        Create new report
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        </a> *@
                     </div>
                 </div>
             </div>
@@ -45,118 +69,159 @@
                 <div class="col-lg-12 col-md-12">
                     <div class="card">
                         <div class="card-header">
+                            <ul class="nav nav-tabs card-header-tabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-bs-toggle="tab" href="#myReservation">
+                                        My Reservation
+                                    </a>
+                                </li>
+                                @if (User.IsInRole("GFMS.Department Head") || User.IsInRole("GFMS.Admin Approver") || User.IsInRole("GFMS.Admin Manager"))
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link" data-bs-toggle="tab" href="#reservationApproval">
+                                            Reservation Requests
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
                             <h3 class="card-title"></h3>
                             <div class="card-actions">
                             </div>
                         </div>
-                        <div class="card-body p-0">
-                            @(
-                                Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_ReservationHeader>()
-                                        .Name("reservationGrid")
-                                        .ToolBar(tools => tools.Excel())
-                                        .Excel(excel => excel
-                                        .FileName("Reservations.xlsx")
-                                        .AllPages(true))
-                                        .Columns(columns =>
+                        <div class="card-body p-0 tab-content">
+                            <div id="myReservation" class="tab-pane active">
+                                @(
+                                    Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
+                                    .Name("reservationGrid2")
+                                    .ToolBar(tools => tools.Excel())
+                                    .Excel(excel => excel
+                                    .FileName("Reservations.xlsx")
+                                    .AllPages(true))
+                                    .Columns(columns =>
+                                    {
+                                        columns.Bound(c => c.ReservationId).Visible(false).Exportable(false);
+                                        columns.Bound(c => c.ReservationDetailId).Visible(false).Exportable(false);
+                                        columns.Bound(c => c.ReservationCode);
+                                        columns.ForeignKey(c => c.ChargeToCompany, ds => ds.Read(r => r.Action("getCompanies", "Global")), "Id", "CompanyCode").Title("Charge To Company").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
+                                        columns.Bound(c => c.DepartmentName);
+                                        columns.Bound(c => c.Requestor);
+                                        columns.Bound(c => c.RequestorEmail).Hidden(true);
+                                        columns.Bound(c => c.Status).ClientTemplate(
+                                        "<div class='datagrid-content'>" +
+                                        "# if (Status === 'PENDING' || Status === 'DRAFT') { #" +
+                                        "<span class='status status-blue'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
+                                        "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\" || Status === \"FOR ADMIN MANAGER'S APPROVAL\" || Status === \"APPROVED\") { #" +
+                                        "<span class='status status-green'><span class='status-dot'></span><strong><strong> #: Status # </strong></strong></span>" +
+                                        "# } else if (Status === 'CANCELLED' || Status === 'DISAPPROVED') { #" +
+                                        "<span class='status status-red'><span class='status-dot'></span><strong> #: Status # </strong></span>" +
+                                        "# } else { #" +
+                                        "<span>#: Status #</span>" +
+                                        "# } #" +
+                                        "</div>"
+                                        ).Title("Status").Width(350);
+                                        columns.Command(command =>
                                         {
-                                            columns.Bound(c => c.ReservationId).Visible(false).Exportable(false);
-                                            columns.ForeignKey(c => c.ChargeToCompany , ds => ds.Read(r => r.Action("getCompanies", "Global")), "Id", "Company").Title("Charge To Company").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
-                                            columns.Bound(c => c.Requestor);
-                                            columns.Bound(c => c.RequestorEmail);
-                                            columns.Bound(c => c.Status).Hidden(true);
-                                            columns.Command(command =>
-                                            {
-                                                command.Custom("view")
-                                            .Text("<i class='ti ti-eye'></i>View")
-                                            .Click("onViewClickReservationList")
-                                            .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
-                                                command.Custom("delete")
-                                            .Text("<i class='ti ti-trash'></i> Delete")
-                                            .Click("onDeleteClick")
-                                            .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
-                                            })
-                                            .Title("Actions")
-                                            .Exportable(false);
-
+                                            command.Custom("view")
+                                        .Text("<i class='ti ti-eye'></i>View")
+                                        .Click("onViewClickReservationList")
+                                        .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success", style = "width: 250px;" });
                                         })
-                                        .Scrollable()
-                                        .ToolBar(toolbar =>
+                                        .Title("Actions")
+                                        .Width(300)
+                                        .Exportable(false);
+
+                                    })
+                                    .NoRecords()
+                                    .Groupable()
+                                    .Filterable()
+                                    .Scrollable()
+                                    .ToolBar(toolbar =>
+                                    {
+                                        toolbar.Search();
+                                    })
+                                    .DataSource(dataSource => dataSource
+                                    .Ajax()
+                                    .Model(model =>
+                                    {
+                                        model.Id(p => p.ReservationId);
+                                        model.Field(p => p.GUID);
+                                        model.Field(p => p.ReservationType);
+                                        model.Field(p => p.ReservationDetailId);
+                                    })
+                                    .Read(read => read.Action("getGuestHouseReservation", "Accommodation", new {gridType = "myReservation"}))
+                                    .PageSize(50)
+                                    )
+                                    )
+                            </div>
+                            <div id="reservationApproval" class="tab-pane fade">
+                                @(
+                                    Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
+                                    .Name("reservationGrid")
+                                    .ToolBar(tools => tools.Excel())
+                                    .Excel(excel => excel
+                                    .FileName("Reservations.xlsx")
+                                    .AllPages(true))
+                                    .Columns(columns =>
+                                    {
+                                        columns.Bound(c => c.ReservationId).Visible(false).Exportable(false);
+                                        columns.Bound(c => c.ReservationDetailId).Visible(false).Exportable(false);
+                                        columns.Bound(c => c.ReservationCode);
+                                        columns.ForeignKey(c => c.ChargeToCompany, ds => ds.Read(r => r.Action("getCompanies", "Global")), "Id", "CompanyCode").Title("Charge To Company").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
+                                        columns.Bound(c => c.DepartmentName);
+                                        columns.Bound(c => c.Requestor);
+                                        columns.Bound(c => c.RequestorEmail).Hidden(true);
+                                        columns.Bound(c => c.Status).ClientTemplate(
+                                        "<div class='datagrid-content'>" +
+                                        "# if (Status === 'PENDING' || Status === 'DRAFT') { #" +
+                                        "<span class='status status-blue'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
+                                        "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\" || Status === \"FOR ADMIN MANAGER'S APPROVAL\" || Status === \"APPROVED\") { #" +
+                                        "<span class='status status-green'><span class='status-dot'></span><strong><strong> #: Status # </strong></strong></span>" +
+                                        "# } else if (Status === 'CANCELLED' || Status === 'DISAPPROVED') { #" +
+                                        "<span class='status status-red'><span class='status-dot'></span><strong> #: Status # </strong></span>" +
+                                        "# } else { #" +
+                                        "<span>#: Status #</span>" +
+                                        "# } #" +
+                                        "</div>"
+                                        ).Title("Status").Width(350);
+                                        columns.Command(command =>
                                         {
-                                            toolbar.Search();
+                                            command.Custom("view")
+                                        .Text("<i class='ti ti-eye'></i>View")
+                                        .Click("onViewClickReservationList")
+                                        .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success", style = "width: 250px;" });
                                         })
-                                        .DataSource(dataSource => dataSource
-                                        .Ajax()
-                                        .Model(model =>
-                                        {
-                                            model.Id(p => p.ReservationId);
-                                            model.Field(p => p.GUID);
-                                            model.Field(p => p.ReservationType);
-                                        })
-                                .Read(read => read.Action("getGuestHouseReservation", "Accommodation"))
-                                .PageSize(50)
-                                )
-                                )
+                                        .Title("Actions")
+                                        .Width(300)
+                                        .Exportable(false);
 
-
+                                    })
+                                    .NoRecords()
+                                    .Groupable()
+                                    .Filterable()
+                                    .Scrollable()
+                                    .ToolBar(toolbar =>
+                                    {
+                                        toolbar.Search();
+                                    })
+                                    .DataSource(dataSource => dataSource
+                                    .Ajax()
+                                    .Model(model =>
+                                    {
+                                        model.Id(p => p.ReservationId);
+                                        model.Field(p => p.GUID);
+                                        model.Field(p => p.ReservationType);
+                                        model.Field(p => p.ReservationDetailId);
+                                    })
+                                    .Read(read => read.Action("getGuestHouseReservation", "Accommodation", new { gridType = "reservationApproval" }))
+                                    .PageSize(50)
+                                    )
+                                    )
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
-
-@*NEW ROOM MODAL *@
-<div class="modal modal-blur fade" id="modal-newRoom" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">New Dorm Room</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="fcFRM1" asp-controller="Room" asp-action="newDMRoom" enctype="multipart/form-data" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label required">Name </label>
-                        <input class="form-control" name="_name" type="text" required="required">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Facility</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_facility")
-                            .DataTextField("FacilityName")
-                            .DataValueField("FacilityId")
-                            .DataSource(source =>
-                            {
-                                source.Read(read =>
-                                {
-                                    read.Action("getFacilityList", "Facility");
-                                });
-                            })
-                            .HtmlAttributes(new { style = "width: 100%" })
-                            )
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Capacity</label>
-                        <input class="form-control" name="_capacity" type="number" required="required">
-                    </div>
-                    <label class="row">
-                        <span class="col">Is Active</span>
-                        <span class="col-auto">
-                            <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" name="_isActive" type="checkbox" checked>
-                            </label>
-                        </span>
-                    </label>
-                </div>
-
-
-                <div class="modal-footer">
-                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@*END - NEW FACILITY MODAL *@
+<partial name="Shared/_newReservation" />

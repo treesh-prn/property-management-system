@@ -57,7 +57,7 @@
                 <div class="col-lg-3">
                     <div class="card text-center">
                         <div class="card-header card-header-light">
-                            <h3 class="card-title">Application #@Model.ReservationHeader.ReservationId</h3>
+                            <h3 class="card-title">@Model.ReservationHeader.ReservationCode</h3>
                         </div>
                         <img class="img-responsive2 mx-auto" src="@Url.Content("~/img/calendar.jpg")" alt="Reservation Image">
                         <div class="card-body">
@@ -129,26 +129,67 @@
                                                                 </span>
                                                                 <span class="form-selectgroup-label-content">
                                                                     <span class="form-selectgroup-title strong mb-1">Housing</span>
-
                                                                 </span>
                                                             </span>
                                                         </label>
                                                     </div>
                                                 </div>
                                                 <div class="row mb-3">
-                                                    <div class="col-lg-12">
-                                                        <div>
-                                                            <label class="form-label">
-                                                                Contact Number
-                                                            </label>
-                                                            <div class="input-group mb-2">
-                                                                <span class="input-group-text">
-                                                                    +63
-                                                                </span>
-                                                                <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" asp-for="@Model.ReservationDetails.FirstOrDefault().ContactNumber" maxlength="10">
+                                                    <div class="col-lg-6">
+                                                        <label class="form-label">Schedule Type</label>
+                                                        <div class="form-selectgroup-boxes row mb-3">
+                                                            <div class="col-lg-4">
+                                                                <label class="form-selectgroup-item">
+                                                                    <input type="radio" name="_homeOwnership" id="regularRadio" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership">
+                                                                    <span class="form-selectgroup-label d-flex align-items-center p-2">
+                                                                        <span class="me-3">
+                                                                            <span class="form-selectgroup-check"></span>
+                                                                        </span>
+                                                                        <span class="form-selectgroup-label-content">
+                                                                            <span class="form-selectgroup-title strong mb-1">Regular</span>
+                                                                        </span>
+                                                                    </span>
+                                                                </label>
                                                             </div>
-                                                            
+                                                            <div class="col-lg-3">
+                                                                <label class="form-selectgroup-item">
+                                                                    <input type="radio" name="_homeOwnership" value="1" id="swingRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership">
+                                                                    <span class="form-selectgroup-label d-flex align-items-center p-2">
+                                                                        <span class="me-3">
+                                                                            <span class="form-selectgroup-check"></span>
+                                                                        </span>
+                                                                        <span class="form-selectgroup-label-content">
+                                                                            <span class="form-selectgroup-title strong mb-1">Swing</span>
+                                                                        </span>
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                            <div class="col-lg-5">
+                                                                <label class="form-selectgroup-item">
+                                                                    <input type="radio" name="_homeOwnership" value="2" id="gyRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership">
+                                                                    <span class="form-selectgroup-label d-flex align-items-center p-2">
+                                                                        <span class="me-3">
+                                                                            <span class="form-selectgroup-check"></span>
+                                                                        </span>
+                                                                        <span class="form-selectgroup-label-content">
+                                                                            <span class="form-selectgroup-title strong mb-1">Graveyard</span>
+                                                                        </span>
+                                                                    </span>
+                                                                </label>
+                                                            </div>
                                                         </div>
+                                                    </div>
+                                                    <div class="col-lg-6">
+                                                        <label class="form-label">
+                                                            Contact Number
+                                                        </label>
+                                                        <div class="input-group pb-2">
+                                                            <span class="input-group-text">
+                                                                +63
+                                                            </span>
+                                                            <input type="text" class="form-control pb-2" name="_contactNumber" placeholder="Contact Number" asp-for="@Model.ReservationDetails.FirstOrDefault().ContactNumber" maxlength="10">
+                                                        </div>
+
                                                     </div>
                                                 </div>
                                                 <div class="row mb-3">
@@ -300,7 +341,7 @@
                                                                 </div>
                                                                 <div class="col-lg-6">
                                                                     <label class="form-label">Fare</label>
-                                                                    <input type="text" id="fare" class="form-control" name="_fare" placeholder="Fare" asp-for="@Model.ReservationDetails.FirstOrDefault().Fare">
+                                                                    <input type="text" id="fare" class="form-control" name="_fare" placeholder="Fare" asp-for="@Model.ReservationDetails.FirstOrDefault().Fare" value="@Model.ReservationDetails.FirstOrDefault().Fare">
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -446,7 +487,7 @@
                                             </div>
 
                                             <div class="modal-footer">
-                                                <a href="@Url.Action("Index", "Dorm")" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                                                <a href="@Url.Action("Index", "Dorm")" class="btn btn-link link-secondary">
                                                     Cancel
                                                 </a>
                                                 <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">

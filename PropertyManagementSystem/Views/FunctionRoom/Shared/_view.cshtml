@@ -1,4 +1,8 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
+    var employee = await RoleService.GetUserName(User);
+}
 @foreach (var detail in Model.ReservationDetails)
 {
     <form asp-action="CancelReservation" method="post">
@@ -52,7 +56,7 @@
                         )
                 </div>
             </div>
-            @if (User.IsInRole("GFMS.Admin Approver") || Model.ReservationHeader.Status == "APPROVED")
+            @if (User.IsInRole("GFMS.Admin Approver") || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED")
             {
                 <div class="row mb-3">
                     <div class="col-lg-6">
@@ -106,7 +110,7 @@
                         .Enable(false)
                         .NoDataTemplateId("noDataTemplate")
                         .DataTextField("EquipmentName")
-                        .DataValueField("EquipmentId")
+                        .DataValueField("Id")
                         .Value(detail.EquipmentNeeded?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                         .Filter("contains")
                         .AutoBind(true)
@@ -135,22 +139,30 @@
         </div>
         <div class="modal-footer">
             <div class="ms-auto">
-                @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
+                @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
                 {
-                    <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
-                        <span>
-                            <i class="ti ti-x m-1"></i>
-                        </span>
-                        Cancel
-                    </button>
-                    <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
-                        Go Back
-                    </a>
-
+                    @if(detail.StartDate >= DateTime.Today.AddHours(DateTime.Now.Hour - 1))
+                    {
+                        <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
+                            <span>
+                                <i class="ti ti-x m-1"></i>
+                            </span>
+                            Cancel
+                        </button>
+                        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                            Go Back
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                            Go Back
+                        </a>
+                    }
                 }
                 else
                 {
-                     <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                    <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
                         Go Back
                     </a>
                 }
@@ -159,7 +171,7 @@
     </form>
 @*CANCEL MODAL*@
     <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
             <div class="modal-content">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 <div class="modal-status bg-danger"></div>
@@ -186,13 +198,14 @@
                                         </a>
                                     </div>
                                     <div class="col">
-                                        <button type="button" class="btn btn-danger w-100" id="confirm-delete">
+                                        <button type="submit" class="btn btn-danger w-100" id="confirm-delete">
                                             Cancel
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    <input type="hidden" name="reservationType" value="@Model.ReservationHeader.ReservationType" />
                     <input type="hidden" name="ReservationId" value="@detail.ReservationId" />
                 </form>
             </div>

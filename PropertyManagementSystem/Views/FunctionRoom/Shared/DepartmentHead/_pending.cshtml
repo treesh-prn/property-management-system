@@ -3,6 +3,7 @@
 {
     <form asp-action="UpdateReservationStatus" method="post">
         @Html.AntiForgeryToken()
+        pending
         <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
         <input type="hidden" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">
@@ -70,7 +71,7 @@
                             .DataTextField("RoomName")
                             .DataValueField("RoomId")
                             .Value(detail.RoomId.ToString())
-
+                            .CascadeFrom("_facilityId")
                             .DataSource(source =>
                             {
                                 source.Read(read =>

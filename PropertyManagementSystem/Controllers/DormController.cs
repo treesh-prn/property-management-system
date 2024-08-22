@@ -7,6 +7,8 @@ using PropertyManagementSystem.Models;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using PropertyManagementSystem.Services;
+using System.Security.Claims;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -14,10 +16,16 @@ namespace PropertyManagementSystem.Controllers
     {
         private readonly DAL _context;
         private const string UploadPath = "wwwroot/Uploads";
+        private readonly IRoleService _roleService;
+        private readonly EmailService _emailService;
+        private readonly EmployeeService _employeeService;
 
-        public DormController(DAL context)
+        public DormController(DAL context, IRoleService roleService, EmailService emailService, EmployeeService employeeService)
         {
             _context = context;
+            _roleService = roleService;
+            _emailService = emailService;
+            _employeeService = employeeService;
         }
         public IActionResult Index()
         {
@@ -156,7 +164,7 @@ namespace PropertyManagementSystem.Controllers
         public ActionResult getDormReservation([DataSourceRequest] DataSourceRequest request)
         {
             var reservationHeaders = _context.ReservationHeaders
-                .Where(x => x.Status == "PENDING" && x.ReservationType == "DRM")
+                .Where(x => x.ReservationType == "DRM")
                 .ToList();
 
             List<ReservationViewModel> reservationViewModels = new List<ReservationViewModel>();
@@ -169,6 +177,7 @@ namespace PropertyManagementSystem.Controllers
                 var viewModel = new ReservationViewModel
                 {
                     ReservationId = header.ReservationId,
+                    ReservationCode = header.ReservationCode,
                     Requestor = header.Requestor,
                     RequestorEmail = header.RequestorEmail,
                     Status = header.Status,
@@ -184,6 +193,7 @@ namespace PropertyManagementSystem.Controllers
             DataSourceResult result = reservationViewModels.ToDataSourceResult(request, model => new
             {
                 model.ReservationId,
+                model.ReservationCode,
                 model.Requestor,
                 model.DepartmentName,
                 model.RequestorEmail,
@@ -196,31 +206,56 @@ namespace PropertyManagementSystem.Controllers
             return Json(result);
         }
 
+        private string GenerateReservationCode()
+        {
+            int year = DateTime.Now.Year;
+            int sequenceNumber = 1;
+
+            var lastReservation = _context.ReservationHeaders.Where(r => r.ReservationType == "FN").Count();
+            if (lastReservation != null)
+            {
+                sequenceNumber = lastReservation + 1;
+            }
+
+            return $"RSQ-DRM-{year}-{sequenceNumber:D4}";
+        }
+
         /*Create Reservation*/
         [HttpPost]
-        public IActionResult CreateReservation(int _department, string _requestor, string _requestorEmail)
+        public async Task<IActionResult> CreateReservationAsync(int _department, string _requestor, string _requestorEmail)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Console.WriteLine("User Id: " + userId);
+            Console.WriteLine("Department Id: " + _department);
+
+            var (managerEmail, managerFullName) = await _employeeService.GetManagerInfo(userId);
+
+            if (managerEmail == null || managerFullName == null)
+            {
+                return NotFound("Manager not found for the given department.");
+            }
+
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
-
-
+            var reservationCode = GenerateReservationCode();
             GFMS_ReservationHeader _reservation = new GFMS_ReservationHeader()
             {
                 GUID = unique,
-                Department = _department,
                 Requestor = _requestor,
                 RequestorEmail = _requestorEmail,
-                Approver = "Jerwin Alimuin",
-                ApproverEmail = "jerwin_alimuin@tecoindustrialpark.com",
+                Approver = managerFullName,
+                ApproverEmail = managerEmail,
                 DateFiled = DateTime.Now,
                 DateSubmitted = DateTime.Now,
                 Status = "DRAFT",
-                ReservationType = "GH",
+                Department = _department,
+                ReservationCode = reservationCode,
+                ReservationType = "DRM"
 
             };
 
             _context.ReservationHeaders.Add(_reservation);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("ReservationDetails", new { Id = unique});
 

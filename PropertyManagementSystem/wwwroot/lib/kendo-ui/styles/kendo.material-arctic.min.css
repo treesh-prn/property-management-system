@@ -29193,11 +29193,6 @@ kendo-grid .k-alt.k-state-hover .k-grid-content-sticky, kendo-grid .k-alt:hover 
 .k-grid .k-grid-pager.k-state-focused, .k-grid .k-grid-pager:focus {
     color: inherit
 }
-
-.k-grid td, .k-grid th {
-    border-left-color: transparent
-}
-
 .k-grid[dir=rtl] td, .k-grid[dir=rtl] th, .k-rtl .k-grid td, .k-rtl .k-grid th {
     border-right-color: transparent
 }

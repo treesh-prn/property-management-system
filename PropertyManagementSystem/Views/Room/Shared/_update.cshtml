@@ -1,0 +1,54 @@
+﻿@model PropertyManagementSystem.Models.RoomViewModel;
+<form asp-action="EditGHRoom" asp-controller="Room" method="post">
+    <input type="hidden" name="_roomId" asp-for="RoomId" />
+    <input type="hidden" name="_roomType" asp-for="RoomType" />
+
+    <div class="mb-3">
+        <label class="form-label required">Room Name </label>
+        <input class="form-control" name="_roomName" type="text" required="required" asp-for="RoomName">
+    </div>
+    <div class="mb-3">
+        <label class="form-label required">Facility</label>
+        @(Html.Kendo().DropDownList()
+            .Name("_facility")
+            .DataTextField("FacilityName")
+            .DataValueField("FacilityId")
+            .DataSource(source =>
+            {
+                source.Read(read => read.Action(Model.RoomType == 0 ? "getGHList" : Model.RoomType == 1 ? "getFNList" : "getDMList", "Facility"));
+            })
+            .Value(Model.FacilityId.ToString())
+            .HtmlAttributes(new { style = "width: 100%" })
+            )
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label required">Status</label>
+        @(Html.Kendo().DropDownList()
+            .Name("_roomStatus")
+            .BindTo(new List<SelectListItem>
+        {
+        new SelectListItem() { Text = "Open", Value = "Open" },
+        new SelectListItem() { Text = "Occupied", Value = "Occupied" },
+        new SelectListItem() { Text = "Under Maintenance", Value = "Under Maintenance" }
+        })
+            .Value(Model.RoomStatus)
+            .HtmlAttributes(new { style = "width: 100%" })
+            )
+    </div>
+    <div class="mb-3">
+        <label class="form-label required">Capacity</label>
+        <input class="form-control" name="_capacity" type="number" required="required" asp-for="Capacity">
+    </div>
+    <label class="row">
+        <span class="col form-label">Is Active</span>
+        <span class="col-auto">
+            <label class="form-check form-check-single form-switch">
+                <input class="form-check-input" name="_isActive" type="checkbox" value="true" @(Model.isActive == true ? "checked" : "") />
+            </label>
+        </span>
+    </label>
+    <div class="mb-3 text-end">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </div>
+</form>
