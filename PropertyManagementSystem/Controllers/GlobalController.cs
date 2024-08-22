@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.IO;
+using System.Security.Claims;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -37,6 +39,7 @@ namespace PropertyManagementSystem.Controllers
 
         public JsonResult getDepartments()
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var _deptList = _context.Departments.AsQueryable().ToList();
 
             return Json(_deptList , new JsonSerializerSettings());
@@ -56,6 +59,23 @@ namespace PropertyManagementSystem.Controllers
             }
             return Json(_eqList);
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult CancelReservation(int ReservationId, string Remarks)
+        {
+            var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                reservation.Status = "CANCELLED";
+                reservation.Remarks = Remarks;
+                _context.SaveChanges();
+            }
 
+            return RedirectToAction("ReservationList","FunctionRoom");
+        }
     }
 }

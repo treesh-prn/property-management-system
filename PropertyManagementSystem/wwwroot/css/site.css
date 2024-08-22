@@ -494,7 +494,7 @@ select {
 }
 
     select:disabled {
-        opacity: 1
+        opacity: .5
     }
 
 [list]:not([type=date]):not([type=datetime-local]):not([type=month]):not([type=week]):not([type=time])::-webkit-calendar-picker-indicator {
@@ -2702,6 +2702,8 @@ progress {
     --tblr-table-hover-color: inherit;
     --tblr-table-hover-bg: rgba(0, 0, 0, 0.075);
     width: 100%;
+    text-align: left;
+    font-size: 0.85rem;
     margin-bottom: 1rem;
     color: var(--tblr-table-color);
     vertical-align: top;
@@ -2962,7 +2964,7 @@ progress {
     padding: .4375rem .75rem;
     font-family: var(--tblr-font-sans-serif);
     font-size: .875rem;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 1.4285714286;
     color: inherit;
     background-color: var(--tblr-bg-forms);
@@ -3030,7 +3032,7 @@ progress {
 }
 
 .form-control:disabled {
-    background-color: var(--tblr-bg-surface-secondary);
+    background-color: var(--tblr-muted-lt);
     opacity: 1
 }
 
@@ -3672,7 +3674,7 @@ textarea.form-control-lg {
     align-items: center;
     padding: .4375rem .75rem;
     font-size: .875rem;
-    font-weight: 400;
+    font-weight: 500;
     line-height: 1.4285714286;
     color: var(--tblr-muted);
     text-align: center;
@@ -27962,7 +27964,6 @@ img {
 .k-grid-content .k-button.k-grid-View {
     background-color: #206BC4;
     border: 1px solid #206BC4;
-    border-radius: 4px;
     padding: 8px 16px;
     margin: 4px 7px 2px 15px;
     font-size: 14px;
@@ -28002,6 +28003,14 @@ span.k-button-text{
     word-wrap: break-word;
 }
 
+.k-grid-norecords {
+    text-align: center;
+    font-size: 15px;
+    color: #999;
+    padding: 20px;
+}
+
+
 .custom-padding{
     padding: 10px;
 }
@@ -28031,8 +28040,6 @@ span.k-button-text{
     margin-bottom: 20px; /* Adjust the value as needed */
 }
 
-.k-grid-header .k-header {
-    text-align: center;
+#customAlert {
+    display: none;
 }
-
-

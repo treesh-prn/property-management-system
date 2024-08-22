@@ -26,7 +26,29 @@ namespace PropertyManagementSystem.Controllers
 
         public async Task<IActionResult> Index()
         {
-           
+          var rooms = _context.Rooms
+          .Include(r => r.Facility)
+          .Where(x => x.RoomType == 1)
+          .Select(room => new GFMS_Rooms
+          {
+              RoomId = room.RoomId,
+              RoomName = room.RoomName,
+              RoomType = room.RoomType,
+              FacilityId = room.FacilityId
+          })
+          .ToList();
+
+            var facilities = _context.Facilities
+           .Where(facility => facility.Rooms.Any(room => room.RoomType == 1))
+           .Select(facility => new GFMS_Facility
+           {
+               FacilityId = facility.FacilityId,
+               FacilityName = facility.FacilityName,
+           })
+            .ToList();
+
+            ViewData["Rooms"] = rooms;
+            ViewData["Facilities"] = facilities;
 
             return View();
         }

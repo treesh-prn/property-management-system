@@ -37,20 +37,18 @@ namespace PropertyManagementSystem.Services
             return activeRole;
         }
 
-
         public async Task<Gen_Employee> GetUserName(ClaimsPrincipal user)
         {
             var empUser = await _user.GetUserAsync(user);
             Console.WriteLine("User Role:" + user.IsInRole);
 
-            // Ensure empUser is not null before proceeding
             if (empUser != null)
             {
                 Gen_Employee employee = _context.Employees.FirstOrDefault(e => e.UserId == empUser.Id);
                 return employee;
             }
 
-            return null; // or handle the case where empUser is null
+            return null;
         }
 
     }

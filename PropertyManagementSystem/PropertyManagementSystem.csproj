@@ -7,6 +7,13 @@
     <UserSecretsId>aspnet-PropertyManagementSystem-01e78dbb-6f51-419d-b141-250f22df5666</UserSecretsId>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+    <Content Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+    <EmbeddedResource Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+    <None Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.7.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.24" />

@@ -2,8 +2,9 @@
 @foreach(var detail in Model.ReservationDetails)
 {
     <form asp-action="EditReservationDetails" method="post">
-        <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
-        <input type="hidden" name="ReservationId" value="@detail.ReservationId">
+        APPROVAL
+        <input type="text" name="ReservationDetailId" value="@detail.ReservationDetailId">
+        <input type="text" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">
             <div id="dynamic-rows">
                 <div class="row mb-3">

@@ -31,5 +31,7 @@ namespace PropertyManagementSystem.Models
 
         [NotMapped]
         public string Fullname => $"{Firstname} {Lastname}";
+        [NotMapped]
+        public string NameInitials => $"{Firstname[0]}{Lastname[0]}";
     }
 }

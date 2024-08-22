@@ -20,20 +20,11 @@
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
-                        @*   <span class="d-none d-sm-inline">
-                        <a href="#" class="btn">
-                        New view
+                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservation">
+                            <i class="ti ti-plus"></i>
+                            Create New Reservation
                         </a>
-                        </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        Create new report
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        </a> *@
+
                     </div>
                 </div>
             </div>
@@ -52,7 +43,7 @@
                                         My Reservation
                                     </a>
                                 </li>
-                                @if (User.IsInRole("GFMS.Department Head"))
+                                @if (User.IsInRole("GFMS.Department Head") || User.IsInRole("GFMS.Admin Approver") || User.IsInRole("GFMS.Admin Manager"))
                                 {
                                     <li class="nav-item">
                                         <a class="nav-link" data-bs-toggle="tab" href="#reservationApproval">
@@ -86,10 +77,10 @@
                                         "<div class='datagrid-content'>" +
                                         "# if (Status === 'PENDING' || Status === 'DRAFT') { #" +
                                         "<span class='status status-blue'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
-                                        "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\") { #" +
-                                        "<span class='status status-green'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
+                                        "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\" || Status === \"FOR ADMIN MANAGER'S APPROVAL\" || Status === \"APPROVED\") { #" +
+                                        "<span class='status status-green'><span class='status-dot'></span><strong><strong> #: Status # </strong></strong></span>" +
                                         "# } else if (Status === 'CANCELLED' || Status === 'DISAPPROVED') { #" +
-                                        "<span class='status status-red'><span class='status-dot'></span>#: Status #</span>" +
+                                        "<span class='status status-red'><span class='status-dot'></span><strong> #: Status # </strong></span>" +
                                         "# } else { #" +
                                         "<span>#: Status #</span>" +
                                         "# } #" +
@@ -100,19 +91,16 @@
                                             command.Custom("view")
                                         .Text("<i class='ti ti-eye'></i>View")
                                         .Click("onViewClickReservationList")
-                                        .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
-
-                                            command.Custom("delete")
-                                        .Text("<i class='ti ti-x'></i> Cancel")
-                                        .Click("onDeleteClick")
-                                        .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
+                                        .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success", style = "width: 250px;" });
                                         })
                                         .Title("Actions")
+                                        .Width(300)
                                         .Exportable(false);
 
                                     })
-                                    .NoRecords(true)
+                                    .NoRecords()
                                     .Groupable()
+                                    .Filterable()
                                     .Scrollable()
                                     .ToolBar(toolbar =>
                                     {
@@ -152,10 +140,10 @@
                                         "<div class='datagrid-content'>" +
                                         "# if (Status === 'PENDING' || Status === 'DRAFT') { #" +
                                         "<span class='status status-blue'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
-                                        "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\") { #" +
+                                        "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\" || Status === \"FOR ADMIN MANAGER'S APPROVAL\" || Status === \"APPROVED\") { #" +
                                         "<span class='status status-green'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
                                         "# } else if (Status === 'CANCELLED' || Status === 'DISAPPROVED') { #" +
-                                        "<span class='status status-red'><span class='status-dot'></span>#: Status #</span>" +
+                                        "<span class='status status-red'><span class='status-dot'></span><strong> #: Status # </strong></span>" +
                                         "# } else { #" +
                                         "<span>#: Status #</span>" +
                                         "# } #" +
@@ -168,11 +156,13 @@
                                         .Click("onViewClickReservationList")
                                         .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success width", style = "width: 250px;" });
                                         })
+                                        .Width(300)
                                         .Title("Actions")
                                         .Exportable(false);
 
                                     })
                                     .NoRecords()
+                                    .Filterable()
                                     .Groupable()
                                     .Scrollable()
                                     .ToolBar(toolbar =>
@@ -191,7 +181,6 @@
                                     .Read(read => read.Action("getFunctionRoomReservation", "FunctionRoom", new { gridType = "reservationApproval" }))
                                     .PageSize(50)
                                     )
-                                    .Height(500)
                                     )
                             </div>
                         </div>
@@ -200,39 +189,5 @@
             </div>
         </div>
     </div>
-
 </div>
-@*DELETE MODAL*@
-<div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            <div class="modal-status bg-danger"></div>
-            <div class="modal-body text-center py-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
-                <h3>Are you sure?</h3>
-                <div class="text-secondary">Do you really want to remove this record? This action cannot be undone.</div>
-            </div>
-            <form id="delete-form" action="@Url.Action("DeleteReservationDetails", "Dorm")" method="post">
-                <div class="modal-footer">
-                    <div class="w-100">
-                        <div class="row">
-                            <div class="col">
-                                <a href="#" class="btn w-100" data-bs-dismiss="modal">
-                                    Cancel
-                                </a>
-                            </div>
-                            <div class="col">
-                                <button type="submit" class="btn btn-danger w-100" id="confirm-delete">
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <input type="hidden" name="ReservationId" id="modal-reservation-id" />
-            </form>
-        </div>
-    </div>
-</div>
-@*END DELETE MODAL*@
+<partial name="Shared/_newReservation" />

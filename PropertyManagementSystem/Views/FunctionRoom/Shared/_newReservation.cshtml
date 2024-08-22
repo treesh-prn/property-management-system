@@ -1,0 +1,68 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
+    var employee = await RoleService.GetUserName(User);
+}
+@*NEW RESERVATION MODAL *@
+<div class="modal modal-blur fade" id="modal-newReservation" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Reservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="fcFRM1" asp-controller="FunctionRoom" asp-action="CreateReservation" method="post">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label class="form-label required">Requestor Name</label>
+                            <input class="form-control" name="_requestor" type="text" value="@employee.Fullname" readonly>
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="form-label required">Requestor Email</label>
+                            <input class="form-control" name="_requestorEmail" type="email" value="@employee.Email" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Charge to Company:</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_company")
+                            .DataTextField("Company")
+                            .DataValueField("Id")
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("getCompanies", "Global");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: normal; border-color: var(--tblr-muted); opacity: .8;" })
+                            )
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Department</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_department")
+                            .DataTextField("DepartmentName")
+                            .DataValueField("Id")
+                            .Value(employee.DepartmentId.ToString())
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("getDepartments", "Global");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
+                            )
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+@*END - NEW RESERVATION MODAL *@

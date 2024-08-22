@@ -1,0 +1,202 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@foreach (var detail in Model.ReservationDetails)
+{
+    <form asp-action="CancelReservation" method="post">
+        <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
+        <input type="hidden" name="ReservationId" value="@detail.ReservationId">
+        <div class="modal-body">
+            <div id="dynamic-rows">
+                <div class="row mb-3">
+                    <div class="col-lg-6">
+                        <label class="form-label">Number of Attendees</label>
+                        <input type="number" class="form-control" name="NumberOfGuest" placeholder="Number of Attendees" value="@detail.NumberOfGuest" disabled>
+                    </div>
+                    <div class="col-lg-6">
+                        <div>
+                            <label class="form-label">
+                                Contact Number
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    +63
+                                </span>
+                                <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" value="@detail.ContactNumber" disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <label class="form-label">Duration of Stay</label>
+            <div class="row mb-3">
+                <div class="col-lg-6">
+                    <label class="form-label">Start Date</label>
+                    @(
+                        Html.Kendo().DateTimePicker()
+                        .Name("StartDate")
+                        .Value(detail.StartDate)
+                        .DateInput(true)
+                        .Format("yyyy/MM/dd HH:mm:ss.fff")
+                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                        .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
+                        )
+                </div>
+                <div class="col-lg-6">
+                    <label class="form-label">End Date</label>
+                    @(
+                        Html.Kendo().DateTimePicker()
+                        .Name("EndDate")
+                        .Value(detail.EndDate)
+                        .Format("yyyy/MM/dd HH:mm:ss.fff")
+                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                        .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
+                        )
+                </div>
+            </div>
+            @if (User.IsInRole("GFMS.Admin Approver") || Model.ReservationHeader.Status == "APPROVED")
+            {
+                <div class="row mb-3">
+                    <div class="col-lg-6">
+                        <label class="form-label">Facility</label>
+                        @(
+                            Html.Kendo().DropDownList()
+                            .Name("_facilityId")
+                            .DataTextField("FacilityName")
+                            .DataValueField("FacilityId")
+                            .Value(detail.FacilityId.ToString())
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("GetFacility", "FunctionRoom");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
+                            .OptionLabel("Select Facility")
+                            )
+                    </div>
+                    <div class="col-lg-6">
+                        <label class="form-label">Room</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_roomId")
+                            .DataTextField("RoomName")
+                            .DataValueField("RoomId")
+                            .Value(detail.RoomId.ToString())
+
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
+                                }).ServerFiltering(true);
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
+                            .OptionLabel("Select Room")
+                            )
+                    </div>
+                </div>
+
+            }
+            <div class="row mb-3">
+                <div class="col-lg-12">
+                    <label class="form-label">Equipment Needed</label>
+                    @(Html.Kendo().MultiSelect()
+                        .Name("EquipmentNeeded")
+                        .Placeholder("Please select needed equipment/s")
+                        .DownArrow(true)
+                        .Enable(false)
+                        .NoDataTemplateId("noDataTemplate")
+                        .DataTextField("EquipmentName")
+                        .DataValueField("EquipmentId")
+                        .Value(detail.EquipmentNeeded?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                        .Filter("contains")
+                        .AutoBind(true)
+                        .DataSource(source =>
+                        {
+                            source.Read(read =>
+                            {
+                                read.Action("GetEquipments", "Global");
+                            });
+                        })
+                        .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
+                        )
+
+                    @* <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded"> *@
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div>
+                    <label class="form-label">
+                        Purpose
+                        <span class="form-label-description">26/50</span>
+                    </label>
+                    <textarea class="form-control" rows="3" name="Purpose" disabled>@detail.Purpose</textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <div class="ms-auto">
+                @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
+                {
+                    <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
+                        <span>
+                            <i class="ti ti-x m-1"></i>
+                        </span>
+                        Cancel
+                    </button>
+                    <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                        Go Back
+                    </a>
+
+                }
+                else
+                {
+                     <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-primary">
+                        Go Back
+                    </a>
+                }
+            </div>
+        </div>
+    </form>
+@*CANCEL MODAL*@
+    <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
+                    <h3>Are you sure?</h3>
+                    <div class="text-secondary">Do you really want to cancel this reservation? This action cannot be undone.</div>
+                </div>
+                <form id="delete-form" action="@Url.Action("CancelReservation", "Global")" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="m-1">
+                        <div>
+                            <label class="form-label">Reason <span class="form-label-description"></span></label>
+                            <textarea class="form-control" rows="2" name="Remarks" required></textarea>
+                        </div>
+                    </div>
+                        <div class="modal-footer">
+                            <div class="w-100">
+                                <input type="hidden" value="@Model.ReservationHeader.Status"/>
+                                <div class="row">
+                                    <div class="col">
+                                        <a href="#" class="btn w-100" data-bs-dismiss="modal">
+                                            Go Back
+                                        </a>
+                                    </div>
+                                    <div class="col">
+                                        <button type="button" class="btn btn-danger w-100" id="confirm-delete">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <input type="hidden" name="ReservationId" value="@detail.ReservationId" />
+                </form>
+            </div>
+        </div>
+    </div>
+@*CANCEL DELETE MODAL*@
+}

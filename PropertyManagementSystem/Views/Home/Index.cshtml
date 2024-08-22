@@ -1,7 +1,16 @@
-﻿@{
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
     ViewData["Title"] = "Home Page";
+    var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms>;
+    var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
+    //var rooms = ViewData["Rooms"] as List<GFMS_Rooms>;
+    //var facilities = ViewData["Facilities"] as List<GFMS_Facility>;
+
+    var employee = await RoleService.GetUserName(User);
 
 }
+
 <div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
@@ -114,6 +123,72 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="col-12">
+                            @(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
+                                .Name("scheduler")
+                                .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0))
+                                .MajorTick(60)
+                                .MinorTickCount(1)
+                                .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
+                                .Views(views =>
+                                {
+                                    views.TimelineMonthView(timeline =>
+                                    {
+                                        timeline.StartTime(new DateTime(2022, 6, 13, 00, 00, 00));
+                                        timeline.EndTime(new DateTime(2022, 6, 13, 00, 00, 00));
+                                        timeline.MajorTick(1440);
+                                        timeline.EventHeight(50);
+                                    });
+                                })
+                                .Timezone("Etc/UTC")
+                                .Group(g => g.Resources("Rooms", "Facilities").Orientation(SchedulerGroupOrientation.Vertical))
+                                .Resources(resource =>
+                                {
+                                    resource.Add(m => m.FacilityId)
+                                    .Title("Facility")
+                                    .Name("Facilities")
+                                    .DataTextField("FacilityName")
+                                    .DataValueField("FacilityId")
+                                    .BindTo(facilities.Select(f => new
+                                    {
+                                        FacilityId = f.FacilityId,
+                                        FacilityName = f.FacilityName
+                                    }));
+
+                                    resource.Add(m => m.RoomId)
+                                    .Title("Room")
+                                    .Name("Rooms")
+                                    .DataTextField("RoomName")
+                                    .DataValueField("RoomId")
+                                    .DataParentValueField("FacilityId")
+                                    .BindTo(rooms.Select(r => new
+                                    {
+                                        RoomId = r.RoomId,
+                                        RoomName = r.RoomName,
+                                        FacilityId = r.FacilityId
+                                    }));
+                                })
+                                .DataSource(d => d
+                                .Model(m =>
+                                {
+                                    m.Id(f => f.ReservationId);
+                                    m.Field(f => f.Title).DefaultValue("No title");
+                                    m.Field(f => f.GUID);
+                                    m.RecurrenceId(f => f.RecurrenceID);
+                                    m.Field(f => f.Start);
+                                    m.Field(f => f.End);
+                                    m.Field(f => f.RoomId);
+                                    m.Field(f => f.FacilityId);
+                                })
+                                .Read("ViewReservation", "FunctionRoom")
+                                .Update("ViewReservationDetails", "FunctionRoom")
+                                .Destroy(destroy => destroy.Action("DeleteReservationDetail", "FunctionRoom"))
+                                )
+                                .Events(events => events
+                                .DataBound("onDataBound")
+                                .Edit("onEditView"))
+                                )
                         </div>
                     </div>
                 </div>
