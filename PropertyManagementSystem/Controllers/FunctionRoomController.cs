@@ -55,7 +55,7 @@ namespace PropertyManagementSystem.Controllers
 
             var viewModel = new ReservationViewModel
             {
-                NewReservationsCount = newReservationCount,
+                //NewReservationsCount = newReservationCount,
                 OccupiedRoomsCount = occupiedRoomsCount,
             };
 

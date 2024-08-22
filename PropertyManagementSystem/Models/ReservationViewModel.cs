@@ -55,7 +55,9 @@ namespace PropertyManagementSystem.Models
         public DateTime DateFiled { get; set; }
 
         //count for dashboard
-        public int NewReservationsCount { get; set; }
+        public int NewFNReservationsCount { get; set; }
+        public int NewGHReservationsCount { get; set; }
+        public int NewDRMReservationsCount { get; set; }
         public int ActiveGuestCount { get; set; }
         public int OccupiedRoomsCount { get; set; }
         public int AvailableRoomsCount { get; set; }

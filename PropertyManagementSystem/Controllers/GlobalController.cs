@@ -47,10 +47,11 @@ namespace PropertyManagementSystem.Controllers
             return Json(_deptList , new JsonSerializerSettings());
         }
 
-        public IActionResult GetFacility(int ReservationId)
+        public IActionResult GetFacility(int ReservationDetailId)
         {
+            Console.WriteLine("ReservationDetailId:" + ReservationDetailId);
             var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationId == ReservationId);
+                .FirstOrDefault(r => r.ReservationDetailId == ReservationDetailId);
 
             if (reservation == null)
             {
@@ -120,10 +121,10 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(rooms);
         }
-        public IActionResult GetGH(int reservationDetailId)
+        public IActionResult GetGH(int ReservationDetailId)
         {
             var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
+                .FirstOrDefault(r => r.ReservationDetailId == ReservationDetailId);
 
             if (reservation == null)
             {

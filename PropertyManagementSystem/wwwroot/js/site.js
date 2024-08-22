@@ -108,9 +108,9 @@ function onRoomsDataBound(e) {
 function filterFacilities() {
     
     return {
-        reservationDetailId: $("#reservationDetailId").val()
+        ReservationDetailId: $("#ReservationDetailId").val()
     };
-    console.log(reservationDetailId);
+    console.log(ReservationDetailId);
 }
 //filtering of Rooms Dropdownlist
 function filterRooms() {
@@ -509,3 +509,12 @@ function addNew(EquipmentId, value) {
 function dataBound() {
     this.expandRow(this.tbody.find("tr.k-master-row").first());
 }
+$(document).ready(function () {
+    if (window.location.hash) {
+        $('.nav-tabs a[href="' + window.location.hash + '"]').tab('show');
+    }
+
+    $('.nav-tabs a').on('shown.bs.tab', function (e) {
+        history.pushState(null, null, e.target.hash);
+    });
+});

@@ -9,7 +9,7 @@
       <am:Name>SSDTRS</am:Name>
       <am:Version>17.9.34728.123</am:Version>
     </am:UpdatedBy>
-    <am:LastModifiedTimestamp>2024-08-15T00:58:26.4356222Z</am:LastModifiedTimestamp>
+    <am:LastModifiedTimestamp>2024-08-19T05:21:29.6853190Z</am:LastModifiedTimestamp>
   </am:AuthoringMetadata>
   <df:DefaultFontFamily>Segoe UI</df:DefaultFontFamily>
   <AutoRefresh>0</AutoRefresh>
@@ -601,44 +601,12 @@
               <PaddingBottom>2pt</PaddingBottom>
             </Style>
           </Textbox>
-          <Textbox Name="Requestor">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>=First(Fields!Requestor.Value, "GFMS_ReservationHeader")</Value>
-                    <Style>
-                      <FontSize>11pt</FontSize>
-                    </Style>
-                  </TextRun>
-                </TextRuns>
-                <Style />
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>Requestor</rd:DefaultName>
-            <Top>0.54573in</Top>
-            <Left>3.35864in</Left>
-            <Height>0.25in</Height>
-            <Width>2.81956in</Width>
-            <ZIndex>3</ZIndex>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
           <Line Name="Line5">
             <Top>0.85129in</Top>
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>4</ZIndex>
+            <ZIndex>3</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -690,37 +658,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>5</ZIndex>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
-          <Textbox Name="RequestorEmail">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>=First(Fields!RequestorEmail.Value, "GFMS_ReservationHeader")</Value>
-                    <Style />
-                  </TextRun>
-                </TextRuns>
-                <Style />
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>RequestorEmail</rd:DefaultName>
-            <Top>0.92073in</Top>
-            <Left>3.35864in</Left>
-            <Height>0.25in</Height>
-            <Width>2.81956in</Width>
-            <ZIndex>6</ZIndex>
+            <ZIndex>4</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -736,7 +674,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>7</ZIndex>
+            <ZIndex>5</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -788,41 +726,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>8</ZIndex>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
-          <Textbox Name="DateSubmitted">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>=First(Fields!DateSubmitted.Value, "GFMS_ReservationHeader")</Value>
-                    <Style>
-                      <Format>dddd, MMMM d, yyyy h:mm:ss tt</Format>
-                    </Style>
-                  </TextRun>
-                </TextRuns>
-                <Style>
-                  <TextAlign>Left</TextAlign>
-                </Style>
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>DateSubmitted</rd:DefaultName>
-            <Top>1.30962in</Top>
-            <Left>3.35864in</Left>
-            <Height>0.25in</Height>
-            <Width>2.81956in</Width>
-            <ZIndex>9</ZIndex>
+            <ZIndex>6</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -857,7 +761,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>10</ZIndex>
+            <ZIndex>7</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -873,7 +777,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>11</ZIndex>
+            <ZIndex>8</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -907,7 +811,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>12</ZIndex>
+            <ZIndex>9</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -959,7 +863,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>13</ZIndex>
+            <ZIndex>10</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -975,7 +879,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>14</ZIndex>
+            <ZIndex>11</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -1027,7 +931,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>15</ZIndex>
+            <ZIndex>12</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1043,7 +947,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>16</ZIndex>
+            <ZIndex>13</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -1095,7 +999,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>17</ZIndex>
+            <ZIndex>14</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1111,7 +1015,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>18</ZIndex>
+            <ZIndex>15</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -1163,7 +1067,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>19</ZIndex>
+            <ZIndex>16</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1197,7 +1101,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>20</ZIndex>
+            <ZIndex>17</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1213,7 +1117,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>21</ZIndex>
+            <ZIndex>18</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -1247,7 +1151,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>22</ZIndex>
+            <ZIndex>19</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -1299,7 +1203,7 @@
             <Left>0.26333in</Left>
             <Height>0.25in</Height>
             <Width>1.8in</Width>
-            <ZIndex>23</ZIndex>
+            <ZIndex>20</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1315,7 +1219,7 @@
             <Left>0.26333in</Left>
             <Height>0in</Height>
             <Width>5.91487in</Width>
-            <ZIndex>24</ZIndex>
+            <ZIndex>21</ZIndex>
             <Style>
               <Border>
                 <Color>LightSteelBlue</Color>
@@ -1344,106 +1248,6 @@
               </RightBorder>
             </Style>
           </Line>
-          <Textbox Name="StartDate">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>=First(Fields!StartDate.Value, "GFMS_ReservationDetails")</Value>
-                    <Style>
-                      <Format>dddd, MMMM d, yyyy h:mm:ss tt</Format>
-                    </Style>
-                  </TextRun>
-                </TextRuns>
-                <Style>
-                  <TextAlign>Left</TextAlign>
-                </Style>
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>StartDate</rd:DefaultName>
-            <Top>3.25342in</Top>
-            <Left>3.35864in</Left>
-            <Height>0.25in</Height>
-            <Width>2.81956in</Width>
-            <ZIndex>25</ZIndex>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
-          <Textbox Name="EndDate">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>=First(Fields!EndDate.Value, "GFMS_ReservationDetails")</Value>
-                    <Style>
-                      <Format>dddd, MMMM d, yyyy h:mm:ss tt</Format>
-                    </Style>
-                  </TextRun>
-                </TextRuns>
-                <Style>
-                  <TextAlign>Left</TextAlign>
-                </Style>
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>EndDate</rd:DefaultName>
-            <Top>3.64231in</Top>
-            <Left>3.35864in</Left>
-            <Height>0.25in</Height>
-            <Width>2.81956in</Width>
-            <ZIndex>26</ZIndex>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
-          <Textbox Name="NumberOfGuest">
-            <CanGrow>true</CanGrow>
-            <KeepTogether>true</KeepTogether>
-            <Paragraphs>
-              <Paragraph>
-                <TextRuns>
-                  <TextRun>
-                    <Value>=Sum(Fields!NumberOfGuest.Value, "GFMS_ReservationDetails")</Value>
-                    <Style />
-                  </TextRun>
-                </TextRuns>
-                <Style>
-                  <TextAlign>Left</TextAlign>
-                </Style>
-              </Paragraph>
-            </Paragraphs>
-            <rd:DefaultName>NumberOfGuest</rd:DefaultName>
-            <Top>4.00342in</Top>
-            <Left>3.35864in</Left>
-            <Height>0.25in</Height>
-            <Width>2.81956in</Width>
-            <ZIndex>27</ZIndex>
-            <Style>
-              <Border>
-                <Style>None</Style>
-              </Border>
-              <PaddingLeft>2pt</PaddingLeft>
-              <PaddingRight>2pt</PaddingRight>
-              <PaddingTop>2pt</PaddingTop>
-              <PaddingBottom>2pt</PaddingBottom>
-            </Style>
-          </Textbox>
           <Textbox Name="FacilityName">
             <CanGrow>true</CanGrow>
             <KeepTogether>true</KeepTogether>
@@ -1465,7 +1269,7 @@
             <Left>3.35864in</Left>
             <Height>0.25in</Height>
             <Width>2.81956in</Width>
-            <ZIndex>28</ZIndex>
+            <ZIndex>22</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1495,7 +1299,7 @@
             <Left>3.35864in</Left>
             <Height>0.25in</Height>
             <Width>2.81956in</Width>
-            <ZIndex>29</ZIndex>
+            <ZIndex>23</ZIndex>
             <Style>
               <Border>
                 <Style>None</Style>
@@ -1524,6 +1328,194 @@
             </Paragraphs>
             <rd:DefaultName>Purpose</rd:DefaultName>
             <Top>4.39232in</Top>
+            <Left>3.35864in</Left>
+            <Height>0.25in</Height>
+            <Width>2.81956in</Width>
+            <ZIndex>24</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="Requestor">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!Requestor.Value, "GetReservationDetails")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>Requestor</rd:DefaultName>
+            <Top>0.54573in</Top>
+            <Left>3.35864in</Left>
+            <Height>0.25in</Height>
+            <Width>2.81956in</Width>
+            <ZIndex>25</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="DateSubmitted">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!DateSubmitted.Value, "GetReservationDetails")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>DateSubmitted</rd:DefaultName>
+            <Top>1.30962in</Top>
+            <Left>3.35864in</Left>
+            <Height>0.25in</Height>
+            <Width>2.81956in</Width>
+            <ZIndex>26</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="RequestorEmail">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!RequestorEmail.Value, "GetReservationDetails")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style />
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>RequestorEmail</rd:DefaultName>
+            <Top>0.92073in</Top>
+            <Left>3.35864in</Left>
+            <Height>0.25in</Height>
+            <Width>2.81956in</Width>
+            <ZIndex>27</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="StartDate">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!StartDate.Value, "GetReservationDetails")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>StartDate</rd:DefaultName>
+            <Top>3.24648in</Top>
+            <Left>3.35864in</Left>
+            <Height>0.25in</Height>
+            <Width>2.81956in</Width>
+            <ZIndex>28</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="EndDate">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=First(Fields!EndDate.Value, "GetReservationDetails")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>EndDate</rd:DefaultName>
+            <Top>3.63537in</Top>
+            <Left>3.35864in</Left>
+            <Height>0.25in</Height>
+            <Width>2.81956in</Width>
+            <ZIndex>29</ZIndex>
+            <Style>
+              <Border>
+                <Style>None</Style>
+              </Border>
+              <PaddingLeft>2pt</PaddingLeft>
+              <PaddingRight>2pt</PaddingRight>
+              <PaddingTop>2pt</PaddingTop>
+              <PaddingBottom>2pt</PaddingBottom>
+            </Style>
+          </Textbox>
+          <Textbox Name="NumberOfGuest">
+            <CanGrow>true</CanGrow>
+            <KeepTogether>true</KeepTogether>
+            <Paragraphs>
+              <Paragraph>
+                <TextRuns>
+                  <TextRun>
+                    <Value>=Sum(Fields!NumberOfGuest.Value, "GetReservationDetails")</Value>
+                    <Style />
+                  </TextRun>
+                </TextRuns>
+                <Style>
+                  <TextAlign>Left</TextAlign>
+                </Style>
+              </Paragraph>
+            </Paragraphs>
+            <rd:DefaultName>NumberOfGuest</rd:DefaultName>
+            <Top>4.0312in</Top>
             <Left>3.35864in</Left>
             <Height>0.25in</Height>
             <Width>2.81956in</Width>
@@ -1707,9 +1699,8 @@
                 <Paragraph>
                   <TextRuns>
                     <TextRun>
-                      <Value>=First(Fields!ReservationCode.Value, "GFMS_ReservationHeader")</Value>
+                      <Value>=First(Fields!ReservationCode.Value, "GetReservationDetails")</Value>
                       <Style>
-                        <FontSize>11pt</FontSize>
                         <FontWeight>Bold</FontWeight>
                       </Style>
                     </TextRun>
@@ -1720,7 +1711,7 @@
                 </Paragraph>
               </Paragraphs>
               <rd:DefaultName>ReservationCode</rd:DefaultName>
-              <Top>0.68611in</Top>
+              <Top>0.7in</Top>
               <Left>4.53506in</Left>
               <Height>0.25in</Height>
               <Width>1.64314in</Width>

@@ -23,7 +23,7 @@
             @foreach (var detail in Model.ReservationDetails)
             {
                 <div class="row mb-3">
-                    <input type="hidden" id="reservationDetailId" class="form-control" name="ReservationDetailId" value="@detail.ReservationDetailId">
+                    <input type="hidden" id="ReservationDetailId" class="form-control" name="ReservationDetailId" value="@detail.ReservationDetailId">
                     <div class="col-lg-2">
                         <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" value="@detail.GuestName" readonly>
                     </div>

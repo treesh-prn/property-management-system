@@ -59,7 +59,7 @@ namespace PropertyManagementSystem.Controllers
             var viewModel = new ReservationViewModel
             {
                 Requestor = _context.ReservationHeaders.FirstOrDefault()?.Requestor,
-                NewReservationsCount = newReservationCount,
+                //NewReservationsCount = newReservationCount,
             };
 
             ViewData["Rooms"] = rooms;
