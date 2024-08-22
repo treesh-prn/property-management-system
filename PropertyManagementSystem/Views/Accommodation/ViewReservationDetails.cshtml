@@ -93,9 +93,13 @@
                             <div class="modal-content">
                                 @if (User.IsInRole("GFMS.Requestor"))
                                 {
-                                    @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
+                                    @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
                                     {
                                         <partial name="Shared/_update" />
+                                    }
+                                    else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
+                                    {
+                                        <partial name="Shared/_view" />
                                     }
                                     else
                                     {

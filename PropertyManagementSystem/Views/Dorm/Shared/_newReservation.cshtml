@@ -1,0 +1,48 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
+    var employee = await RoleService.GetUserName(User);
+}
+<div class="modal modal-blur fade" id="modal-newReservatoion" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Reservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="fcFRM1" asp-controller="Dorm" asp-action="CreateReservation" method="post">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-lg-6">
+                            <label class="form-label required">Requestor Name</label>
+                            <input class="form-control" name="_requestor" type="text" value="@employee.Fullname" readonly>
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="form-label required">Requestor Email</label>
+                            <input class="form-control" name="_requestorEmail" type="email" required="required" value="@employee.Email" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Department</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_department")
+                            .DataTextField("DepartmentName")
+                            .DataValueField("Id")
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("getDepartments", "Global");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

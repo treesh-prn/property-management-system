@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PropertyManagementSystem.Data;
 
 namespace PropertyManagementSystem.Services
@@ -43,6 +44,11 @@ namespace PropertyManagementSystem.Services
             }
 
             return (manager.Email, manager.FullName);
+        }
+        public async Task<string> GetPositionNameById(int positionId)
+        {
+            var position = await _context.Positions.FirstOrDefaultAsync(p => p.Id == positionId);
+            return position?.PositionName;
         }
     }
 }

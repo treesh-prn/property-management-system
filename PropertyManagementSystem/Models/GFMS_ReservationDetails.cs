@@ -41,7 +41,10 @@ namespace PropertyManagementSystem.Models
         public string? DependentAge { get; set; }
         public string? StudyLocation { get; set; }
         public string? WorkPosition { get; set; }
-
+        public int? ScheduleType { get; set; }
+        public bool? isCritical { get; set; }
+        public bool? isOnCall { get; set; }
+        public string? DeptHeadRemarks { get; set; }
 
         public GFMS_ReservationHeader ReservationHeader { get; set; }
     }

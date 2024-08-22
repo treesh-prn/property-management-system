@@ -40,67 +40,73 @@
                 <div class="col-12">
                     <div class="row row-cards">
                         <div class="col-sm-6 col-lg-3">
-                            <div class="card card-sm">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <span class="bg-primary text-white avatar">
-                                                <i class="ti ti-briefcase" style="font-size: 30px;"></i>
-                                            </span>
-                                        </div>
-                                        <div class="col">
-                                            <div class="font-weight-medium">
-                                                : Total Venue
+                            <a href="@Url.Action("ReservationList", "FunctionRoom")#reservationApproval" class="card card-sm text-decoration-none">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-primary text-white avatar">
+                                                    <i class="ti ti-briefcase" style="font-size: 30px;"></i>
+                                                </span>
                                             </div>
-                                            <div class="text-secondary">
-                                                12 waiting reservation
+                                            <div class="col">
+                                                <div class="font-weight-medium">
+                                                    : Function Room
+                                                </div>
+                                                <div class="text-secondary">
+                                                    @Model.NewFNReservationsCount waiting for approval
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         <div class="col-sm-6 col-lg-3">
-                            <div class="card card-sm">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <span class="bg-success text-white avatar">
-                                                <i class="ti ti-home" style="font-size: 30px;"></i>
-                                            </span>
-                                        </div>
-                                        <div class="col">
-                                            <div class="font-weight-medium">
-                                                : Total Rooms
+                            <a href="@Url.Action("ReservationList", "Accommodation")#reservationApproval" class="card card-sm text-decoration-none">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-success text-white avatar">
+                                                    <i class="ti ti-door" style="font-size: 30px;"></i>
+                                                </span>
                                             </div>
-                                            <div class="text-secondary">
-                                                12 waiting reservation
+                                            <div class="col">
+                                                <div class="font-weight-medium">
+                                                    : Accommodation
+                                                </div>
+                                                <div class="text-secondary">
+                                                    @Model.NewGHReservationsCount waiting for approval
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a> 
                         </div>
                         <div class="col-sm-6 col-lg-3">
-                            <div class="card card-sm">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <span class="bg-yellow text-white avatar">
-                                                <i class="ti ti-bed" style="font-size: 30px;"></i>
-                                            </span>
-                                        </div>
-                                        <div class="col">
-                                            <div class="font-weight-medium">
-                                                : Total Dorm Space
+                            <a href="@Url.Action("ReservationList", "Dorm")#reservationApproval" class="card card-sm text-decoration-none">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-yellow text-white avatar">
+                                                    <i class="ti ti-bed" style="font-size: 30px;"></i>
+                                                </span>
                                             </div>
-                                            <div class="text-secondary">
-                                                67 active tenants
+                                            <div class="col">
+                                                <div class="font-weight-medium">
+                                                    : Dorm
+                                                </div>
+                                                <div class="text-secondary">
+                                                    @Model.NewDRMReservationsCount waiting for approval
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         <div class="col-sm-6 col-lg-3">
                             <div class="card card-sm">
@@ -136,11 +142,6 @@
                                             <b>GUEST ROOM</b>
                                         </a>
                                     </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#drmRoom">
-                                            <b>DORM ROOM</b>
-                                        </a>
-                                    </li>
                                 </ul>
                                 <h3 class="card-title"></h3>
                                 <div class="card-actions">
@@ -152,9 +153,6 @@
                                 </div>
                                 <div id="ghRoom" class="tab-pane fade">
                                     <partial name="Shared/_ghRoom" />
-                                </div>
-                                <div id="drmRoom" class="tab-pane fade">
-                                    @*insert calendar here*@
                                 </div>
                             </div>
                         </div>

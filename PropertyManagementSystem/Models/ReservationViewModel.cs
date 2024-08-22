@@ -6,11 +6,14 @@ namespace PropertyManagementSystem.Models
     {
         public GFMS_ReservationHeader? ReservationHeader { get; set; }
         public Gen_Department? Department { get; set; }
+        public Gen_Position? Position { get; set; }
+        public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
 
 
         public int FacilityId { get; set; }
         public string? FacilityName { get; set; }
+        public string? FacilityLocation { get; set; }
         public int? ReservationDetailId { get; set; }
         public int ReservationId { get; set; }
         public string ReservationType { get; set; }
@@ -45,17 +48,19 @@ namespace PropertyManagementSystem.Models
         public string? Purpose { get; set; }
         public string? EquipmentNeeded {  get; set; }
 
+        public int? ScheduleType {  get; set; }
+
         public string StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime DateFiled { get; set; }
 
         //count for dashboard
-        public int NewReservationsCount { get; set; }
+        public int NewFNReservationsCount { get; set; }
+        public int NewGHReservationsCount { get; set; }
+        public int NewDRMReservationsCount { get; set; }
         public int ActiveGuestCount { get; set; }
         public int OccupiedRoomsCount { get; set; }
         public int AvailableRoomsCount { get; set; }
         public IEnumerable<ReservationViewModel>? Reservations { get; set; }
-
-
     }
 }

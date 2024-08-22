@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Kendo.Mvc.Extensions;
+using Kendo.Mvc.UI;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
@@ -45,10 +47,11 @@ namespace PropertyManagementSystem.Controllers
             return Json(_deptList , new JsonSerializerSettings());
         }
 
-        public IActionResult GetFacility(int ReservationId)
+        public IActionResult GetFacility(int ReservationDetailId)
         {
+            Console.WriteLine("ReservationDetailId:" + ReservationDetailId);
             var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationId == ReservationId);
+                .FirstOrDefault(r => r.ReservationDetailId == ReservationDetailId);
 
             if (reservation == null)
             {
@@ -118,10 +121,10 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(rooms);
         }
-        public IActionResult GetGH(int reservationDetailId)
+        public IActionResult GetGH(int ReservationDetailId)
         {
             var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
+                .FirstOrDefault(r => r.ReservationDetailId == ReservationDetailId);
 
             if (reservation == null)
             {
@@ -235,6 +238,123 @@ namespace PropertyManagementSystem.Controllers
             return Json(rooms);
         }
 
+        public IActionResult GetDRM(int reservationDetailId)
+        {
+            var reservation = _context.ReservationDetails
+                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            var startDate = reservation.StartDate;
+            var endDate = reservation.EndDate;
+
+            var facilities = _context.Facilities
+                .Where(f => f.FacilityClassification == "DORM")
+                .Select(f => new
+                {
+                    Facility = f,
+                    AvailableRooms = f.Rooms.Where(room =>
+                        room.isActive == false ||
+
+                        !_context.ReservationDetails
+                            .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                            .Any(joined =>
+                                joined.rd.RoomId == room.RoomId &&
+                                joined.rh.Status != "CANCELLED" &&
+                                joined.rh.Status != "DISAPPROVED" &&
+                                ((joined.rd.StartDate <= startDate && joined.rd.EndDate > startDate) ||
+                                 (joined.rd.StartDate <= endDate && joined.rd.EndDate >= endDate) ||
+                                 (joined.rd.StartDate >= startDate && joined.rd.EndDate <= endDate))) &&
+                        _context.ReservationDetails
+                            .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                            .Where(joined =>
+                                joined.rd.RoomId == room.RoomId &&
+                                joined.rh.Status != "CANCELLED" &&
+                                joined.rh.Status != "DISAPPROVED" &&
+                                ((joined.rd.StartDate <= startDate && joined.rd.EndDate > startDate) ||
+                                 (joined.rd.StartDate <= endDate && joined.rd.EndDate >= endDate) ||
+                                 (joined.rd.StartDate >= startDate && joined.rd.EndDate <= endDate)))
+                            .Select(joined => joined.rd.GuestName)
+                            .Count() < room.Capacity)
+                })
+                .Where(f => f.AvailableRooms.Any())
+                .Select(f => new
+                {
+                    FacilityId = f.Facility.FacilityId,
+                    FacilityName = f.Facility.FacilityName,
+                    FacilityClass = f.Facility.FacilityClassification
+                })
+                .OrderBy(f => f.FacilityName)
+                .ToList();
+
+            return Json(facilities);
+        }
+
+        public IActionResult GetDRMRoom(int? facilityId, int reservationDetailId)
+        {
+            Console.WriteLine(facilityId);
+            Console.WriteLine(reservationDetailId);
+
+            var reservation = _context.ReservationDetails
+                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
+
+            if (reservation == null)
+            {
+                return NotFound();
+            }
+
+            var startDate = reservation.StartDate;
+            var endDate = reservation.EndDate;
+
+            var rooms = _context.Rooms
+                .Where(room => room.FacilityId == facilityId)
+                .Select(room => new
+                {
+                    RoomId = room.RoomId,
+                    RoomName = room.RoomName,
+                    OccupiedGuestCount = _context.ReservationDetails
+                        .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                        .Where(joined =>
+                            room.isActive == false ||
+                            joined.rd.RoomId == room.RoomId &&
+                            joined.rh.Status != "CANCELLED" &&
+                            joined.rh.Status != "DISAPPROVED" &&
+                            ((joined.rd.StartDate <= startDate && joined.rd.EndDate > startDate) ||
+                             (joined.rd.StartDate <= endDate && joined.rd.EndDate >= endDate) ||
+                             (joined.rd.StartDate >= startDate && joined.rd.EndDate <= endDate)))
+                        .Select(joined => joined.rd.GuestName)
+                        .Count(),
+                    RoomCapacity = room.Capacity
+                })
+                .Where(room => room.OccupiedGuestCount < room.RoomCapacity)
+                .Select(room => new
+                {
+                    RoomId = room.RoomId,
+                    RoomName = room.RoomName
+                })
+                .ToList();
+
+            // Add the initially selected room if it's not already in the list
+            var selectedRoom = _context.Rooms
+                .Where(room => room.RoomId == reservation.RoomId)
+                .Select(room => new
+                {
+                    RoomId = room.RoomId,
+                    RoomName = room.RoomName
+                })
+                .FirstOrDefault();
+
+            if (selectedRoom != null && !rooms.Any(r => r.RoomId == selectedRoom.RoomId))
+            {
+                rooms.Insert(0, selectedRoom);
+            }
+
+            return Json(rooms);
+        }
+
         public ActionResult GetEquipments()
         {
             List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();
@@ -285,6 +405,20 @@ namespace PropertyManagementSystem.Controllers
                 }
             }
             
+        }
+        public ActionResult getDormList([DataSourceRequest] DataSourceRequest request)
+        {
+            List<GFMS_Facility> _Facilities = _context.Facilities.Where(f => f.FacilityClassification == "DORM").ToList();
+            DataSourceResult result = _Facilities.ToDataSourceResult(request, _Facility => new
+            {
+                FacilityId = _Facility.FacilityId,
+                FacilityName = _Facility.FacilityName,
+                FacilityClassification = _Facility.FacilityClassification,
+                FacilityLocation = _Facility.FacilityLocation,
+                isActive = _Facility.isActive
+            });
+            return Json(result);
+
         }
     }
 }

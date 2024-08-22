@@ -54,7 +54,6 @@ function onDataBound(e) {
         element.find(".k-event-template").text(newTitle);
     });
 }
-
 function onEditView(e) {
     e.preventDefault();
     var scheduler = $("#scheduler").data("kendoScheduler");
@@ -82,6 +81,19 @@ function onEditViewG(e) {
     var editUrl = '/Accommodation/ViewReservationDetails/' + event.GUID;
     window.location.href = editUrl;
 }
+function onEditViewD(e) {
+    e.preventDefault();
+    var scheduler = $("#scheduler").data("kendoScheduler");
+    var event = e.event;
+
+    if (!event.ReservationId) {
+        console.error("ReservationId is null or undefined.");
+        return;
+    }
+
+    var editUrl = '/Dorm/ViewReservationDetails/' + event.GUID;
+    window.location.href = editUrl;
+}
 
 function onRoomsDataBound(e) {
     var dropdownlist = this;
@@ -96,15 +108,15 @@ function onRoomsDataBound(e) {
 function filterFacilities() {
     
     return {
-        reservationDetailId: $("#reservationDetailId").val()
+        ReservationDetailId: $("#ReservationDetailId").val()
     };
-    console.log(reservationDetailId);
+    console.log(ReservationDetailId);
 }
 //filtering of Rooms Dropdownlist
 function filterRooms() {
     return {
         facilityId: $("#_facilityId").val(),
-        ReservationId: $("#ReservationId").val()
+        reservationId: $("#ReservationId").val()
     };
 }
 function onFacilityChange(e) {
@@ -197,11 +209,6 @@ function onViewClickReservationList(e) {
         if (dataItem.ReservationType == "DRM") {
             var guid = dataItem.GUID;
             var url = '/Dorm/ViewReservationDetails/' + guid;
-            window.location.href = url;
-        }
-        if (dataItem.ReservationType == "DRM" && dataItem.ReservationDetailId == 0) {
-            var guid = dataItem.GUID;
-            var url = '/Dorm/ReservationDetails/' + guid;
             window.location.href = url;
         }
 
@@ -462,8 +469,20 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 function onSuccess(e) {
-    var filesList = $("#filesList");
-    filesList.append("<li>" + e.response.fileName + "</li>");
+    if (e.response && e.response.success) {
+        // Store the file paths in the hidden input as a comma-separated string
+        var filePaths = e.response.filepaths.join(',');
+        $('#filePath').val(filePaths);
+
+
+        // Display links to the uploaded files
+        e.response.filepaths.forEach(function (path) {
+            var fileName = path.split('/').pop();
+            $('#fileLinksList').append('<li><a href="' + path + '" target="_blank">' + fileName + '</a></li>');
+        });
+
+        $('#uploadedFilesLinks').show();
+    }
 }
 
 function onError(e) {
@@ -487,4 +506,15 @@ function addNew(EquipmentId, value) {
         widget.trigger("change");
     }
 }
+function dataBound() {
+    this.expandRow(this.tbody.find("tr.k-master-row").first());
+}
+$(document).ready(function () {
+    if (window.location.hash) {
+        $('.nav-tabs a[href="' + window.location.hash + '"]').tab('show');
+    }
 
+    $('.nav-tabs a').on('shown.bs.tab', function (e) {
+        history.pushState(null, null, e.target.hash);
+    });
+});
