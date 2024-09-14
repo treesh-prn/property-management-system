@@ -110,6 +110,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 reservationsQuery = reservationsQuery.Where(r => r.RequestorEmail == currUser && r.ReservationType == "FN");
             }
+            reservationsQuery = reservationsQuery.Where(r => r.ReservationType == "FN");
             var reservations = reservationsQuery.AsEnumerable()
                                                 .Select(r => new ReservationViewModel
                                                 {

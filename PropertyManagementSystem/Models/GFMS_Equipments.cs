@@ -10,9 +10,9 @@ namespace PropertyManagementSystem.Models
         public int Id { get; set; }
         public string? EquipmentName { get; set; }
         public int? EquipmentQty { get; set; }
-        public int? PurchaseCost { get; set; }
-        public int? WholeDayCost { get; set; }
-        public int? HalfDayCost { get; set; }
+        public double? PurchaseCost { get; set; }
+        public double? WholeDayCost { get; set; }
+        public double? HalfDayCost { get; set; }
         public string? Remarks { get; set; }
         public bool? isActive { get; set; }
     }

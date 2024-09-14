@@ -1,0 +1,120 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+<div class="container-xl">
+    <div class="card card-lg">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-6">
+                    <p class="h5" style="color:dimgray">@DateTime.Now</p>
+                </div>
+                <div class="col-6 text-end">
+                    <p class="h5" style="color:dimgray">This is your copy.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <img src="@Url.Content("~/img/Logo.png")" width="110" height="32" alt="Tabler" class="navbar-brand-image">
+                    <p class="h1">Reservation Report</p>
+                </div>
+                <div class="col-6 text-end">
+                    <p class="h2">Reservation Code</p>
+                    <div class="text-secondary" style="font-weight:bold">@Model.ReservationHeader.ReservationCode</div>
+                </div>
+            </div>
+            <div class="col-12 my-0">
+                <h3>RESERVATION DETAILS</h3>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="mb-2">
+                        <div class="datagrid-title">Requestor</div>
+                        <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="datagrid-title">Facility</div>
+                        <div class="datagrid-content">@Model.FacilityName</div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="mb-2">
+                        <div class="datagrid-title">Date Filed</div>
+                        <div class="datagrid-content">@Model.ReservationHeader.DateFiled</div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="datagrid-title">Room Name</div>
+                        <div class="datagrid-content">@Model.RoomName</div>
+                    </div>
+                </div>
+                <div class="col" style="max-width: 400px;">
+                    <div class="mb-2">
+                        <div class="datagrid-title">Charge To</div>
+                        <div class="datagrid-content">@Model.Company.Company</div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="datagrid-title">Department</div>
+                        <div class="datagrid-content">@Model.Department.DepartmentCode</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 my-3">
+                <h3>SUMMARY OF CHARGES</h3>
+            </div>
+            <table class="table table-striped table-responsive">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 1%">#</th>
+                        <th>Description</th>
+                        <th class="text-center">Hours</th>
+                        <th class="text-end" style="width: 1%">Unit</th>
+                        <th class="text-end" style="width: 1%">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int rowNumber = 1;
+                    }
+                    <tr>
+                        <td class="text-center">@rowNumber</td>
+                        <td>
+                            <p class="strong mb-1">@Model.RoomName</p>
+                            <div class="text-secondary">@Model.FacilityName</div>
+                        </td>
+                        <td class="text-center">@Model.HourSpent</td>
+                        <td class="text-end">₱@Model.RoomTotalCost</td>
+                        <td class="text-end">₱@Model.RoomTotalCost</td>
+                    </tr>
+                    @if (Model.Equipments.Any())
+                    {
+                        <tr>
+                            <td class="text-center">@(++rowNumber)</td>
+                            <td>
+                                <p class="strong mb-1">EQUIPMENTS USED</p>
+                                @foreach (var equipment in Model.Equipments)
+                                {
+                                    <div class="text-secondary">@equipment</div>
+                                }
+                            </td>
+                            <td class="text-center">@Model.HourSpent</td>
+                            <td class="text-end">₱@Model.EquipmentTotalCost</td>
+                            <td class="text-end">₱@Model.EquipmentTotalCost</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td colspan="4" class="strong text-end">Subtotal</td>
+                        <td class="text-end">₱@Model.SubTotalCost</td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="4" class="font-weight-bold text-uppercase text-end">Total Due</td>
+                        <td class="font-weight-bold text-end">₱@Model.TotalCost</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+        <div class="card-footer text-center">
+            <p class="text-secondary mt-9 mb-0">
+                This report is system generated. © 2024 TIPCO Estates Corporation. All rights reserved.
+            </p>
+        </div>
+    </div>
+</div>

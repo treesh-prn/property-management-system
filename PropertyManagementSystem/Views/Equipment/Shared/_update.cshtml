@@ -11,15 +11,15 @@
     </div>
     <div class="mb-3">
         <label class="form-label required">Purchase Cost </label>
-        <input class="form-control" name="_purCost" type="text" required="required" asp-for="PurchaseCost">
+        <input class="form-control" name="_purCost" type="text" step="0.01" required="required" asp-for="PurchaseCost">
     </div>
     <div class="mb-3">
         <label class="form-label required">Half Cost </label>
-        <input class="form-control" name="_halfCost" type="text" required="required" asp-for="HalfDayCost">
+        <input class="form-control" name="_halfCost" type="text" step="0.01" required="required" asp-for="HalfDayCost">
     </div>
     <div class="mb-3">
         <label class="form-label required">Whole Day Cost </label>
-        <input class="form-control" name="_wholeCost" type="text" required="required" asp-for="WholeDayCost">
+        <input class="form-control" name="_wholeCost" type="text" step="0.01" required="required" asp-for="WholeDayCost">
     </div>
     <div class="mb-3">
         <label class="form-label required">Remarks</label>

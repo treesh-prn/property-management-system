@@ -215,6 +215,21 @@ function onViewClickReservationList(e) {
     }
 
 }
+
+function onViewClickReservationReport(e) {
+    e.preventDefault();
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    if (dataItem) {
+        console.log(dataItem.ReservationDetailId)
+        if (dataItem.ReservationType == "FN") {
+            var guid = dataItem.GUID;
+            var url = '/Report/ViewReport/';
+            window.location.href = url;
+        }
+
+    }
+
+}
 function onDeleteClick(e) {
     e.preventDefault();
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
@@ -277,25 +292,7 @@ $(document).ready(function () {
     });
 });
 
-$(document).ready(function () {
-    $('#location').hide();
-    $('#location1').hide();
-    $('input[name="dependent-status"]').on('change', function () {
-        if ($(this).val() === 'working') {
-            $('#position').show();
-            $('#location').hide();
 
-            $('#position1').show();
-            $('#location1').hide();
-        } else if ($(this).val() === 'studying') {
-            $('#position').hide();
-            $('#location').show();
-
-            $('#position1').hide();
-            $('#location1').show();
-        }
-    });
-});
 
 document.getElementById('add-row').addEventListener('click', function () {
     var rowToClone = document.querySelector('#dynamic-rows .row');
@@ -338,8 +335,8 @@ document.getElementById('dynamic-rows').addEventListener('click', function (e) {
 });
 
 $(document).ready(function () {
-    $('#dynamic-rows-dependent').slideUp();
-    $('#dynamic-rows-dependent-label').slideUp();
+    //$('#dynamic-rows-dependent').slideUp();
+    //$('#dynamic-rows-dependent-label').slideUp();
     $('input[name="_civilStat"]').on('change', function () {
         if ($(this).val() === 'MARRIED') {
             $('#dynamic-rows-dependent').slideDown();
@@ -351,23 +348,35 @@ $(document).ready(function () {
     });
 });
 document.getElementById('add-dependent').addEventListener('click', function () {
-    var originalRow = document.querySelector('#dynamic-rows-dependent .row.mb-3');
+    var originalRow = document.querySelector('#dynamic-rows-dependent .original-row');
     var clone = originalRow.cloneNode(true);
 
+    // Clear input values in the cloned row
     var inputs = clone.querySelectorAll('input');
     inputs.forEach(function (input) {
-        input.value = "";
+        if (input.type !== 'radio') {
+            input.value = "";
+        }
+        // Reset the radio buttons to be unchecked
+        if (input.type === 'radio') {
+            input.checked = false;
+        }
     });
 
-    clone.classList.remove('original-row');
+    // Dynamically update the name attribute for radio buttons to ensure unique groups
+    var rowCount = document.querySelectorAll('#dynamic-rows-dependent .row.mb-3').length;
+    var radioButtons = clone.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(function (radio) {
+        radio.name = `dependent-status-${rowCount}`;
+    });
 
+    clone.classList.remove('original-row'); // Remove the original-row class from the clone
     document.getElementById('dynamic-rows-dependent').appendChild(clone);
-
 });
+
 document.getElementById('dynamic-rows-dependent').addEventListener('click', function (e) {
     if (e.target && e.target.closest('button') && e.target.closest('button').classList.contains('remove-row')) {
         var row = e.target.closest('.row.mb-3');
-
         if (!row.classList.contains('original-row')) {
             row.remove();
         }
@@ -377,6 +386,7 @@ document.getElementById('dynamic-rows-dependent').addEventListener('click', func
 // Add a unique class or identifier to the original row
 var originalRow = document.querySelector('#dynamic-rows-dependent .row.mb-3');
 originalRow.classList.add('original-row');
+
 //test
 document.addEventListener('DOMContentLoaded', function () {
     const ownedRadio = document.getElementById('ownedRadio');

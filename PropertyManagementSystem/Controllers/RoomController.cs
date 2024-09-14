@@ -126,7 +126,11 @@ namespace PropertyManagementSystem.Controllers
                 FacilityId = _Room.FacilityId,
                 Capacity = _Room.Capacity,
                 isActive = _Room.isActive,
-                //RoomType = _Room.RoomType
+                RoomType = _Room.RoomType,
+                CostPerDay = _Room.CostPerDay,
+                CostPerWeek = _Room.CostPerWeek,
+                CostPerMonth = _Room.CostPerMonth,
+                isPerHead = _Room.isPerHead,
             });
             return Json(result);
 
@@ -222,7 +226,7 @@ namespace PropertyManagementSystem.Controllers
         /*Update*/
 
         [HttpPost]
-        public IActionResult EditGHRoom(GFMS_Rooms room, int _roomId, string _roomName, int _facility, string _roomStatus, int _capacity, bool _isActive)
+        public IActionResult EditGHRoom(GFMS_Rooms room, int _roomId, string _roomName, int _facility, string _roomStatus, int _capacity, bool _isActive, double _costPerDay)
         {
             var ghRoom = _context.Rooms.FirstOrDefault(gh => gh.RoomId == _roomId);
             if (ghRoom == null)
@@ -234,6 +238,7 @@ namespace PropertyManagementSystem.Controllers
             ghRoom.RoomStatus = _roomStatus;
             ghRoom.Capacity = _capacity;
             ghRoom.isActive = _isActive;
+            ghRoom.CostPerDay = _costPerDay;
 
             try
             {

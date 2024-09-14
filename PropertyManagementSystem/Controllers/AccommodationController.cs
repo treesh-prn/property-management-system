@@ -162,7 +162,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 reservationsQuery = reservationsQuery.Where(r => r.RequestorEmail == currUser && r.ReservationType == "GH");
             }
-
+            reservationsQuery = reservationsQuery.Where(r => r.ReservationType == "GH");
             var reservationList = reservationsQuery.ToList();
 
             var groupedReservations = reservationList.GroupBy(r => r.ReservationId)

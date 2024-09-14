@@ -5,8 +5,12 @@ namespace PropertyManagementSystem.Models
     public class ReservationViewModel : ISchedulerEvent
     {
         public GFMS_ReservationHeader? ReservationHeader { get; set; }
+        public GFMS_Facility? Facility { get; set; }
+        public GFMS_Rooms? Rooms { get; set; }
         public Gen_Department? Department { get; set; }
+        public Gen_Company? Company { get; set; }
         public Gen_Position? Position { get; set; }
+        public List<string> Equipments { get; set; }
         public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
 
@@ -62,5 +66,12 @@ namespace PropertyManagementSystem.Models
         public int OccupiedRoomsCount { get; set; }
         public int AvailableRoomsCount { get; set; }
         public IEnumerable<ReservationViewModel>? Reservations { get; set; }
+
+        //hours spent
+        public double? HourSpent { get; set; }
+        public double? EquipmentTotalCost {  get; set; }
+        public double? RoomTotalCost { get; set; }
+        public double SubTotalCost {  get; set; }
+        public double TotalCost {  get; set; }
     }
 }

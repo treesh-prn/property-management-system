@@ -2696,7 +2696,7 @@ progress {
     --tblr-table-border-color: var(--tblr-border-color-translucent);
     --tblr-table-accent-bg: transparent;
     --tblr-table-striped-color: inherit;
-    --tblr-table-striped-bg: var(--tblr-bg-surface-tertiary);
+    --tblr-table-striped-bg: var(--tblr-bg-surface-secondary);
     --tblr-table-active-color: inherit;
     --tblr-table-active-bg: rgba(0, 0, 0, 0.1);
     --tblr-table-hover-color: inherit;

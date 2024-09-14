@@ -38,7 +38,7 @@ namespace PropertyManagementSystem.Controllers
             });
             return Json(result);
         }
-        public ActionResult newEquipments(string _name, int _quantity, int _purCost, int _halfCost, int _wholeCost, string _remarks, bool _isActive)
+        public ActionResult newEquipments(string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive)
         {
             GFMS_Equipments equipments = new GFMS_Equipments()
             {
@@ -66,7 +66,7 @@ namespace PropertyManagementSystem.Controllers
             return View(equipmentDetail);
         }
         /*Update*/
-        public IActionResult EditEquipment(int Id, string _name, int _quantity, int _purCost, int _halfCost, int _wholeCost, string _remarks, bool _isActive)
+        public IActionResult EditEquipment(int Id, string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive)
         {
             var equipment = _context.Equipments.FirstOrDefault(e => e.Id == Id);
             if (equipment == null)
