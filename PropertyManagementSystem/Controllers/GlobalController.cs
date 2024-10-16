@@ -85,10 +85,12 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(facilities);
         }
-        public IActionResult GetRoom(int? facilityId, int reservationId)
+        public IActionResult GetRoom(int? facilityId, int reservationDetailId)
         {
+            Console.WriteLine("FacilityId: " + facilityId);
+            Console.WriteLine("Reservation Id: " + reservationDetailId);
             var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationId == reservationId);
+                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
 
             if (reservation == null)
             {

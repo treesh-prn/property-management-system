@@ -48,5 +48,7 @@ namespace PropertyManagementSystem.Models
         public string? OtherInfo { get; set; }
 
         public GFMS_ReservationHeader ReservationHeader { get; set; }
+        public virtual GFMS_Rooms Room { get; set; }
+        public virtual GFMS_Facility Facility { get; set; }
     }
 }

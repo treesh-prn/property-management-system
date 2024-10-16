@@ -3,22 +3,35 @@
 {
     <form asp-action="UpdateReservationStatus" method="post">
         @Html.AntiForgeryToken()
-        <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
+        @* <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId"> *@
+        <input type="hidden" id="ReservationDetailId" name="ReservationDetailId" value="@detail.ReservationDetailId">
         <input type="hidden" id="ReservationId" name="ReservationId" value="@detail.ReservationId">
         <div class="modal-body">
             <div id="dynamic-rows">
                 <div class="row mb-3">
-                    <div class="col-lg-12">
+                    <div class="col-lg-6">
                         <label class="form-label">Number of Attendees</label>
                         <input type="number" class="form-control" name="NumberOfGuest" placeholder="Number of Attendees" value="@detail.NumberOfGuest" disabled>
                     </div>
+                    <div class="col-lg-6">
+                        <div>
+                            <label class="form-label">
+                                Contact Number
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    +63
+                                </span>
+                                <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" value="@detail.ContactNumber" disabled>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
             <label class="form-label">Duration of Stay</label>
             <div class="row mb-3">
                 <div class="col-lg-6">
-                    <label class="form-label required">Start Date</label>
+                    <label class="form-label">Start Date</label>
                     @(
                         Html.Kendo().DateTimePicker()
                         .Name("StartDate")
@@ -26,18 +39,18 @@
                         .DateInput(true)
                         .Format("yyyy/MM/dd HH:mm:ss.fff")
                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                        .Enable(false)
+                        .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
                         )
                 </div>
                 <div class="col-lg-6">
-                    <label class="form-label required">End Date</label>
+                    <label class="form-label">End Date</label>
                     @(
                         Html.Kendo().DateTimePicker()
                         .Name("EndDate")
                         .Value(detail.EndDate)
                         .Format("yyyy/MM/dd HH:mm:ss.fff")
                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                        .Enable(false)
+                        .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;", @readonly = "readonly" })
                         )
                 </div>
             </div>
@@ -87,10 +100,12 @@
                     <label class="form-label">Equipment Needed</label>
                     @(Html.Kendo().MultiSelect()
                         .Name("EquipmentNeeded")
-                        .Enable(false)
+                        .Placeholder("Please select needed equipment/s")
                         .DownArrow(true)
+                        .Enable(false)
+                        .NoDataTemplateId("noDataTemplate")
                         .DataTextField("EquipmentName")
-                        .DataValueField("EquipmentId")
+                        .DataValueField("Id")
                         .Value(detail.EquipmentNeeded?.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
                         .Filter("contains")
                         .AutoBind(true)
@@ -101,18 +116,10 @@
                                 read.Action("GetEquipments", "Global");
                             });
                         })
+                        .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
                         )
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-lg-12">
-                    <div>
-                        <label class="form-label">Contact Number</label>
-                        <div class="input-group mb-2">
-                            <span class="input-group-text">+63</span>
-                            <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" value="@detail.ContactNumber" disabled>
-                        </div>
-                    </div>
+
+                    @* <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded"> *@
                 </div>
             </div>
             <div class="col-lg-12">

@@ -32,6 +32,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
 
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<EmployeeService>();
+builder.Services.AddScoped<ReportServices>();
 builder.Services.AddScoped<SsrsService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpClient<SsrsService>();

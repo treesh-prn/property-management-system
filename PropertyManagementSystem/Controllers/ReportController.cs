@@ -13,11 +13,11 @@ namespace PropertyManagementSystem.Controllers
 {
     public class ReportController : Controller
     {
-        private readonly SsrsService _ssrsService;
+        private readonly ReportServices _reportServices;
         private readonly DAL _context;
-        public ReportController(SsrsService ssrsService, DAL context)
+        public ReportController(ReportServices reportServices, DAL context)
         {
-            _ssrsService = ssrsService;
+            _reportServices = reportServices;
             _context = context;
         }
 
@@ -67,12 +67,12 @@ namespace PropertyManagementSystem.Controllers
                             .Select(e => int.Parse(e.Trim()))
                             .ToList();
                     var equipmentDetails = _context.Equipments.Where(e => equipmentList.Contains(e.Id)).ToList();
-                    
+
                     equipmentNames = equipmentDetails.Select(e => e.EquipmentName).ToList();
 
                     foreach (var equipment in equipmentDetails)
                     {
-                        if(hours <= 4)
+                        if (hours <= 4)
                         {
                             equipmentTotalCost += equipment.HalfDayCost ?? 0;
                         }
@@ -82,7 +82,7 @@ namespace PropertyManagementSystem.Controllers
                         }
                     }
                 }
-                if(hours <= 4)
+                if (hours <= 4)
                 {
                     roomTotalCost += (rooms.CostPerDay ?? 0) / 2;
                 }
@@ -100,7 +100,7 @@ namespace PropertyManagementSystem.Controllers
                     Department = department,
                     FacilityName = facilities?.FacilityName,
                     RoomName = rooms?.RoomName,
-                    HourSpent = hours, 
+                    HourSpent = hours,
                     Equipments = equipmentNames,
                     EquipmentTotalCost = equipmentTotalCost,
                     RoomTotalCost = roomTotalCost,
@@ -157,5 +157,37 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(result);
         }
+        public IActionResult GetRoomOccupancyData()
+        {
+            var today = DateTime.Today;
+
+            var occupancyData = _context.Facilities
+                .Where(f => f.isActive == true) 
+                .Select(f => new
+                {
+                    FacilityName = f.FacilityName,
+
+                    OccupiedRooms = f.Rooms.Count(room => _context.ReservationDetails
+                        .Any(rd => rd.RoomId == room.RoomId &&
+                                   rd.StartDate <= today && rd.EndDate >= today &&
+                                   rd.ReservationHeader.Status == "APPROVED")),
+
+                    UnoccupiedRooms = f.Rooms.Count(room => !_context.ReservationDetails
+                        .Any(rd => rd.RoomId == room.RoomId &&
+                                   rd.StartDate <= today && rd.EndDate >= today &&
+                                   rd.ReservationHeader.Status == "APPROVED"))
+                }).ToList();
+
+            return Json(occupancyData);
+        }
+
+        //monthly charges
+        public IActionResult MonthlyChargesReport()
+        {
+            var reportData = _reportServices.GenerateCompanyChargesReport();
+
+            return View(reportData);
+        }
+
     }
 }

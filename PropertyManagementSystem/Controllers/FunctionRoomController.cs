@@ -84,6 +84,7 @@ namespace PropertyManagementSystem.Controllers
             bool isRequestor = User.IsInRole("GFMS.Requestor");
             bool isDeptHead = User.IsInRole("GFMS.Department Head");
 
+
             var reservationsQuery = from resDetails in _context.ReservationDetails
                                     join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
                                     join room in _context.Rooms on resDetails.RoomId equals room.RoomId
@@ -137,9 +138,9 @@ namespace PropertyManagementSystem.Controllers
             return Json(reservations.ToDataSourceResult(request));
         }
 
-        public IActionResult GetFacility(int ReservationId)
+        public IActionResult GetFacility(int ReservationDetailId)
         {
-            var resDetails = _context.ReservationDetails.Where(r => r.ReservationId == ReservationId);
+            var resDetails = _context.ReservationDetails.Where(r => r.ReservationId == ReservationDetailId);
             var facilities = _context.Facilities.AsQueryable().ToList();
             return Json(facilities
                 .Select(c => new { FacilityId = c.FacilityId, FacilityName = c.FacilityName, FacilityClass = c.FacilityClassification })
@@ -303,18 +304,43 @@ namespace PropertyManagementSystem.Controllers
                     .Where(x => x.ReservationId == reservationId)
                     .ToList();
 
+                Gen_Department department = null;
+                GFMS_Facility facility = null;
+                GFMS_Rooms rooms = null;
+                List<string> equipmentNames = new List<string>();
+
+                if (reservationDetails.Any())
+                {
+                    var firstDetail = reservationDetails.FirstOrDefault();
+                    facility = _context.Facilities.FirstOrDefault(f => f.FacilityId == firstDetail.FacilityId);
+                    rooms = _context.Rooms.FirstOrDefault(r => r.RoomId == firstDetail.RoomId);
+                    var equipmentIds = firstDetail.EquipmentNeeded
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(int.Parse)
+                    .ToList();
+
+                    equipmentNames = _context.Equipments
+                        .Where(e => equipmentIds.Contains(e.Id))
+                        .Select(e => e.EquipmentName)
+                        .ToList();
+                }
+
+                department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
+
                 var reservation = new ReservationViewModel
                 {
                     ReservationHeader = reservationHeader,
                     ReservationDetails = reservationDetails,
-                    NumberOfGuest = reservationDetails.Sum(rd => rd.NumberOfGuest)
+                    Department = department,
+                    Facility = facility,
+                    Room = rooms,
+                    EquipmentNames = equipmentNames
                 };
 
                 return View(reservation);
             }
             catch (InvalidCastException ex)
             {
-
                 Console.WriteLine($"InvalidCastException: {ex.Message}");
                 if (ex.InnerException != null)
                 {
@@ -324,11 +350,11 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine($"Exception: {ex.Message}");
                 return RedirectToAction("Error", "Error");
             }
         }
+
 
         public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, List<string> _equipment, string _contactNumber, string _requestorEmail)
         {
@@ -536,11 +562,11 @@ namespace PropertyManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, string action, int _facilityId, int _roomId, string Remarks)
+        public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, int ReservationDetailId, string action, int _facilityId, int _roomId, string Remarks)
         {
-            Console.WriteLine("ReservationId: " + ReservationId);
+            Console.WriteLine("ReservationDetailId: " + ReservationDetailId);
 
-            if (ReservationId <= 0 || string.IsNullOrEmpty(action))
+            if (ReservationDetailId <= 0 || string.IsNullOrEmpty(action))
             {
                 return BadRequest("Invalid parameters.");
             }

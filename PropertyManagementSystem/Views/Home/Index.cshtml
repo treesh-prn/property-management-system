@@ -130,31 +130,31 @@
                             </div>
                         </div>
                         <div class="card">
-                            <div class="card-header">
-                                <ul class="nav nav-tabs card-header-tabs">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#fnRoom">
-                                            <b>FUNCTION ROOM</b>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#ghRoom">
-                                            <b>GUEST ROOM</b>
-                                        </a>
-                                    </li>
-                                </ul>
-                                <h3 class="card-title"></h3>
-                                <div class="card-actions">
-                                </div>
-                            </div>
-                            <div class="card-body p-0 tab-content">
+                            @(Html.Kendo().TabStrip()
+                                    .Name("tabstrip")
+                                    .Animation(animation =>
+                                    animation.Open(effect =>
+                                    effect.Fade(FadeDirection.In)))
+                                    .Items(tabstrip =>
+                                    {
+                                        tabstrip.Add().Text("Function Room")
+                                    .Encoded(false)
+
+                                    .Selected(true)
+                                    .Content(@<text>
                                 <div id="fnRoom" class="tab-pane active">
                                     <partial name="Shared/_fnRoom" />
                                 </div>
-                                <div id="ghRoom" class="tab-pane fade">
+                            </text>);
+                                        tabstrip.Add().Text("Guest Room")
+                                    .Encoded(false)
+                                    .Content(@<text>
+                                <div id="ghRoom">
                                     <partial name="Shared/_ghRoom" />
                                 </div>
-                            </div>
+                            </text>);
+                                    })
+                                )
                         </div>
                     </div>
                 </div>
@@ -162,3 +162,6 @@
         </div>
     </div>
 </div>
+<script>
+    kendo.culture("en-PH");
+</script>
