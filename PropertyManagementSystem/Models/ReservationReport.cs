@@ -2,11 +2,16 @@
 {
     public class ReservationReport
     {
-        public string CompanyName { get; set; }
-        public double EquipmentTotalCost { get; set; }
-        public double RoomTotalCost { get; set; }
-        public double SubTotalCost { get; set; }
-        public double TotalCost { get; set; }
-        public double? Hours { get; set; }
+        public string CompanyCode { get; set; }
+        public string Department { get; set; }
+        public string RoomUsed { get; set; }
+        public string Dates { get; set; }
+        public int NoOfDays { get; set; }
+        public string EquipmentUsed { get; set; }
+        public decimal RoomCharge { get; set; }
+        public decimal EquipmentCharge { get; set; }
+        public decimal TotalCharge { get; set; }
+        public string PreparedBy { get; set; }
+        public string NotedBy { get; set; }
     }
 }

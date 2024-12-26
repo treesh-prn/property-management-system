@@ -47,7 +47,7 @@
                         <div class="card-header">
                             <h3 class="card-title"></h3>
                             <div class="card-actions">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#modal-newFacility" class="btn btn-primary">
+                                <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
                                     <i class="ti ti-home-plus icon"></i>
                                     New Facility
                                 </a>
@@ -110,79 +110,16 @@
     </div>
 
 </div>
-@*NEW FACILITY MODAL *@
-<div class="modal modal-blur fade" id="modal-newFacility" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">New Facility</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="fcFRM1" asp-controller="Facility" asp-action="newFacility" enctype="multipart/form-data" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label required">Facility Name </label>
-                        <input class="form-control" name="_name" type="text" required="required">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Facility Location</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_location")
-                            .BindTo(new List<SelectListItem>
-                        {
-                        new SelectListItem() {
-                        Text = "MILL",
-                        Value = "MILL"
-                        },
-                        new SelectListItem() {
-                        Text = "MAKATI",
-                        Value = "MAKATI"
-                        },
-                        })
-                            .HtmlAttributes(new { style = "width: 100%" })
-                            )
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Facility Classification</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_classification")
-                            .BindTo(new List<SelectListItem>
-                        {
-                        new SelectListItem() {
-                        Text = "FUNCTION ROOM",
-                        Value = "FUNCTION ROOM"
-                        },
-                        new SelectListItem() {
-                        Text = "GUESTHOUSE",
-                        Value = "GUESTHOUSE"
-                        },
-                        new SelectListItem() {
-                        Text = "DORM",
-                        Value = "DORM"
-                        },
-                        })
-                            .HtmlAttributes(new { style = "width: 100%" })
-                            )
-                    </div>
-                    <label class="row">
-                        <span class="col">Is Active</span>
-                        <span class="col-auto">
-                            <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" id="isActiveCheckbox" name="_isActive" type="checkbox" value="true" checked>
-                            </label>
-                        </span>
-                    </label>
-                </div>
-
-
-                <div class="modal-footer">
-                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Save</button>
-                </div>
-            </form>
-        </div>
+@*off canvas edit form*@
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+    <div class="offcanvas-header">
+        <h2 class="offcanvas-title" id="offcanvasEndLabel">Add Facility</h2>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <partial name="Shared/_add" />
     </div>
 </div>
-@*END - NEW FACILITY MODAL *@
 
 @*DELETE MODAL*@
 <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">

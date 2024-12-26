@@ -137,6 +137,9 @@
                                             </span>
                                         </a>
                                         <div class="dropdown-menu" id="maintenance">
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
+                                                <strong>Facilities</strong>
+                                            </a>
                                             <a class="dropdown-item" href="@Url.Action("GuestRoom", "Room")">
                                                 <strong>Guest Room</strong>
                                             </a>
@@ -145,9 +148,6 @@
                                             </a>
                                             <a class="dropdown-item" href="@Url.Action("DormRoom", "Room")">
                                                 <strong>Dorm Room</strong>
-                                            </a>
-                                            <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
-                                                <strong>Facilities</strong>
                                             </a>
                                             <a class="dropdown-item" href="@Url.Action("Index", "Equipment")">
                                                 <strong>Equipments</strong>
@@ -160,21 +160,18 @@
                                                 <i class="ti ti-article icon"></i>
                                             </span>
                                             <span class="nav-link-title">
-                                                <strong>Reports </strong>
+                                                <strong>Reports</strong>
                                             </span>
                                         </a>
                                         <div class="dropdown-menu" id="maintenance">
-                                            <a class="dropdown-item" href="@Url.Action("Index", "Report")">
-                                                <strong>Dashboard</strong>
-                                            </a>
                                             <a class="dropdown-item" href="@Url.Action("MonthlyChargesReport", "Report")">
-                                                <strong>Facilities</strong>
+                                                <strong>Company & Department Charges</strong>
                                             </a>
                                             <a class="dropdown-item" href="@Url.Action("Index", "Report")">
-                                                <strong>Accommodation</strong>
+                                                <strong>Weekly Occupancy</strong>
                                             </a>
                                             <a class="dropdown-item" href="@Url.Action("Index", "Report")">
-                                                <strong>Dorm</strong>
+                                                <strong>Reservation Details</strong>
                                             </a>
                                         </div>
                                     </li>

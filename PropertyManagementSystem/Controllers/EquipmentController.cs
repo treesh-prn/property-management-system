@@ -38,7 +38,7 @@ namespace PropertyManagementSystem.Controllers
             });
             return Json(result);
         }
-        public ActionResult newEquipments(string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive)
+        public ActionResult newEquipments(string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive, int _facilityId, int _roomId, bool _isFacilityEquipment)
         {
             GFMS_Equipments equipments = new GFMS_Equipments()
             {
@@ -49,6 +49,10 @@ namespace PropertyManagementSystem.Controllers
                 WholeDayCost = _wholeCost,
                 Remarks = _remarks,
                 isActive = _isActive,
+                FacilityId = _facilityId,
+                RoomId = _roomId,
+                isFacilityEquipment = _isFacilityEquipment
+
 
             };
             _context.Equipments.Add(equipments);
@@ -59,14 +63,36 @@ namespace PropertyManagementSystem.Controllers
         public IActionResult ViewEquipment(int Id)
         {
             var equipmentDetail = _context.Equipments.FirstOrDefault(e => e.Id == Id);
-            if(equipmentDetail == null)
+            var facilityDetail = _context.Facilities.FirstOrDefault(f => f.FacilityId == equipmentDetail.FacilityId);
+            var roomDetail = _context.Rooms.FirstOrDefault(r => r.RoomId == equipmentDetail.RoomId);
+
+            if (equipmentDetail == null)
             {
                 return NotFound();
             }
-            return View(equipmentDetail);
+
+            var equipmentViewModel = new EquipmentViewModel
+            {
+                Id = equipmentDetail.Id,
+                EquipmentName = equipmentDetail.EquipmentName,
+                EquipmentQty = equipmentDetail.EquipmentQty,
+                PurchaseCost = equipmentDetail.PurchaseCost,
+                WholeDayCost = equipmentDetail.WholeDayCost,
+                HalfDayCost = equipmentDetail.HalfDayCost,
+                Remarks = equipmentDetail.Remarks,
+                isActive = equipmentDetail.isActive,
+                FacilityId = equipmentDetail.FacilityId,
+                RoomId = equipmentDetail.RoomId,
+                isFacilityEquipment = equipmentDetail.isFacilityEquipment,
+                FacilityName = facilityDetail?.FacilityName,
+                RoomName = roomDetail?.RoomName
+            };
+
+            return View(equipmentViewModel);
         }
+
         /*Update*/
-        public IActionResult EditEquipment(int Id, string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive)
+        public IActionResult EditEquipment(int Id, string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive, bool _isFacilityEquipment)
         {
             var equipment = _context.Equipments.FirstOrDefault(e => e.Id == Id);
             if (equipment == null)
@@ -81,6 +107,7 @@ namespace PropertyManagementSystem.Controllers
             equipment.WholeDayCost = _wholeCost;
             equipment.Remarks = _remarks;
             equipment.isActive = _isActive;
+            equipment.isFacilityEquipment = _isFacilityEquipment;
             try
             {
                 _context.Equipments.Update(equipment);

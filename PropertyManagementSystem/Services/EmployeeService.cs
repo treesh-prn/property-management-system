@@ -23,15 +23,15 @@ namespace PropertyManagementSystem.Services
                 return (null, null);
             }
 
-            var managerPosition = await _context.Positions.FirstOrDefaultAsync(p => p.PositionName == "Manager");
-
-            if (managerPosition == null)
-            {
-                return (null, null);
-            }
+           var dept = await(from d in _context.Departments
+                            where d.Id == departmentId
+                            select new
+                            {
+                                d.DepartmentHead,
+                            }).FirstOrDefaultAsync();
 
             var manager = await (from e in _context.Employees
-                                 where e.DepartmentId == departmentId && e.PositionId == managerPosition.Id
+                                 where e.GUID == dept.DepartmentHead
                                  select new
                                  {
                                      e.Email,

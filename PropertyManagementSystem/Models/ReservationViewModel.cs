@@ -13,6 +13,7 @@ namespace PropertyManagementSystem.Models
         public List<string> Equipments { get; set; }
         public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
+        
 
 
 
@@ -75,5 +76,8 @@ namespace PropertyManagementSystem.Models
         public double? RoomTotalCost { get; set; }
         public double SubTotalCost {  get; set; }
         public double TotalCost {  get; set; }
+
+        //total booking for today
+        public IEnumerable<dynamic> TodaysBookings { get; set; }
     }
 }

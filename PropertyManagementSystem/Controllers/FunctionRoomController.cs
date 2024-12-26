@@ -138,9 +138,9 @@ namespace PropertyManagementSystem.Controllers
             return Json(reservations.ToDataSourceResult(request));
         }
 
-        public IActionResult GetFacility(int ReservationDetailId)
+        public IActionResult GetFacility()
         {
-            var resDetails = _context.ReservationDetails.Where(r => r.ReservationId == ReservationDetailId);
+           
             var facilities = _context.Facilities.AsQueryable().ToList();
             return Json(facilities
                 .Select(c => new { FacilityId = c.FacilityId, FacilityName = c.FacilityName, FacilityClass = c.FacilityClassification })
@@ -562,7 +562,7 @@ namespace PropertyManagementSystem.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, int ReservationDetailId, string action, int _facilityId, int _roomId, string Remarks)
+        public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, int ReservationDetailId, string action, int _facilityId, int _roomId, string Remarks, string EquipmentNeeded)
         {
             Console.WriteLine("ReservationDetailId: " + ReservationDetailId);
 
@@ -594,6 +594,7 @@ namespace PropertyManagementSystem.Controllers
                 reservation.Status = "FOR ADMIN MANAGER'S APPROVAL";
                 reservationDetails.FacilityId = _facilityId;
                 reservationDetails.RoomId = _roomId;
+                reservationDetails.EquipmentNeeded = EquipmentNeeded;
                 reservation.ApprovedBy = empName.Fullname;
 
                 TempData["AlertMessage"] = "Room details assigned successfully!";
@@ -655,7 +656,7 @@ namespace PropertyManagementSystem.Controllers
             }
             _context.SaveChanges();
 
-            return RedirectToAction("Index", "FunctionRoom");
+            return RedirectToAction("ReservationList", "FunctionRoom");
         }
     }
 }

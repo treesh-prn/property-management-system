@@ -29,16 +29,16 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.AddHttpClient();
+
 
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<EmployeeService>();
-builder.Services.AddScoped<ReportServices>();
 builder.Services.AddScoped<SsrsService>();
 builder.Services.AddControllersWithViews();
-builder.Services.AddHttpClient<SsrsService>();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
-
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 var app = builder.Build();
 
@@ -53,6 +53,12 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     //app.UseHsts();
 }
+
+app.UseCors(builder =>
+    builder.AllowAnyOrigin()
+           .AllowAnyMethod()
+           .AllowAnyHeader());
+
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -71,6 +77,12 @@ app.MapControllerRoute(
     pattern: "Accommodation/ReservationDetails/{Id}",
     defaults: new { controller = "Accommodation", action = "ReservationDetails" }
 );
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Report}/{action=GenerateReport}/{_startDate?}/{_endDate?}/{_preparedBy?}");
+
+app.UseDeveloperExceptionPage();
 
 app.MapRazorPages();
 

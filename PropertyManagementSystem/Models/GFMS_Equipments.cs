@@ -15,6 +15,9 @@ namespace PropertyManagementSystem.Models
         public double? HalfDayCost { get; set; }
         public string? Remarks { get; set; }
         public bool? isActive { get; set; }
+        public int? FacilityId { get; set; }
+        public int? RoomId { get; set; }
+        public bool? isFacilityEquipment {  get; set; }
     }
 
     public partial class equipmentList

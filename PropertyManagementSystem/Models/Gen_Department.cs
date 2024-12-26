@@ -10,5 +10,7 @@ namespace PropertyManagementSystem.Models
         public int Id { get; set; }
         public string? DepartmentName { get; set; }
         public string? DepartmentCode { get; set; }
+        public int CompanyId { get; set; }
+        public Guid? DepartmentHead {  get; set; }
     }
 }

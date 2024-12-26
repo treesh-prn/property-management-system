@@ -39,12 +39,37 @@ namespace PropertyManagementSystem.Controllers
             return unique;
         }
 
-        public JsonResult getDepartments()
+        public JsonResult getDepartments(int companyId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var _deptList = _context.Departments.AsQueryable().ToList();
+            var _deptList = _context.Departments.Where(d => d.CompanyId == companyId);
 
             return Json(_deptList , new JsonSerializerSettings());
+        }
+
+        public IActionResult GetAllFacility()
+        {
+            var facilities = _context.Facilities
+                .Where(f => f.isActive == true)
+                .Select(f => new { 
+                    FacilityId = f.FacilityId,
+                    FacilityName = f.FacilityName,
+                   
+                }).ToList();
+
+            return Json(facilities);
+        }
+
+        public IActionResult GetAllRooms(int facilityId)
+        {
+            var rooms = _context.Rooms
+               .Where(room => room.FacilityId == facilityId)
+               .Select(r => new
+               {
+                   RoomId = r.RoomId,
+                   RoomName = r.RoomName
+               }).ToList();
+
+            return Json(rooms);
         }
 
         public IActionResult GetFacility(int ReservationDetailId)
@@ -125,6 +150,7 @@ namespace PropertyManagementSystem.Controllers
         }
         public IActionResult GetGH(int ReservationDetailId)
         {
+            // Retrieve the reservation details
             var reservation = _context.ReservationDetails
                 .FirstOrDefault(r => r.ReservationDetailId == ReservationDetailId);
 
@@ -136,8 +162,9 @@ namespace PropertyManagementSystem.Controllers
             var startDate = reservation.StartDate;
             var endDate = reservation.EndDate;
 
+            // Retrieve the available guesthouse facilities
             var facilities = _context.Facilities
-                .Where(f => f.FacilityClassification == "GUESTHOUSE")
+                .Where(f => f.FacilityClassification == "GUESTHOUSE" || f.FacilityId == reservation.FacilityId)
                 .Select(f => new
                 {
                     Facility = f,
@@ -175,8 +202,26 @@ namespace PropertyManagementSystem.Controllers
                 .OrderBy(f => f.FacilityName)
                 .ToList();
 
+            // Select the current facility based on the reservation's FacilityId
+            var selectedFacility = _context.Facilities
+        .Where(f => f.FacilityId == reservation.FacilityId)
+        .Select(f => new
+        {
+            FacilityId = f.FacilityId,
+            FacilityName = f.FacilityName,
+            FacilityClass = f.FacilityClassification // Include FacilityClass
+        })
+        .FirstOrDefault();
+
+            // Insert the selected facility at the top if it's not already in the list
+            if (selectedFacility != null && !facilities.Any(f => f.FacilityId == selectedFacility.FacilityId))
+            {
+                facilities.Insert(0, selectedFacility);
+            }
+
             return Json(facilities);
         }
+
 
         public IActionResult GetGHRoom(int? facilityId, int reservationDetailId)
         {
@@ -356,21 +401,41 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(rooms);
         }
-
-        public ActionResult GetEquipments()
+        [HttpGet]
+        public IActionResult GetEquipmentFNAssign(int facilityId, int roomId)
         {
+            var equipment = _context.Equipments
+                .Where(e => e.FacilityId == facilityId && e.RoomId == roomId && e.isActive == true)
+                .Select(e => new { e.Id })
+                .ToList();
+
+            return Json(equipment);
+        }
+        public ActionResult GetEquipments(DateTime startDate, DateTime endDate)
+        {
+            // Fetch all equipment data
             List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();
             List<equipmentList> _eqList = new List<equipmentList>();
-            foreach(var item in _Equipments)
+
+            foreach (var item in _Equipments)
             {
+                // Check if the equipment is currently reserved
+                bool isReserved = _context.ReservationDetails
+                    .Any(r => r.EquipmentNeeded.Contains(item.Id.ToString())
+                              && r.StartDate <= DateTime.Now
+                              && r.EndDate >= DateTime.Now);
+
+                // Add equipment to the list with reservation status
                 _eqList.Add(new equipmentList
                 {
                     Id = item.Id,
                     EquipmentName = item.EquipmentName,
                 });
             }
+
             return Json(_eqList);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CancelReservation(int ReservationId, string Remarks, string reservationType)

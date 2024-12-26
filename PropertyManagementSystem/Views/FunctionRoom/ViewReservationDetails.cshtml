@@ -56,7 +56,7 @@
                         }
                         else if (User.IsInRole("GFMS.Department Head"))
                         {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
+                            @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "DRAFT")
                             {
                                 <partial name="Shared/_view" />
                             }
@@ -68,10 +68,14 @@
                             {
                                 <partial name="Shared/_view" />
                             }
+                            else
+                            {
+                                <partial name="Shared/_draft" />
+                            }
                         }
                         else if (User.IsInRole("GFMS.Admin Manager"))
                         {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
+                            @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "DRAFT")
                             {
                                 <partial name="Shared/_view" />
                             }
@@ -83,10 +87,14 @@
                             {
                                 <partial name="Shared/_view" />
                             }
+                            else
+                            {
+                                <partial name="Shared/_draft" />
+                            }
                         }
                         else if (User.IsInRole("GFMS.Admin Approver"))
                         {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
+                            @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "DRAFT")
                             {
                                 <partial name="Shared/_view" />
                             }
@@ -97,6 +105,10 @@
                             else if (Model.ReservationHeader.Requestor != employee.Fullname)
                             {
                                 <partial name="Shared/_view" />
+                            }
+                            else
+                            {
+                                <partial name="Shared/_draft" />
                             }
                         }
                     </div>

@@ -538,8 +538,8 @@ namespace PropertyManagementSystem.Controllers
             for (int i = 0; i < ReservationDetailId.Count; i++)
             {
                 Console.WriteLine("Reservation Detail Id: " + ReservationDetailId[i]);
-                Console.WriteLine("Facility Id: " + _facilityId[i]);
-                Console.WriteLine("Room Id: " + _roomId[i]);
+                //Console.WriteLine("Facility Id: " + _facilityId[i]);
+                //Console.WriteLine("Room Id: " + _roomId[i]);
             }
 
             var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);

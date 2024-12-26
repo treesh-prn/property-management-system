@@ -1,209 +1,64 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
+using System.Data;
 
 namespace PropertyManagementSystem.Services
 {
     public class ReportServices
     {
         private readonly DAL _context;
+        private readonly string _connectionString;
 
-        public ReportServices(DAL context)
+        public ReportServices(DAL context, IConfiguration configuration)
         {
             _context = context;
+            _connectionString = configuration.GetConnectionString("ApplicationDbContextConnection");
         }
 
-        public ReservationReport CalculateReservationCosts(int reservationId)
+        public async Task<List<ReservationReport>> GetCompanyChargesReportAsync(DateTime? startDate, DateTime? endDate, string preparedBy)
         {
-            var reservationHeader = _context.ReservationHeaders
-                .FirstOrDefault(x => x.ReservationId == reservationId);
+            var reportData = new List<ReservationReport>();
 
-            if (reservationHeader == null)
+            using (var connection = new SqlConnection(_connectionString))
             {
-                return null;
-            }
-
-            var companyName = _context.Companies
-                .Where(c => c.Id == reservationHeader.ChargeToCompany)
-                .Select(c => c.Company) 
-                .FirstOrDefault();
-
-            var reservationDetails = _context.ReservationDetails
-                .Where(x => x.ReservationId == reservationId)
-                .ToList();
-
-            if (!reservationDetails.Any())
-            {
-                return null;
-            }
-
-            var facility = _context.Facilities
-                .FirstOrDefault(x => x.FacilityId == reservationDetails.First().FacilityId);
-            var room = _context.Rooms
-                .FirstOrDefault(x => x.RoomId == reservationDetails.First().RoomId);
-
-            double equipmentTotalCost = 0;
-            double roomTotalCost = 0;
-            double subTotalCost = 0;
-            double totalCost = 0;
-            double? hours = null;
-
-            foreach (var detail in reservationDetails)
-            {
-                if (detail.StartDate.HasValue && detail.EndDate.HasValue)
+                await connection.OpenAsync();
+                using (var command = new SqlCommand("dbo.GenerateCompanyChargesReport", connection))
                 {
-                    hours = (detail.EndDate.Value - detail.StartDate.Value).TotalHours;
-                }
+                    command.CommandType = CommandType.StoredProcedure;
 
-                var equipmentIds = detail.EquipmentNeeded?.Split(',')
-                    .Select(e => int.Parse(e.Trim()))
-                    .ToList();
+                    // Add parameters
+                    command.Parameters.AddWithValue("@StartDate", startDate.HasValue ? (object)startDate.Value : DBNull.Value);
+                    command.Parameters.AddWithValue("@EndDate", endDate.HasValue ? (object)endDate.Value : DBNull.Value);
+                    command.Parameters.AddWithValue("@PreparedBy", preparedBy);
 
-                if (equipmentIds != null)
-                {
-                    var equipmentDetails = _context.Equipments
-                        .Where(e => equipmentIds.Contains(e.Id))
-                        .ToList();
-
-                    foreach (var equipment in equipmentDetails)
+                    // Execute the stored procedure and read the results
+                    using (var reader = await command.ExecuteReaderAsync())
                     {
-                        if (hours <= 4)
+                        while (await reader.ReadAsync())
                         {
-                            equipmentTotalCost += equipment.HalfDayCost ?? 0;
-                        }
-                        else
-                        {
-                            equipmentTotalCost += equipment.WholeDayCost ?? 0;
-                        }
-                    }
-                }
-
-                if (hours <= 4)
-                {
-                    roomTotalCost += (room?.CostPerDay ?? 0) / 2;
-                }
-                else
-                {
-                    roomTotalCost += room?.CostPerDay ?? 0;
-                }
-            }
-
-            subTotalCost = roomTotalCost + equipmentTotalCost;
-            totalCost = subTotalCost;
-
-            return new ReservationReport
-            {
-                CompanyName = companyName,
-                EquipmentTotalCost = equipmentTotalCost,
-                RoomTotalCost = roomTotalCost,
-                SubTotalCost = subTotalCost,
-                TotalCost = totalCost,
-                Hours = hours
-            };
-        }
-
-        public IEnumerable<ReservationReport> GenerateCompanyChargesReport()
-        {
-            // Fetch reservation headers and details
-            var reservationHeaders = _context.ReservationHeaders.Where(rh => rh.Status == "APPROVED").ToList();
-            var reservationDetails = _context.ReservationDetails
-            .Include(rd => rd.Room)
-            .Include(rd => rd.Facility)
-            .Where(rd => rd.Facility.FacilityClassification == "FUNCTION ROOM" && rd.ReservationHeader.ChargeToCompany != null) // Filter by facility classification and status
-            .ToList();
-            var equipmentDetails = _context.Equipments.ToList();
-
-            // Group reservation details by company
-            var reportData = reservationHeaders
-                .GroupBy(rh => rh.ChargeToCompany)
-                .Select(group =>
-                {
-                    var companyId = group.Key;
-                    var company = _context.Companies.FirstOrDefault(c => c.Id == companyId);
-                    var companyName = company?.Company ?? "Unknown Company";
-
-                    var reservationIds = group.SelectMany(rh => reservationDetails
-                        .Where(rd => rd.ReservationId == rh.ReservationId)
-                        .Select(rd => rd.ReservationId)).Distinct();
-
-                    double equipmentTotalCost = 0;
-                    double roomTotalCost = 0;
-
-                    foreach (var reservationId in reservationIds)
-                    {
-                        var details = reservationDetails
-                            .Where(rd => rd.ReservationId == reservationId)
-                            .ToList();
-
-                        foreach (var detail in details)
-                        {
-                            if (!detail.StartDate.HasValue || !detail.EndDate.HasValue)
-                                continue;
-
-                            var hours = (detail.EndDate.Value - detail.StartDate.Value).TotalHours;
-
-                            var equipmentIds = detail.EquipmentNeeded?
-                                .Split(',')
-                                .Select(id => int.TryParse(id.Trim(), out var parsedId) ? parsedId : (int?)null)
-                                .Where(id => id.HasValue)
-                                .Select(id => id.Value)
-                                .ToList();
-
-                            if (equipmentIds != null)
+                            var data = new ReservationReport
                             {
-                                var equipmentCosts = equipmentDetails
-                                    .Where(e => equipmentIds.Contains(e.Id))
-                                    .Sum(e => hours <= 4 ? e.HalfDayCost ?? 0 : e.WholeDayCost ?? 0);
-
-                                equipmentTotalCost += equipmentCosts;
-                            }
-
-                            var roomCost = detail.Room?.CostPerDay ?? 0;
-                            roomTotalCost += hours <= 4 ? roomCost / 2 : roomCost;
+                                CompanyCode = reader["CompanyCode"].ToString(),
+                                Department = reader["Department"].ToString(),
+                                RoomUsed = reader["RoomUsed"].ToString(),
+                                Dates = reader["Dates"].ToString(),
+                                NoOfDays = reader.GetInt32(reader.GetOrdinal("NoOfDays")),
+                                EquipmentUsed = reader["EquipmentUsed"].ToString(),
+                                RoomCharge = reader.GetDecimal(reader.GetOrdinal("RoomCharge")),
+                                EquipmentCharge = reader.GetDecimal(reader.GetOrdinal("EquipmentCharge")),
+                                TotalCharge = reader.GetDecimal(reader.GetOrdinal("TotalCharge")),
+                                PreparedBy = reader["PreparedBy"].ToString(),
+                                NotedBy = reader["NotedBy"].ToString()
+                            };
+                            reportData.Add(data);
                         }
                     }
-
-                    var subTotalCost = roomTotalCost + equipmentTotalCost;
-
-                    return new ReservationReport
-                    {
-                        CompanyName = companyName,
-                        EquipmentTotalCost = equipmentTotalCost,
-                        RoomTotalCost = roomTotalCost,
-                        SubTotalCost = subTotalCost,
-                        TotalCost = subTotalCost // Assuming TotalCost equals SubTotalCost
-                    };
-                })
-                .ToList();
+                }
+            }
 
             return reportData;
-        }
-
-        private double CalculateEquipmentTotalCost(List<int> equipmentIds, DateTime? startDate, DateTime? endDate, List<GFMS_Equipments> equipmentDetails)
-        {
-            if (equipmentIds == null || !startDate.HasValue || !endDate.HasValue)
-                return 0;
-
-            var totalHours = (endDate.Value - startDate.Value).TotalHours;
-            return equipmentDetails
-                .Where(e => equipmentIds.Contains(e.Id))
-                .Sum(e => totalHours <= 4 ? e.HalfDayCost ?? 0 : e.WholeDayCost ?? 0);
-        }
-
-        private double CalculateRoomTotalCost(double? roomCost, DateTime? startDate, DateTime? endDate)
-        {
-            if (!startDate.HasValue || !endDate.HasValue || roomCost == null)
-                return 0;
-
-            var totalHours = (endDate.Value - startDate.Value).TotalHours;
-            return totalHours <= 4 ? roomCost.Value / 2 : roomCost.Value;
-        }
-
-        private double CalculateSubTotalCost(double? roomCost, List<int> equipmentIds, DateTime? startDate, DateTime? endDate, List<GFMS_Equipments> equipmentDetails)
-        {
-            var roomTotalCost = CalculateRoomTotalCost(roomCost, startDate, endDate);
-            var equipmentTotalCost = CalculateEquipmentTotalCost(equipmentIds, startDate, endDate, equipmentDetails);
-            return roomTotalCost + equipmentTotalCost;
         }
 
     }
