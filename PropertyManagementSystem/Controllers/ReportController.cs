@@ -54,5 +54,32 @@ namespace PropertyManagementSystem.Controllers
             }
         }
 
+        public async Task<ActionResult> GenerateWeelyOccupancy(string _startDate, string _endDate, string _preparedBy, string _facility)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "StartDate", _startDate },
+                { "EndDate", _endDate },
+                { "ReservationType", _facility }
+            };
+           
+            try
+            {
+                var reportBytes = await _ssrsService.GetReportAsPdfAsync("/Reports/GFMS_GetReservationOccupancy", parameters);
+
+                // Validate the PDF file format
+                if (reportBytes.Length > 4 && reportBytes[0] == '%' && reportBytes[1] == 'P' && reportBytes[2] == 'D' && reportBytes[3] == 'F')
+                {
+                    return File(reportBytes, "application/pdf", "Report.pdf");
+                }
+
+                throw new Exception("The response is not a valid PDF file.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error generating report: {ex.Message}");
+            }
+        }
+
     }
 }

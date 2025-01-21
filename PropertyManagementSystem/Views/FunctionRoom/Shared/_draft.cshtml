@@ -57,6 +57,46 @@
                                         )
                                 </div>
                             </div>
+                            @if(User.IsInRole("GFMS.Admin Manager")){
+                                <div class="row mb-3">
+                                    <div class="col-lg-6">
+                                        <label class="form-label required">Facility</label>
+                                        @(
+                                            Html.Kendo().DropDownList()
+                                            .Name("_facilityId")
+                                            .DataTextField("FacilityName")
+                                            .DataValueField("FacilityId")
+                                            .DataSource(source =>
+                                            {
+                                                source.Read(read =>
+                                                {
+                                                    read.Action("GetAllFacility", "Global").Data("filterFacilities");
+                                                });
+                                            })
+                                            .HtmlAttributes(new { style = "width: 100%" })
+                                            .OptionLabel("Select Facility")
+                                            )
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <label class="form-label required">Room</label>
+                                        @(Html.Kendo().DropDownList()
+                                            .Name("_roomId")
+                                            .DataTextField("RoomName")
+                                            .DataValueField("RoomId")
+                                            .CascadeFrom("_facilityId")
+                                            .DataSource(source =>
+                                            {
+                                                source.Read(read =>
+                                                {
+                                                    read.Action("GetAllRooms", "Global").Data("filterRooms");
+                                                }).ServerFiltering(true);
+                                            })
+                                            .HtmlAttributes(new { style = "width: 100%" })
+                                            .OptionLabel("Select Room")
+                                            )
+                                    </div>
+                                </div>
+                            }
                             <div class="row mb-3">
                                 <div class="col-lg-12">
                                     <label class="form-label required">Equipment Needed</label>

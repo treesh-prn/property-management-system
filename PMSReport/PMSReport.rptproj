@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Report Include="GFMS_GenerateCompanyBilling.rdl" />
+    <Report Include="GFMS_GetReservationOccupancy.rdl" />
     <Report Include="ReservationReport.rdl" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Reporting Services\Microsoft.ReportingServices.MSBuilder.targets" />

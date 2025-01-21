@@ -231,17 +231,32 @@ namespace PropertyManagementSystem.Controllers
 
         private string GenerateReservationCode()
         {
-            int year = DateTime.Now.Year;
+            int currentYear = DateTime.Now.Year;
             int sequenceNumber = 1;
 
-            var lastReservation = _context.ReservationHeaders.Where(r => r.ReservationType == "FN").Count();
+            var lastReservation = _context.ReservationHeaders
+                .Where(r => r.ReservationType == "GH")
+                .OrderByDescending(r => r.DateSubmitted)
+                .FirstOrDefault();
+
             if (lastReservation != null)
             {
-                sequenceNumber = lastReservation + 1;
+                string[] codeParts = lastReservation.ReservationCode?.Split('-'); 
+                if (codeParts?.Length == 4 &&
+                    int.TryParse(codeParts[2], out int lastYear) &&
+                    int.TryParse(codeParts[3], out int lastSequenceNumber))
+                {
+                    if (lastYear == currentYear)
+                    {
+                        sequenceNumber = lastSequenceNumber + 1;
+                    }
+                }
             }
 
-            return $"RSQ-FN-{year}-{sequenceNumber:D4}";
+            return $"RSQ-FN-{currentYear}-{sequenceNumber:D4}";
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
@@ -251,8 +266,11 @@ namespace PropertyManagementSystem.Controllers
             Console.WriteLine("Department Id: " + _department);
 
             var (managerEmail, managerFullName) = await _employeeService.GetManagerInfo(userId);
+            var role = await _roleService.GetActiveRoleAsync(User);
 
-            if (managerEmail == null || managerFullName == null)
+            Console.WriteLine("Role :" + role);
+
+            if ((managerEmail == null || managerFullName == null) && !User.IsInRole("GFMS.Admin Manager"))
             {
                 return NotFound("Manager not found for the given department.");
             }

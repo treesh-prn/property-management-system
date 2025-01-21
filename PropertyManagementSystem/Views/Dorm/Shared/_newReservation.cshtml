@@ -23,19 +23,39 @@
                         </div>
                     </div>
                     <div class="mb-3">
+                        <label class="form-label required">Company:</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_company")
+                            .DataTextField("Company")
+                            .DataValueField("Id")
+                            .Value(employee.CompanyId.ToString())
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("getCompanies", "Global");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
+                            .OptionLabel("Select Company")
+                            )
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label required">Department</label>
                         @(Html.Kendo().DropDownList()
                             .Name("_department")
                             .DataTextField("DepartmentName")
                             .DataValueField("Id")
+                            .CascadeFrom("_company")
+                            .Value(employee.DepartmentId.ToString())
                             .DataSource(source =>
                             {
                                 source.Read(read =>
                                 {
-                                    read.Action("getDepartments", "Global");
-                                });
+                                    read.Action("getDepartments", "Global").Data("filterDepartments");
+                                }).ServerFiltering(true);
                             })
-                            .HtmlAttributes(new { style = "width: 100%" })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
                             )
                     </div>
                 </div>

@@ -169,16 +169,29 @@ namespace PropertyManagementSystem.Controllers
 
         private string GenerateReservationCode()
         {
-            int year = DateTime.Now.Year;
+            int currentYear = DateTime.Now.Year;
             int sequenceNumber = 1;
 
-            var lastReservation = _context.ReservationHeaders.Where(r => r.ReservationType == "GH").Count();
+            var lastReservation = _context.ReservationHeaders
+                .Where(r => r.ReservationType == "FN")
+                .OrderByDescending(r => r.DateSubmitted)
+                .FirstOrDefault();
+
             if (lastReservation != null)
             {
-                sequenceNumber = lastReservation + 1;
+                string[] codeParts = lastReservation.ReservationCode?.Split('-');
+                if (codeParts?.Length == 4 &&
+                    int.TryParse(codeParts[2], out int lastYear) &&
+                    int.TryParse(codeParts[3], out int lastSequenceNumber))
+                {
+                    if (lastYear == currentYear)
+                    {
+                        sequenceNumber = lastSequenceNumber + 1;
+                    }
+                }
             }
 
-            return $"RSQ-GH-{year}-{sequenceNumber:D4}";
+            return $"RSQ-GH-{currentYear}-{sequenceNumber:D4}";
         }
 
         [HttpPost]
