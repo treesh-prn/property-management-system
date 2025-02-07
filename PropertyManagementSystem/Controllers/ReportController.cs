@@ -38,7 +38,7 @@ namespace PropertyManagementSystem.Controllers
 
             try
             {
-                var reportBytes = await _ssrsService.GetReportAsPdfAsync("/Reports/GFMS_GenerateCompanyBilling", parameters);
+                var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GenerateCompanyBilling", parameters);
 
                 // Validate the PDF file format
                 if (reportBytes.Length > 4 && reportBytes[0] == '%' && reportBytes[1] == 'P' && reportBytes[2] == 'D' && reportBytes[3] == 'F')
@@ -65,7 +65,7 @@ namespace PropertyManagementSystem.Controllers
            
             try
             {
-                var reportBytes = await _ssrsService.GetReportAsPdfAsync("/Reports/GFMS_GetReservationOccupancy", parameters);
+                var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GetReservationOccupancy", parameters);
 
                 // Validate the PDF file format
                 if (reportBytes.Length > 4 && reportBytes[0] == '%' && reportBytes[1] == 'P' && reportBytes[2] == 'D' && reportBytes[3] == 'F')

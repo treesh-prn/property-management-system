@@ -4,11 +4,8 @@
     ViewData["Title"] = "Home Page";
     var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms>;
     var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
-    //var rooms = ViewData["Rooms"] as List<GFMS_Rooms>;
-    //var facilities = ViewData["Facilities"] as List<GFMS_Facility>;
 
     var employee = await RoleService.GetUserName(User);
-
 }
 
 <div class="page-wrapper">
@@ -40,7 +37,9 @@
                 <div class="col-12">
                     <div class="row row-cards">
                         <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "FunctionRoom")#reservationApproval" class="card card-sm text-decoration-none">
+                            <a href="@Url.Action("ReservationList", "FunctionRoom")"
+                               class="card card-sm text-decoration-none"
+                               onclick="goToReservationApproval(event, this)">
                                 <div class="card card-sm">
                                     <div class="card-body">
                                         <div class="row align-items-center">
@@ -63,7 +62,7 @@
                             </a>
                         </div>
                         <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "Accommodation")#reservationApproval" class="card card-sm text-decoration-none">
+                            <a href="@Url.Action("ReservationList", "Accommodation")" class="card card-sm text-decoration-none">
                                 <div class="card card-sm">
                                     <div class="card-body">
                                         <div class="row align-items-center">
@@ -86,7 +85,7 @@
                             </a>
                         </div>
                         <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "Dorm")#reservationApproval" class="card card-sm text-decoration-none">
+                            <a href="@Url.Action("ReservationList", "Dorm")" class="card card-sm text-decoration-none">
                                 <div class="card card-sm">
                                     <div class="card-body">
                                         <div class="row align-items-center">

@@ -168,7 +168,8 @@ namespace PropertyManagementSystem.Controllers
             var targetDateTime = new DateTime(today.Year, today.Month, today.Day, 16, 0, 0);
 
             var query = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.ReservationType == "FN");
+                .Where(x => x.ReservationType == "FN")
+                .Where(x => x.Status != "DELETED");
 
             if (gridType == "myReservation")
             {
@@ -194,7 +195,10 @@ namespace PropertyManagementSystem.Controllers
             var reservationViewModels = reservationHeaders.Select(header =>
             {
                 var department = _context.Departments.FirstOrDefault(d => d.Id == header.Department);
-                var details = _context.ReservationDetails.Where(rd => rd.ReservationId == header.ReservationId).ToList();
+                var details = _context.ReservationDetails
+                .Where(rd => rd.ReservationId == header.ReservationId)
+                .Where(rd => rd.StartDate < today)
+                .ToList();
 
                 return new ReservationViewModel
                 {
@@ -204,6 +208,7 @@ namespace PropertyManagementSystem.Controllers
                     RequestorEmail = header.RequestorEmail,
                     Status = header.Status,
                     GUID = header.GUID,
+                    CanDelete = header.Status == "DRAFT",
                     ChargeToCompany = header.ChargeToCompany,
                     ReservationType = header.ReservationType,
                     DepartmentName = department?.DepartmentCode,
@@ -219,6 +224,7 @@ namespace PropertyManagementSystem.Controllers
                 model.DepartmentName,
                 model.RequestorEmail,
                 model.Status,
+                model.CanDelete,
                 model.GUID,
                 model.ChargeToCompany,
                 model.ReservationType,
@@ -229,13 +235,14 @@ namespace PropertyManagementSystem.Controllers
         }
 
 
+
         private string GenerateReservationCode()
         {
             int currentYear = DateTime.Now.Year;
             int sequenceNumber = 1;
 
             var lastReservation = _context.ReservationHeaders
-                .Where(r => r.ReservationType == "GH")
+                .Where(r => r.ReservationType == "FN")
                 .OrderByDescending(r => r.DateSubmitted)
                 .FirstOrDefault();
 
@@ -372,8 +379,6 @@ namespace PropertyManagementSystem.Controllers
                 return RedirectToAction("Error", "Error");
             }
         }
-
-
         public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, List<string> _equipment, string _contactNumber, string _requestorEmail)
         {
             Console.WriteLine($"Requestor Email: {_requestorEmail}");
@@ -384,6 +389,18 @@ namespace PropertyManagementSystem.Controllers
                 _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
             {
                 throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
+            }
+
+            var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == _reservationId).Select(rh => rh.GUID).FirstOrDefault();
+
+            if(_endDate < _startDate)
+            {
+                TempData["AlertMessage"] = "End date cannot be earlier than the start date.";
+                TempData["AlertSubMessage"] = "Please select a valid end date.";
+                TempData["AlertType"] = "Warning";
+
+
+                return RedirectToAction("ViewReservationDetails", new { id = guid});
             }
 
             try
@@ -490,7 +507,7 @@ namespace PropertyManagementSystem.Controllers
 
         /*EditReservation*/
         [HttpPost]
-        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string Purpose, string[] EquipmentNeeded, string _contactNumber)
+        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string _purpose, string[] EquipmentNeeded, string _contactNumber)
         {
             if (StartDate < new DateTime(1753, 1, 1) || StartDate > new DateTime(9999, 12, 31) ||
                 EndDate < new DateTime(1753, 1, 1) || EndDate > new DateTime(9999, 12, 31))
@@ -510,7 +527,7 @@ namespace PropertyManagementSystem.Controllers
             reservationDetail.StartDate = StartDate;
             reservationDetail.EndDate = EndDate;
             reservationDetail.ContactNumber = _contactNumber;
-            reservationDetail.Purpose = Purpose;
+            reservationDetail.Purpose = _purpose;
 
             if (EquipmentNeeded != null && EquipmentNeeded.Any())
             {
@@ -544,27 +561,21 @@ namespace PropertyManagementSystem.Controllers
 
         /*Delete*/
         [HttpPost]
-        public IActionResult DeleteReservationDetail(int ReservationId)
+        public IActionResult DeleteReservationDetail(int reservationId)
         {
             try
             {
-                var reservationDetail = _context.ReservationDetails
-                    .Include(rd => rd.ReservationHeader)
-                    .FirstOrDefault(rd => rd.ReservationId == ReservationId);
+                var reservationHeader = _context.ReservationHeaders
+                    .FirstOrDefault(rd => rd.ReservationId == reservationId);
 
-                if (reservationDetail == null)
+                if (reservationHeader == null)
                 {
                     return NotFound("Reservation detail not found.");
                 }
 
-
-                _context.ReservationDetails.Remove(reservationDetail);
-
-
-                var reservationHeader = reservationDetail.ReservationHeader;
                 if (reservationHeader != null)
                 {
-                    _context.ReservationHeaders.Remove(reservationHeader);
+                    reservationHeader.Status = "DELETED"; 
                 }
 
                 _context.SaveChanges();
@@ -573,10 +584,11 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred while deleting reservation detail: {ex.Message}");
+                Console.WriteLine($"An error occurred while updating reservation header status: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
         }
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -667,6 +679,13 @@ namespace PropertyManagementSystem.Controllers
                       reservation,
                       reservation.RequestorEmail
                   );
+            }
+            else if (action == "Cancel")
+            {
+                reservation.Status = "CANCELLED";
+                reservation.Remarks = Remarks;
+                reservation.ApprovedBy = empName.Fullname;
+                
             }
             else
             {

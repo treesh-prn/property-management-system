@@ -19,6 +19,7 @@
 var fullyBookedDates = [];
 var availableDates = [];
 var bookings = [];
+var assignedData = {}; 
 
 $(document).ready(function () {
     var calendar = $("#calendar").data("kendoCalendar");
@@ -99,7 +100,22 @@ $(document).ready(function () {
     }
 });
 
+// Automatically validate on page load (before form submission)
+window.onload = function () {
+    const form = document.querySelector('form');
 
+    // Check if the dates are invalid
+    const startDate = new Date(document.getElementById('_startDate').value);
+    const endDate = new Date(document.getElementById('_endDate').value);
+
+    // If the date range is invalid, trigger validation to prevent form submission
+    if (startDate >= endDate) {
+        document.getElementById('dateValidationMessage').style.display = 'block';
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission
+        });
+    }
+};
 
 $(document).ready(function () {
     const isFacilityEquipmentCheckbox = $("#isFacilityEquipment");
@@ -139,7 +155,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-
 document.addEventListener('DOMContentLoaded', function () {
     var tabs = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
     var editButton = document.getElementById('editRoomButton');
@@ -154,6 +169,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+
+
 function onDataBound(e) {
     var scheduler = this;
     var view = scheduler.view();
@@ -267,16 +285,48 @@ function onRoomChange(e) {
     $('#' + inputId).val(selectedRoomId);
 
 }
-function filterRooms2(reservationDetailId) {
-    var facilityId = $(`#_facilityId_${reservationDetailId}`).val();
-    var inputId = 'hiddenRoomId_' + reservationDetailId;
-    console.log(facilityId);
-    console.log(inputId);
+function filterRooms2() {
     return {
-        facilityId: facilityId,
-        reservationDetailId: reservationDetailId
+        facilityId: $("#_facilityId").data("kendoDropDownList").value(), // Get FacilityId from Kendo Dropdown
+        reservationDetailId: $("#ReservationDetailId").val()
     };
 }
+
+
+// Open modal and set selected ReservationDetailId
+function openAssignModal(e) {
+    var dataItem = $("#approvalGrid").data("kendoGrid").dataItem($(e.currentTarget).closest("tr"));
+    $("#ReservationDetailId").val(dataItem.ReservationDetailId);
+    $("#_facilityId").data("kendoDropDownList").value("");
+    $("#_roomId").data("kendoDropDownList").value("");
+
+    $("#assignFacilityModal").modal("show");
+}
+
+// Store assigned data temporarily
+function assignFacility() {
+    var reservationDetailId = $("#ReservationDetailId").val();
+    var facilityDropdown = $("#_facilityId").data("kendoDropDownList");
+    var roomDropdown = $("#_roomId").data("kendoDropDownList");
+
+    if (!facilityDropdown.value() || !roomDropdown.value()) {
+        alert("Please select both Facility and Room");
+        return;
+    }
+
+    assignedData[reservationDetailId] = {
+        FacilityId: facilityDropdown.value(),
+        FacilityName: facilityDropdown.text(),
+        RoomId: roomDropdown.value(),
+        RoomName: roomDropdown.text()
+    };
+
+    $("#assignFacilityModal").modal("hide");
+    $("#approvalGrid").data("kendoGrid").dataSource.read(); // Refresh grid
+
+
+}
+
 //alert
 $(document).ready(function () {
     window.setTimeout(function () {
@@ -360,6 +410,84 @@ function onViewClickReservationReport(e) {
     }
 
 }
+function onGridDataBound(e) {
+    var grid = e.sender;
+    var rows = grid.tbody.find("tr");
+
+    rows.each(function () {
+        var dataItem = grid.dataItem(this);
+        var viewButton = $(this).find(".k-grid-View");
+        var deleteButton = $(this).find(".k-grid-Delete");
+
+        if (dataItem.Status !== "DRAFT") {
+            viewButton.css("width", "250px"); 
+        } else {
+            viewButton.css("width", "115px");  
+        }
+
+        if (dataItem.CanDelete === false) {
+            deleteButton.hide();
+        } else {
+            deleteButton.show();
+        }
+    });
+}
+
+
+function onDeleteClickReservation(e) {
+    var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+    var reservationId = dataItem.ReservationId;
+    var reservationType = dataItem.ReservationType;
+    console.log(reservationId);
+    console.log(reservationType);
+
+    if (dataItem.CanDelete !== true) {
+        alert("You are not allowed to delete this reservation.");
+        return;
+    }
+
+    // Show confirmation before deleting
+    if (confirm("Are you sure you want to delete this reservation?")) {
+        if (reservationType == "FN") {
+            $.ajax({
+                url: '/FunctionRoom/DeleteReservationDetail',
+                type: 'POST',
+                data: { reservationId: reservationId },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert("Failed to delete the reservation. Error: " + xhr.status + " " + xhr.statusText);
+                }
+            });
+        }
+        else if (reservationType == "GH") {
+            $.ajax({
+                url: '/Accommodation/DeleteReservationDetail',
+                type: 'POST',
+                data: { reservationId: reservationId },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert("Failed to delete the reservation. Error: " + xhr.status + " " + xhr.statusText);
+                }
+            });
+        }
+
+    }
+}
+
 function onDeleteClick(e) {
     e.preventDefault();
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));

@@ -1,5 +1,7 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
+
 <form asp-action="CreateReservationDetails" asp-controller="FunctionRoom" method="post">
+
     <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
     <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
     <input type="hidden" class="form-control" name="_requestorEmail" asp-for="@Model.ReservationHeader.RequestorEmail">
@@ -43,6 +45,7 @@
                                         .Format("yyyy/MM/dd HH:mm:ss.fff")
                                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         .Events(e => e.Open("onDateTimePickerOpen"))
+                                        .HtmlAttributes(new { id = "_startDate", onkeydown = "return false;" })
                                         )
                                 </div>
                                 <div class="col-lg-6">
@@ -54,6 +57,7 @@
                                         .Format("yyyy/MM/dd HH:mm:ss.fff")
                                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         .Events(e => e.Open("onDateTimePickerOpen"))
+                                        .HtmlAttributes(new { id = "_endDate", onkeydown = "return false;" })
                                         )
                                 </div>
                             </div>
@@ -123,11 +127,11 @@
                             </div>
                             <div class="col-lg-12">
                                 <div>
-                                    <label class="form-label">
+                                    <label class="form-label required">
                                         Purpose
                                         <span id="charCount" class="form-label-description">0/50</span>
                                     </label>
-                                    <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50">Some existing text</textarea>
+                                    <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50"></textarea>
                                 </div>
                             </div>
                         </div>

@@ -31,11 +31,11 @@ namespace PropertyManagementSystem.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var cutoffTime = new TimeSpan(16, 0, 0);
+            var today = DateTime.Today;
+            var cutoffTime = new DateTime(today.Year, today.Month, today.Day, 16, 0, 0);
             var newFNReservationCount = 0;
             var newGHReservationCount = 0;
             var newDRMReservationCount = 0;
-            var today = DateTime.Today;
 
             var rooms = _context.Rooms
           .Include(r => r.Facility)
@@ -66,51 +66,51 @@ namespace PropertyManagementSystem.Controllers
                 newFNReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "FN"
                         && r.Status == "FOR ADMIN MANAGER'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
 
                 newGHReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "GH"
                         && r.Status == "FOR ADMIN MANAGER'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
 
                 newDRMReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "DRM"
                         && r.Status == "FOR ADMIN MANAGER'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
             }
             else if (User.IsInRole("GFMS.Admin Approver"))
             {
                 newFNReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "FN"
                         && r.Status == "FOR ADMIN APPROVER'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
 
                 newGHReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "GH"
                         && r.Status == "FOR ADMIN APPROVER'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
 
                 newDRMReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "DRM"
                         && r.Status == "FOR ADMIN APPROVER'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
             }
             else if (User.IsInRole("GFMS.Department Head"))
             {
                 newFNReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "FN"
                         && r.Status == "FOR DEPARTMENT HEAD'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
 
                 newGHReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "GH"
                         && r.Status == "FOR DEPARTMENT HEAD'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
 
                 newDRMReservationCount = _context.ReservationHeaders
                     .Count(r => r.ReservationType == "DRM"
                         && r.Status == "FOR DEPARTMENT HEAD'S APPROVAL"
-                        && r.DateFiled.Value.TimeOfDay < cutoffTime);
+                        && r.DateFiled <= cutoffTime);
             }
 
             var todaysBookings = await (from detail in _context.ReservationDetails

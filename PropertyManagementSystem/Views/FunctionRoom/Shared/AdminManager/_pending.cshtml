@@ -193,6 +193,7 @@
                             Html.Kendo().DropDownList()
                             .Name("_facilityId")
                             .DataTextField("FacilityName")
+                            .Value(Model.ReservationDetails.FirstOrDefault().FacilityId.ToString())
                             .DataValueField("FacilityId")
                             .DataSource(source =>
                             {
@@ -210,6 +211,7 @@
                         @(Html.Kendo().DropDownList()
                             .Name("_roomId")
                             .DataTextField("RoomName")
+                            .Value(Model.ReservationDetails.FirstOrDefault().RoomId.ToString())
                             .DataValueField("RoomId")
                             .CascadeFrom("_facilityId")
                             .DataSource(source =>

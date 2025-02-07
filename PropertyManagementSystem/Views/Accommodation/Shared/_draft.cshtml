@@ -44,6 +44,7 @@
                                     .Value(DateTime.Today)
                                     .Format("yyyy/MM/dd HH:mm:ss.fff")
                                     .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                    .HtmlAttributes(new {onkeydown = "return false;" })
                                     )
                             </div>
                             <div class="col-lg-6">
@@ -52,6 +53,7 @@
                                     .Name("_endDate")
                                     .Value(DateTime.Today)
                                     .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                    .HtmlAttributes(new { onkeydown = "return false;" })
                                     .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                     )
                             </div>

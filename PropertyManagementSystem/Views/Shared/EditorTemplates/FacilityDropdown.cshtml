@@ -1,0 +1,16 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+
+@(Html.Kendo().DropDownListFor(m => m.FacilityId)
+    .Name("FacilityId")
+    .DataTextField("FacilityName")
+    .DataValueField("FacilityId")
+    .OptionLabel("Select Facility")
+    .DataSource(source =>
+    {
+        source.Read(read =>
+        {
+            read.Action("GetGHFac", "Global").Data("function() { return filterFacilities2(); }");
+        });
+    })
+    .HtmlAttributes(new { style = "width: 100%" })
+)
