@@ -394,7 +394,8 @@ namespace PropertyManagementSystem.Controllers
             var employee = employeeTask.Result;
 
             var query = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.ReservationType == "GH");
+                .Where(x => x.ReservationType == "GH")
+                .Where(x => x.Status != "DELETED");
 
             if (gridType == "myReservation")
             {

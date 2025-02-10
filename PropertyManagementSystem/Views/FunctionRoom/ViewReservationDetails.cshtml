@@ -110,7 +110,7 @@
                             {
                                 <partial name="Shared/AdminManager/_pending" />
                             }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status != "DRAFT")
                             {
                                 <partial name="Shared/_view" />
                             }
@@ -129,7 +129,7 @@
                             {
                                 <partial name="Shared/AdminApprover/_pending" />
                             }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status != "DRAFT")
                             {
                                 <partial name="Shared/_view" />
                             }

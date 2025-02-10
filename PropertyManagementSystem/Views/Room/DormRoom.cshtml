@@ -116,13 +116,13 @@
 
 </div>
 @*off canvas edit form*@
+<form id="fcFRM1" asp-controller="Room" asp-action="newDMRoom" enctype="multipart/form-data" method="post">
 <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
     <div class="offcanvas-header">
         <h2 class="offcanvas-title" id="offcanvasEndLabel">New Dorm Room</h2>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
-        <form id="fcFRM1" asp-controller="Room" asp-action="newDMRoom" enctype="multipart/form-data" method="post">
             <div class="mb-3">
                 <label class="form-label required">Name </label>
                 <input class="form-control" name="_name" type="text" required="required">
@@ -175,9 +175,12 @@
                     <input class="form-check-input" id="switch" name="_isActive" type="checkbox" value="true" checked>
                 </div>
             </div>
-        </form>
+    </div>
+    <div class="offcanvas-footer">
+        <button type="submit" class="btn btn-primary" form="fcFRM1">Add Room</button>
     </div>
 </div>
+</form>
 @*DELETE MODAL*@
 <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">

@@ -144,7 +144,8 @@ namespace PropertyManagementSystem.Controllers
             var employee = _roleService.GetUserName(User).Result;
 
             var query = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.ReservationType == "DRM");
+                .Where(x => x.ReservationType == "DRM")
+                .Where(x => x.Status != "DELETED");
 
             if (gridType == "myReservation")
             {
@@ -189,6 +190,7 @@ namespace PropertyManagementSystem.Controllers
                 RequestorEmail = reservation.header.RequestorEmail,
                 Status = reservation.header.Status,
                 GUID = reservation.header.GUID,
+                CanDelete = reservation.header.Status == "DRAFT",
                 FacilityName = reservation.Facility?.FacilityName,
                 RoomName = reservation.Room?.RoomName,
                 FacilityLocation = reservation.Facility?.FacilityLocation,
@@ -210,6 +212,7 @@ namespace PropertyManagementSystem.Controllers
                 model.FacilityLocation,
                 model.Status,
                 model.GUID,
+                model.CanDelete,
                 model.ReservationType,
                 model.ReservationDetailId
             });
@@ -568,28 +571,23 @@ namespace PropertyManagementSystem.Controllers
 
 
         /*Delete*/
-        public IActionResult DeleteReservationDetail(int ReservationId)
+        public IActionResult DeleteReservationDetail(int reservationId)
         {
             try
             {
-                Console.WriteLine(ReservationId);
-                var reservationDetail = _context.ReservationDetails
-                    .Include(rd => rd.ReservationHeader)
-                    .Where(rd => rd.ReservationId == ReservationId).ToList();
+                Console.WriteLine(reservationId);
 
-                if (reservationDetail == null)
+                var reservationHeader = _context.ReservationHeaders
+                    .FirstOrDefault(rd => rd.ReservationId == reservationId);
+
+                if (reservationHeader == null)
                 {
                     return NotFound("Reservation detail not found.");
                 }
 
-
-                _context.ReservationDetails.RemoveRange(reservationDetail);
-
-
-                var reservationHeader = reservationDetail.First().ReservationHeader;
                 if (reservationHeader != null)
                 {
-                    _context.ReservationHeaders.Remove(reservationHeader);
+                    reservationHeader.Status = "DELETED";
                 }
 
                 _context.SaveChanges();

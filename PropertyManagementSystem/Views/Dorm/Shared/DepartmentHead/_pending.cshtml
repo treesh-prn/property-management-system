@@ -99,6 +99,12 @@
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Number of Dependents</div>
+                        <div class="datagrid-content">@Model.ReservationDetails.Count()</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Letter of Intent</div>
                         <div class="datagrid-content">
                             <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
@@ -148,15 +154,24 @@
                     </div>
                     <div class="mb-3 d-flex justify-content-between align-items-center">
                         <label class="form-label mb-0">Job performed by employee is critical to operations?</label>
-                        <span class="form-check form-check-single form-switch">
-                            <input class="form-check-input" name="_isCritical" type="checkbox" value="true" @(Model.ReservationDetails.FirstOrDefault().isCritical == true ? "checked" : "") />
-                        </span>
+                        <div class="d-flex align-items-center">
+                            <span class="me-2 form-label">No</span>
+                            <span class="form-check form-check-single form-switch me-5">
+                                <input class="form-check-input" name="_isCritical" type="checkbox" value="true" @(Model.ReservationDetails.FirstOrDefault().isCritical == true ? "checked" : "") />
+                            </span>
+                            <span class="ms-2 form-label">Yes</span>
+                        </div>
                     </div>
+
                     <div class="mb-3 d-flex justify-content-between align-items-center">
                         <label class="form-label mb-0">Employee is often on call to perform job function?</label>
-                        <span class="form-check form-check-single form-switch">
-                            <input class="form-check-input" name="_isOnCall" type="checkbox" value="true" @(Model.ReservationDetails.FirstOrDefault().isOnCall == true ? "checked" : "") />
-                        </span>
+                        <div class="d-flex align-items-center">
+                            <span class="me-2 form-label">No</span>
+                            <span class="form-check form-check-single form-switch me-5">
+                                <input class="form-check-input" name="_isOnCall" type="checkbox" value="true" @(Model.ReservationDetails.FirstOrDefault().isOnCall == true ? "checked" : "") />
+                            </span>
+                            <span class="ms-2 form-label">Yes</span>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <div>
@@ -183,7 +198,7 @@
             <div class="modal-body text-center py-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
                 <h3>Are you sure?</h3>
-                <div class="text-secondary">Do you really want to cancel this reservation? This action cannot be undone.</div>
+                <div class="text-secondary">Do you really want to disapprove this reservation? This action cannot be undone.</div>
             </div>
             <form asp-action="UpdateReservationStatus" method="post">
                 @Html.AntiForgeryToken()

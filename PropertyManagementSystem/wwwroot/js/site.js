@@ -484,6 +484,24 @@ function onDeleteClickReservation(e) {
                 }
             });
         }
+        else if (reservationType == "DRM") {
+            $.ajax({
+                url: '/Dorm/DeleteReservationDetail',
+                type: 'POST',
+                data: { reservationId: reservationId },
+                success: function (response) {
+                    if (response.success) {
+                        alert(response.message);
+                        location.reload();
+                    } else {
+                        location.reload();
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert("Failed to delete the reservation. Error: " + xhr.status + " " + xhr.statusText);
+                }
+            });
+        }
 
     }
 }
@@ -590,29 +608,46 @@ document.getElementById('dynamic-rows').addEventListener('click', function (e) {
         }
     }
 });
+
 //dorm - civil status
 $(document).ready(function () {
-    // Function to handle showing/hiding elements based on the selected radio button
     function updateVisibility() {
         var selectedValue = $('input[name="_civilStat"]:checked').val();
+        var housingOption = $('input[name="_unitApplied"][value="1"]');
+        var dormOption = $('input[name="_unitApplied"][value="0"]');
 
         if (selectedValue === 'SINGLE') {
             $('#dynamic-rows-dependent').slideUp();
             $('#dynamic-rows-dependent-label').slideUp();
 
+            // If Housing was selected, switch to Dorm
+            if (housingOption.is(':checked')) {
+                dormOption.prop('checked', true);
+            }
+
+            // Disable Housing
+            housingOption.prop('disabled', true);
         } else if (selectedValue === 'MARRIED') {
             $('#dynamic-rows-dependent').slideDown();
             $('#dynamic-rows-dependent-label').slideDown();
+
+            // Enable Housing
+            housingOption.prop('disabled', false);
         } else {
             $('#dynamic-rows-dependent').slideUp();
             $('#dynamic-rows-dependent-label').slideUp();
+
+            // Enable Housing
+            housingOption.prop('disabled', false);
         }
     }
 
+    // Trigger change on Civil Status selection
     $('input[name="_civilStat"]').on('change', function () {
         updateVisibility();
     });
-    updateVisibility();
+
+    updateVisibility(); // Run function on page load
 });
 
 //dorm - dependents
@@ -632,67 +667,53 @@ $('#add-dependent').on('click', function () {
     originalRow.find('input[name="_dependent_status[0]"]').attr('name', `_dependent_status[${rowIndex}]`);
     originalRow.find('input[name="_dependent_status[1]"]').attr('name', `_dependent_status[${rowIndex}]`);
 
+    originalRow.find("#add-dependent").remove();
     // Append the cloned row
     $('#dynamic-rows-dependent').append(originalRow);
 });
 
-// Capture form submission
-//$('form').on('submit', function () {
-//    // Output selected values for testing
-//    $('input[type="radio"]:checked').each(function (index) {
-//        console.log(`Dependent Status for row ${index}: ${$(this).val()}`);
-//    });
-//});
+$(document).ready(function () {
+    // Function to update placeholders based on selected dependent status
+    function updatePlaceholders(row) {
+        var selectedStatus = row.find('input[name^="_dependent_status"]:checked').val();
 
+        if (selectedStatus === "studying") {
+            row.find('input[name="_position[]"]').attr("placeholder", "School");
+            row.find('input[name="_location[]"]').attr("placeholder", "School Location");
+        } else if (selectedStatus === "working") {
+            row.find('input[name="_position[]"]').attr("placeholder", "Position");
+            row.find('input[name="_location[]"]').attr("placeholder", "Work Location");
+        }
+    }
 
+    // Event listener for changing Studying/Working radio button
+    $(document).on("change", 'input[name^="_dependent_status"]', function () {
+        var row = $(this).closest(".row");
+        updatePlaceholders(row);
+    });
 
-//$('form').on('submit', function (e) {
-//    e.preventDefault(); // Prevent actual form submission for testing
-//
-//    $('#dynamic-rows-dependent .row').each(function (index) {
-//        var name = $(this).find('input[name="_dependents[]"]').val();
-//        var age = $(this).find('input[name="_age[]"]').val();
-//        var status = $(this).find('input[name="_dependent_status[' + index + ']"]:checked').val(); // Capture checked status
-//        var position = $(this).find('input[name="_position[]"]').val();
-//        var location = $(this).find('input[name="_location[]"]').val();
-//
-//        console.log('Dependent Name:', name);
-//        console.log('Dependent Age:', age);
-//        console.log('Dependent Status for row ' + index + ':', status);
-//        console.log('Dependent Position:', position);
-//        console.log('Dependent Location:', location);
-//    });
-//});
+    // Function to add new dependent row
+    $("#add-dependent").on("click", function () {
+        var lastRow = $(".original-row:last");
+        var newRow = lastRow.clone();
 
+        // Clear input values in the new row
+        newRow.find("input").val("");
+        newRow.find("input[type='radio']").prop("checked", false);
 
-//// Add a unique class or identifier to the original row
-//var originalRow = document.querySelector('#dynamic-rows-dependent .row.mb-3');
-//originalRow.classList.add('original-row');
+        // Reset placeholders to default
+        newRow.find('input[name="_position[]"]').attr("placeholder", "Position");
+        newRow.find('input[name="_location[]"]').attr("placeholder", "Location");
 
-//document.getElementById('add-dependent').addEventListener('click', function () {
-//    var rowToClone = document.querySelector('#dynamic-rows-dependent .original-row');
-//    var newRow = rowToClone.cloneNode(true);
-
-//    var textInput = newRow.querySelectorAll('input');
-//    textInput.forEach(function (input) {
-//        if (input.type !== 'radio') {
-//            input.value = "";
-//        }
-//        if (input.type === 'radio') {
-//            input.checked = false;
-//        }
-//    });
-
-//    var rowCount = document.querySelectorAll('#dynamic-rows-dependent .row.mb-3').length;
-//    var radioButtons = newRow.querySelectorAll('input[type="radio"]');
-//    radioButtons.forEach(function (radio) {
-//        radio.name = `dependent_status_[]`;
-//    });
-
-//    document.getElementById('dynamic-rows-dependent').appendChild(newRow);
-
-
-//})
+        // Update name attributes to prevent duplicate names
+        var index = $(".original-row").length;
+        newRow.find('input[name^="_dependent_status"]').each(function () {
+            $(this).attr("name", `_dependent_status[${index}]`);
+        });
+        
+    });
+    
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     const ownedRadio = document.getElementById('ownedRadio');
@@ -814,6 +835,8 @@ function onSuccess(e) {
 //        $('#uploadedFilesLinks').show();
 //    }
 //}
+
+
 
 function onError(e) {
     console.log("Upload error: " + e.XMLHttpRequest.statusText);
