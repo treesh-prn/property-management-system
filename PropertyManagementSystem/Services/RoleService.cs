@@ -13,10 +13,10 @@ namespace PropertyManagementSystem.Services
     }
     public class RoleService : IRoleService
     {
-        private readonly UserManager<IdentityUser> _user;
+        private readonly UserManager<ApplicationUser> _user;
         private readonly DAL _context;
 
-        public RoleService(UserManager<IdentityUser> user, DAL context)
+        public RoleService(UserManager<ApplicationUser> user, DAL context)
         {
             _user = user;
             _context = context;

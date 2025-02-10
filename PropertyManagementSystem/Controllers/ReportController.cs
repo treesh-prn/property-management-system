@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PropertyManagementSystem.Services;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class ReportController : Controller
     {
         private readonly SsrsService _ssrsService;

@@ -7,9 +7,11 @@ using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.IO;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class GlobalController : Controller
     {
         private readonly DAL _context;

@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace PropertyManagementSystem.Models;
 
-public class ApplicationUser
+public class ApplicationUser : IdentityUser
 {
     
 }
