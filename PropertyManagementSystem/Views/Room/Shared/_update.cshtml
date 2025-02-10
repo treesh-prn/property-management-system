@@ -21,7 +21,6 @@
             .HtmlAttributes(new { style = "width: 100%" })
             )
     </div>
-
     <div class="mb-3">
         <label class="form-label required">Status</label>
         @(Html.Kendo().DropDownList()
@@ -39,6 +38,18 @@
     <div class="mb-3">
         <label class="form-label required">Capacity</label>
         <input class="form-control" name="_capacity" type="number" required="required" asp-for="Capacity">
+    </div>
+    <div class="mb-3">
+        <label class="form-label required">Cost Per Day</label>
+        <input class="form-control" name="_costPerDay" type="number" step="0.01" asp-for="CostPerDay">
+    </div>
+    <div class="mb-3">
+        <label class="form-label required">Cost Per Week</label>
+        <input class="form-control" name="_costPerWeek" type="number"  asp-for="CostPerWeek">
+    </div>
+    <div class="mb-3">
+        <label class="form-label required">Cost Per Month</label>
+        <input class="form-control" name="_costPerMonth" type="number" asp-for="CostPerMonth">
     </div>
     <label class="row">
         <span class="col form-label">Is Active</span>

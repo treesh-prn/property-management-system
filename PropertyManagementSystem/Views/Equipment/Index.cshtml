@@ -47,8 +47,8 @@
                         <div class="card-header">
                             <h3 class="card-title"></h3>
                             <div class="card-actions">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#modal-newFacility" class="btn btn-primary">
-                                    <i class="ti ti-home-plus icon"></i>
+                                <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
+                                    <i class="ti ti-plus icon"></i>
                                     New Equipment
                                 </a>
                             </div>
@@ -107,71 +107,19 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-</div>
-@*NEW FACILITY MODAL *@
-<div class="modal modal-blur fade" id="modal-newFacility" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">New Equipment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            @*off canvas edit form*@
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+                <div class="offcanvas-header">
+                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Add Equipment</h2>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <partial name="Shared/_add" />
+                </div>
             </div>
-            <form id="fcFRM1" asp-controller="Equipment" asp-action="newEquipments" enctype="multipart/form-data" method="post">
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-lg-6">
-                            <label class="form-label required">Equipment Name </label>
-                            <input class="form-control" name="_name" type="text" required="required">
-                        </div>
-                        <div class="col-lg-6">
-                            <label class="form-label required">Equipment Qty</label>
-                            <input class="form-control" name="_quantity" type="number" required="required">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Purchase Cost</label>
-                        <input class="form-control" name="_purCost" type="number" required="required">
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-lg-6">
-                            <label class="form-label required">Half Day Cost</label>
-                            <input class="form-control" name="_halfCost" type="number" required="required">
-                        </div>
-                        <div class="col-lg-6">
-                            <label class="form-label required">Whole Day Cost</label>
-                            <input class="form-control" name="_wholeCost" type="number" required="required">
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <div>
-                            <label class="form-label required">
-                                Remarks
-                            </label>
-                            <textarea class="form-control required" rows="2" name="_remarks"></textarea>
-                        </div>
-                    </div>
-                    <label class="row mb-3">
-                        <span class="col form-label required">Is Active</span>
-                        <span class="col-auto">
-                            <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" id="isActiveCheckbox" name="_isActive" type="checkbox" value="true" checked>
-                            </label>
-                        </span>
-                    </label>
-                </div>
-
-
-                <div class="modal-footer">
-                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Save</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
-@*END - NEW FACILITY MODAL *@
 
 @*DELETE MODAL*@
 <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">

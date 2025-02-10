@@ -14,18 +14,21 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using PropertyManagementSystem.Models;
 
 namespace WebApplication1.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
-        private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly IConfiguration _configuration;
 
-        public LoginModel(SignInManager<IdentityUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, IConfiguration configuration)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -83,8 +86,37 @@ namespace WebApplication1.Areas.Identity.Pages.Account
             [Display(Name = "Remember me?")]
             public bool RememberMe { get; set; }
         }
+        
+        public async Task<IActionResult> OnGetAsync(string returnUrl = null)
+        {
+            if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                ModelState.AddModelError(string.Empty, ErrorMessage);
+            }
 
-        public async Task OnGetAsync(string returnUrl = null)
+            returnUrl ??= Url.Content("~/");
+
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            ReturnUrl = returnUrl;
+
+            bool integrateSSO = bool.TryParse(_configuration["Jwt:IntegrateSSO"], out bool result) && result;
+
+            if (integrateSSO)
+            {
+                return Redirect($"{_configuration["Jwt:AuthServer"]}/Identity/Account/Login?returnUrl={_configuration["Jwt:AppUrl"]}/Token/HandleToken");
+            }
+            else
+            {
+                await OnGetAsyncOld(returnUrl);
+                return Page(); // Ensure you return a valid IActionResult
+            }
+        }
+
+        public async Task OnGetAsyncOld(string returnUrl = null)
         {
             if (!string.IsNullOrEmpty(ErrorMessage))
             {
@@ -100,6 +132,7 @@ namespace WebApplication1.Areas.Identity.Pages.Account
 
             ReturnUrl = returnUrl;
         }
+
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {

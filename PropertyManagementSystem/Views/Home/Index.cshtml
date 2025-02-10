@@ -4,11 +4,8 @@
     ViewData["Title"] = "Home Page";
     var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms>;
     var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
-    //var rooms = ViewData["Rooms"] as List<GFMS_Rooms>;
-    //var facilities = ViewData["Facilities"] as List<GFMS_Facility>;
 
     var employee = await RoleService.GetUserName(User);
-
 }
 
 <div class="page-wrapper">
@@ -40,7 +37,9 @@
                 <div class="col-12">
                     <div class="row row-cards">
                         <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "FunctionRoom")#reservationApproval" class="card card-sm text-decoration-none">
+                            <a href="@Url.Action("ReservationList", "FunctionRoom")"
+                               class="card card-sm text-decoration-none"
+                               onclick="goToReservationApproval(event, this)">
                                 <div class="card card-sm">
                                     <div class="card-body">
                                         <div class="row align-items-center">
@@ -50,8 +49,8 @@
                                                 </span>
                                             </div>
                                             <div class="col">
-                                                <div class="font-weight-medium">
-                                                    : Function Room
+                                                <div class="font-weight-medium" style="font-weight:600">
+                                                    Function Room
                                                 </div>
                                                 <div class="text-secondary">
                                                     @Model.NewFNReservationsCount waiting for approval
@@ -63,7 +62,7 @@
                             </a>
                         </div>
                         <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "Accommodation")#reservationApproval" class="card card-sm text-decoration-none">
+                            <a href="@Url.Action("ReservationList", "Accommodation")" class="card card-sm text-decoration-none">
                                 <div class="card card-sm">
                                     <div class="card-body">
                                         <div class="row align-items-center">
@@ -73,8 +72,8 @@
                                                 </span>
                                             </div>
                                             <div class="col">
-                                                <div class="font-weight-medium">
-                                                    : Accommodation
+                                                <div class="font-weight-medium" style="font-weight:600">
+                                                    Accommodation
                                                 </div>
                                                 <div class="text-secondary">
                                                     @Model.NewGHReservationsCount waiting for approval
@@ -83,10 +82,10 @@
                                         </div>
                                     </div>
                                 </div>
-                            </a> 
+                            </a>
                         </div>
                         <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "Dorm")#reservationApproval" class="card card-sm text-decoration-none">
+                            <a href="@Url.Action("ReservationList", "Dorm")" class="card card-sm text-decoration-none">
                                 <div class="card card-sm">
                                     <div class="card-body">
                                         <div class="row align-items-center">
@@ -96,8 +95,8 @@
                                                 </span>
                                             </div>
                                             <div class="col">
-                                                <div class="font-weight-medium">
-                                                    : Dorm
+                                                <div class="font-weight-medium" style="font-weight:600">
+                                                    Dorm
                                                 </div>
                                                 <div class="text-secondary">
                                                     @Model.NewDRMReservationsCount waiting for approval
@@ -118,8 +117,8 @@
                                             </span>
                                         </div>
                                         <div class="col">
-                                            <div class="font-weight-medium">
-                                                : Total Rooms
+                                            <div class="font-weight-medium" style="font-weight:600">
+                                                Total Rooms
                                             </div>
                                             <div class="text-secondary">
                                                 12 waiting reservation
@@ -129,32 +128,176 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card">
-                            <div class="card-header">
-                                <ul class="nav nav-tabs card-header-tabs">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" data-bs-toggle="tab" href="#fnRoom">
-                                            <b>FUNCTION ROOM</b>
-                                        </a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" data-bs-toggle="tab" href="#ghRoom">
-                                            <b>GUEST ROOM</b>
-                                        </a>
-                                    </li>
-                                </ul>
-                                <h3 class="card-title"></h3>
-                                <div class="card-actions">
+                    </div>
+                </div>
+                <div class="col-9">
+                    <div class="card">
+                        @(Html.Kendo().TabStrip()
+                                .Name("tabstrip")
+                                .Animation(animation =>
+                                animation.Open(effect =>
+                                effect.Fade(FadeDirection.In)))
+                                .Items(tabstrip =>
+                                {
+                                    tabstrip.Add().Text("Function Room")
+                                .Encoded(false)
+
+                                .Selected(true)
+                                .Content(@<text>
+                            <div id="fnRoom" class="tab-pane active">
+                                <partial name="Shared/_fnRoom" />
+                            </div>
+                        </text>);
+                                    tabstrip.Add().Text("Guest Room")
+                                .Encoded(false)
+                                .Content(@<text>
+                            <div id="ghRoom">
+                                <partial name="Shared/_ghRoom" />
+                            </div>
+                        </text>);
+                                })
+                            )
+                    </div>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <div class="card card-sm">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <span class="bg-pink text-white avatar">
+                                        <i class="ti ti-calendar-event" style="font-size: 30px;"></i>
+                                    </span>
+                                </div>
+                                <div class="col">
+                                    <div style="font-weight:600">
+                                        Availability Checker
+                                    </div>
+                                    <div class="text-secondary">
+                                        Select facility and room to check availability.
+                                    </div>
+                                </div>
+                                <!-- Filter Icon Button on the Side -->
+                                <div class="col-auto text-end">
+                                    <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false" aria-controls="filterPanel">
+                                        <i class="ti ti-filter" style="font-size: 20px;"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="card-body p-0 tab-content">
-                                <div id="fnRoom" class="tab-pane active">
-                                    <partial name="Shared/_fnRoom" />
-                                </div>
-                                <div id="ghRoom" class="tab-pane fade">
-                                    <partial name="Shared/_ghRoom" />
+
+                            <!-- Collapsible Filter Categories -->
+                            <div class="collapse mt-3" id="filterPanel">
+                                <div class="card card-body">
+                                    <!-- Facility and Room Selection -->
+                                    <div class="mb-2">
+                                        <label class="form-label required">Facility</label>
+                                        @(
+                                            Html.Kendo().DropDownList()
+                                            .Name("_facilityId")
+                                            .DataTextField("FacilityName")
+                                            .DataValueField("FacilityId")
+                                            .DataSource(source =>
+                                            {
+                                                source.Read(read =>
+                                                {
+                                                    read.Action("GetAllFacility", "Global").Data("filterFacilities");
+                                                });
+                                            })
+                                            .HtmlAttributes(new { style = "width: 100%" })
+                                            .OptionLabel("Select Facility")
+                                            )
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label class="form-label required">Room</label>
+                                        @(Html.Kendo().DropDownList()
+                                            .Name("_roomId")
+                                            .DataTextField("RoomName")
+                                            .DataValueField("RoomId")
+                                            .CascadeFrom("_facilityId")
+                                            .DataSource(source =>
+                                            {
+                                                source.Read(read =>
+                                                {
+                                                    read.Action("GetAllRooms", "Global").Data("filterRooms");
+                                                }).ServerFiltering(true);
+                                            })
+                                            .HtmlAttributes(new { style = "width: 100%" })
+                                            .OptionLabel("Select Room")
+                                            )
+                                    </div>
+
+                                    <!-- Apply Filter Button -->
+                                    <div class="mb-3">
+                                        <button id="checkAvailabilityButton" class="btn btn-primary">
+                                            <i class="fa fa-filter"></i> Check Room Availability
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Calendar Preview -->
+                            <div class="mt-3 mb-3 k-d-flex-col k-text-align-center k-align-items-center">
+                                <div id="special-days">
+                                    @(Html.Kendo().Calendar()
+                                        .Name("calendar")
+                                        .WeekNumber(false)
+                                        .Footer(@"
+                                    <div class='color-legend'>
+                                    <span class='legend-item'>
+                                    <span class='legend-box legend-fully-booked'></span> Fully Booked
+                                    </span>
+                                    <span class='legend-item'>
+                                    <span class='legend-box legend-available'></span> Available
+                                    </span>
+                                    <span class='legend-item'>
+                                    <span class='legend-box legend-current'></span> Current
+                                    </span>
+                                    </div>
+                                    ")
+                                        .MonthTemplate(month => month.Content(@"
+                                    # if ($.inArray(data.date.getTime(), fullyBookedDates) !== -1) { #
+                                    <div class='fully-booked'>#= data.value #</div>
+                                    # } else if ($.inArray(data.date.getTime(), availableDates) !== -1) { #
+                                    <div class='available'>#= data.value #</div>
+                                    # } else { #
+                                    <div>#= data.value #</div>
+                                    # } #
+                                    "))
+                                        )
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-lg-12">
+                                    <div style="font-weight:600; font-size:medium">
+                                        Today's Bookings
+                                    </div>
+                                </div>
+                            </div>
+
+                            @foreach (var booking in Model.TodaysBookings)
+                            {
+                                <div class="col-auto">
+                                    <div class="mb-3 card card-sm @(booking.ReservationType == "FN" ? "bg-blue-lt" : booking.ReservationType == "GH" ? "bg-green-lt" : "bg-gray-lt")">
+                                        <div class="card-body">
+                                            <div class="row align-items-center">
+                                                <div class="col-auto">
+                                                    <span class="@(booking.ReservationType == "FN" ? "bg-blue" : booking.ReservationType == "GH" ? "bg-green" : "bg-gray") text-white avatar">
+                                                        <i class="@(booking.ReservationType == "FN" ? "ti ti-briefcase" : booking.ReservationType == "GH" ? "ti ti-door" : "ti ti-calendar")" style="font-size: 30px;"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="col">
+                                                    <div style="font-weight:600">
+                                                        @booking.Purpose
+                                                    </div>
+                                                    <div class="text-secondary">
+                                                        @booking.StartDate - @booking.EndDate
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
@@ -162,3 +305,6 @@
         </div>
     </div>
 </div>
+<script>
+    kendo.culture("en-PH");
+</script>

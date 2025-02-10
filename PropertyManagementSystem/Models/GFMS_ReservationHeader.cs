@@ -31,6 +31,5 @@ namespace PropertyManagementSystem.Models
         public string? ApprovedBy {  get; set; }
 
         //public ICollection<GFMS_ReservationDetails> ReservationDetails { get; set; }
-
     }
 }

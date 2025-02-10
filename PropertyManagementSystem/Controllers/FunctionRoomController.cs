@@ -8,10 +8,11 @@ using PropertyManagementSystem.Models;
 using PropertyManagementSystem.Services;
 using System.Reflection.PortableExecutable;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
-
+[Authorize]
     public class FunctionRoomController : Controller
     {
         private readonly DAL _context;
@@ -84,6 +85,7 @@ namespace PropertyManagementSystem.Controllers
             bool isRequestor = User.IsInRole("GFMS.Requestor");
             bool isDeptHead = User.IsInRole("GFMS.Department Head");
 
+
             var reservationsQuery = from resDetails in _context.ReservationDetails
                                     join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
                                     join room in _context.Rooms on resDetails.RoomId equals room.RoomId
@@ -110,6 +112,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 reservationsQuery = reservationsQuery.Where(r => r.RequestorEmail == currUser && r.ReservationType == "FN");
             }
+            reservationsQuery = reservationsQuery.Where(r => r.ReservationType == "FN");
             var reservations = reservationsQuery.AsEnumerable()
                                                 .Select(r => new ReservationViewModel
                                                 {
@@ -136,9 +139,9 @@ namespace PropertyManagementSystem.Controllers
             return Json(reservations.ToDataSourceResult(request));
         }
 
-        public IActionResult GetFacility(int ReservationId)
+        public IActionResult GetFacility()
         {
-            var resDetails = _context.ReservationDetails.Where(r => r.ReservationId == ReservationId);
+           
             var facilities = _context.Facilities.AsQueryable().ToList();
             return Json(facilities
                 .Select(c => new { FacilityId = c.FacilityId, FacilityName = c.FacilityName, FacilityClass = c.FacilityClassification })
@@ -166,7 +169,8 @@ namespace PropertyManagementSystem.Controllers
             var targetDateTime = new DateTime(today.Year, today.Month, today.Day, 16, 0, 0);
 
             var query = _context.ReservationHeaders.AsQueryable()
-                .Where(x => x.ReservationType == "FN");
+                .Where(x => x.ReservationType == "FN")
+                .Where(x => x.Status != "DELETED");
 
             if (gridType == "myReservation")
             {
@@ -192,7 +196,10 @@ namespace PropertyManagementSystem.Controllers
             var reservationViewModels = reservationHeaders.Select(header =>
             {
                 var department = _context.Departments.FirstOrDefault(d => d.Id == header.Department);
-                var details = _context.ReservationDetails.Where(rd => rd.ReservationId == header.ReservationId).ToList();
+                var details = _context.ReservationDetails
+                .Where(rd => rd.ReservationId == header.ReservationId)
+                .Where(rd => rd.StartDate < today)
+                .ToList();
 
                 return new ReservationViewModel
                 {
@@ -202,6 +209,7 @@ namespace PropertyManagementSystem.Controllers
                     RequestorEmail = header.RequestorEmail,
                     Status = header.Status,
                     GUID = header.GUID,
+                    CanDelete = header.Status == "DRAFT",
                     ChargeToCompany = header.ChargeToCompany,
                     ReservationType = header.ReservationType,
                     DepartmentName = department?.DepartmentCode,
@@ -217,6 +225,7 @@ namespace PropertyManagementSystem.Controllers
                 model.DepartmentName,
                 model.RequestorEmail,
                 model.Status,
+                model.CanDelete,
                 model.GUID,
                 model.ChargeToCompany,
                 model.ReservationType,
@@ -227,19 +236,35 @@ namespace PropertyManagementSystem.Controllers
         }
 
 
+
         private string GenerateReservationCode()
         {
-            int year = DateTime.Now.Year;
+            int currentYear = DateTime.Now.Year;
             int sequenceNumber = 1;
 
-            var lastReservation = _context.ReservationHeaders.Where(r => r.ReservationType == "FN").Count();
+            var lastReservation = _context.ReservationHeaders
+                .Where(r => r.ReservationType == "FN")
+                .OrderByDescending(r => r.DateSubmitted)
+                .FirstOrDefault();
+
             if (lastReservation != null)
             {
-                sequenceNumber = lastReservation + 1;
+                string[] codeParts = lastReservation.ReservationCode?.Split('-'); 
+                if (codeParts?.Length == 4 &&
+                    int.TryParse(codeParts[2], out int lastYear) &&
+                    int.TryParse(codeParts[3], out int lastSequenceNumber))
+                {
+                    if (lastYear == currentYear)
+                    {
+                        sequenceNumber = lastSequenceNumber + 1;
+                    }
+                }
             }
 
-            return $"RSQ-FN-{year}-{sequenceNumber:D4}";
+            return $"RSQ-FN-{currentYear}-{sequenceNumber:D4}";
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
@@ -249,8 +274,11 @@ namespace PropertyManagementSystem.Controllers
             Console.WriteLine("Department Id: " + _department);
 
             var (managerEmail, managerFullName) = await _employeeService.GetManagerInfo(userId);
+            var role = await _roleService.GetActiveRoleAsync(User);
 
-            if (managerEmail == null || managerFullName == null)
+            Console.WriteLine("Role :" + role);
+
+            if ((managerEmail == null || managerFullName == null) && !User.IsInRole("GFMS.Admin Manager"))
             {
                 return NotFound("Manager not found for the given department.");
             }
@@ -302,18 +330,43 @@ namespace PropertyManagementSystem.Controllers
                     .Where(x => x.ReservationId == reservationId)
                     .ToList();
 
+                Gen_Department department = null;
+                GFMS_Facility facility = null;
+                GFMS_Rooms rooms = null;
+                List<string> equipmentNames = new List<string>();
+
+                if (reservationDetails.Any())
+                {
+                    var firstDetail = reservationDetails.FirstOrDefault();
+                    facility = _context.Facilities.FirstOrDefault(f => f.FacilityId == firstDetail.FacilityId);
+                    rooms = _context.Rooms.FirstOrDefault(r => r.RoomId == firstDetail.RoomId);
+                    var equipmentIds = firstDetail.EquipmentNeeded
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(int.Parse)
+                    .ToList();
+
+                    equipmentNames = _context.Equipments
+                        .Where(e => equipmentIds.Contains(e.Id))
+                        .Select(e => e.EquipmentName)
+                        .ToList();
+                }
+
+                department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
+
                 var reservation = new ReservationViewModel
                 {
                     ReservationHeader = reservationHeader,
                     ReservationDetails = reservationDetails,
-                    NumberOfGuest = reservationDetails.Sum(rd => rd.NumberOfGuest)
+                    Department = department,
+                    Facility = facility,
+                    Room = rooms,
+                    EquipmentNames = equipmentNames
                 };
 
                 return View(reservation);
             }
             catch (InvalidCastException ex)
             {
-
                 Console.WriteLine($"InvalidCastException: {ex.Message}");
                 if (ex.InnerException != null)
                 {
@@ -323,12 +376,10 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine($"Exception: {ex.Message}");
                 return RedirectToAction("Error", "Error");
             }
         }
-
         public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, List<string> _equipment, string _contactNumber, string _requestorEmail)
         {
             Console.WriteLine($"Requestor Email: {_requestorEmail}");
@@ -339,6 +390,18 @@ namespace PropertyManagementSystem.Controllers
                 _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
             {
                 throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
+            }
+
+            var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == _reservationId).Select(rh => rh.GUID).FirstOrDefault();
+
+            if(_endDate < _startDate)
+            {
+                TempData["AlertMessage"] = "End date cannot be earlier than the start date.";
+                TempData["AlertSubMessage"] = "Please select a valid end date.";
+                TempData["AlertType"] = "Warning";
+
+
+                return RedirectToAction("ViewReservationDetails", new { id = guid});
             }
 
             try
@@ -445,7 +508,7 @@ namespace PropertyManagementSystem.Controllers
 
         /*EditReservation*/
         [HttpPost]
-        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string Purpose, string[] EquipmentNeeded, string _contactNumber)
+        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string _purpose, string[] EquipmentNeeded, string _contactNumber)
         {
             if (StartDate < new DateTime(1753, 1, 1) || StartDate > new DateTime(9999, 12, 31) ||
                 EndDate < new DateTime(1753, 1, 1) || EndDate > new DateTime(9999, 12, 31))
@@ -465,7 +528,7 @@ namespace PropertyManagementSystem.Controllers
             reservationDetail.StartDate = StartDate;
             reservationDetail.EndDate = EndDate;
             reservationDetail.ContactNumber = _contactNumber;
-            reservationDetail.Purpose = Purpose;
+            reservationDetail.Purpose = _purpose;
 
             if (EquipmentNeeded != null && EquipmentNeeded.Any())
             {
@@ -499,27 +562,21 @@ namespace PropertyManagementSystem.Controllers
 
         /*Delete*/
         [HttpPost]
-        public IActionResult DeleteReservationDetail(int ReservationId)
+        public IActionResult DeleteReservationDetail(int reservationId)
         {
             try
             {
-                var reservationDetail = _context.ReservationDetails
-                    .Include(rd => rd.ReservationHeader)
-                    .FirstOrDefault(rd => rd.ReservationId == ReservationId);
+                var reservationHeader = _context.ReservationHeaders
+                    .FirstOrDefault(rd => rd.ReservationId == reservationId);
 
-                if (reservationDetail == null)
+                if (reservationHeader == null)
                 {
                     return NotFound("Reservation detail not found.");
                 }
 
-
-                _context.ReservationDetails.Remove(reservationDetail);
-
-
-                var reservationHeader = reservationDetail.ReservationHeader;
                 if (reservationHeader != null)
                 {
-                    _context.ReservationHeaders.Remove(reservationHeader);
+                    reservationHeader.Status = "DELETED"; 
                 }
 
                 _context.SaveChanges();
@@ -528,18 +585,19 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred while deleting reservation detail: {ex.Message}");
+                Console.WriteLine($"An error occurred while updating reservation header status: {ex.Message}");
                 return StatusCode(500, "Internal server error");
             }
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, string action, int _facilityId, int _roomId, string Remarks)
+        public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, int ReservationDetailId, string action, int _facilityId, int _roomId, string Remarks, string EquipmentNeeded)
         {
-            Console.WriteLine("ReservationId: " + ReservationId);
+            Console.WriteLine("ReservationDetailId: " + ReservationDetailId);
 
-            if (ReservationId <= 0 || string.IsNullOrEmpty(action))
+            if (ReservationDetailId <= 0 || string.IsNullOrEmpty(action))
             {
                 return BadRequest("Invalid parameters.");
             }
@@ -567,6 +625,7 @@ namespace PropertyManagementSystem.Controllers
                 reservation.Status = "FOR ADMIN MANAGER'S APPROVAL";
                 reservationDetails.FacilityId = _facilityId;
                 reservationDetails.RoomId = _roomId;
+                reservationDetails.EquipmentNeeded = EquipmentNeeded;
                 reservation.ApprovedBy = empName.Fullname;
 
                 TempData["AlertMessage"] = "Room details assigned successfully!";
@@ -622,13 +681,20 @@ namespace PropertyManagementSystem.Controllers
                       reservation.RequestorEmail
                   );
             }
+            else if (action == "Cancel")
+            {
+                reservation.Status = "CANCELLED";
+                reservation.Remarks = Remarks;
+                reservation.ApprovedBy = empName.Fullname;
+                
+            }
             else
             {
                 return BadRequest("Invalid action.");
             }
             _context.SaveChanges();
 
-            return RedirectToAction("Index", "FunctionRoom");
+            return RedirectToAction("ReservationList", "FunctionRoom");
         }
     }
 }

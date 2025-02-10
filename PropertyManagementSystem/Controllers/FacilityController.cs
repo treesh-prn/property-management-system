@@ -6,9 +6,11 @@ using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class FacilityController : Controller
     {
         private readonly DAL _context;

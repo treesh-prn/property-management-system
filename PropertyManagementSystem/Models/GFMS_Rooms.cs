@@ -18,6 +18,12 @@ namespace PropertyManagementSystem.Models
         public int Capacity { get; set; }
         public bool isActive { get; set; }
         public int RoomType { get; set; }
+        public double? CostPerDay { get; set; }
+        public double? CostPerWeek { get; set; }
+        public double? CostPerMonth {  get; set; }
+        public bool? isPerHead {  get; set; }
+
+
 
     }
     public partial class facilityList

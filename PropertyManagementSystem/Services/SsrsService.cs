@@ -1,56 +1,81 @@
 ﻿using System;
+using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
+using System.Net.Http.Headers;
 
-public class SsrsService
+namespace PropertyManagementSystem.Services
 {
-    private readonly IConfiguration _configuration;
-    private readonly HttpClient _httpClient;
-
-    public SsrsService(IConfiguration configuration, HttpClient httpClient)
+    public class SsrsService
     {
-        _configuration = configuration;
-        _httpClient = httpClient;
-        _httpClient.Timeout = TimeSpan.FromMinutes(5);
-    }
+        private readonly IConfiguration _configuration;
 
-    public async Task<string> GetReportUrlAsync(string reportName, int reservationId)
-    {
-        var baseUrl = _configuration["SsrsSettings:BaseUrl"];
-        var username = _configuration["SsrsSettings:Username"];
-        var password = _configuration["SsrsSettings:Password"];
-
-        var reportUrl = $"{baseUrl}/Pages/ReportViewer.aspx?%2fReports%2f{Uri.EscapeDataString(reportName)}&rs:Command=Render&ReservationId={reservationId}";
-        Console.WriteLine(reportUrl);
-
-        try
+        public SsrsService(IConfiguration configuration)
         {
-            var handler = new HttpClientHandler
-            {
-                Credentials = new System.Net.NetworkCredential(username, password)
-            };
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+        }
 
-            using (var client = new HttpClient(handler))
+        public async Task<byte[]> GetReportAsPdfAsync(string reportPath, Dictionary<string, string> parameters)
+        {
+            try
             {
-                var response = await client.GetAsync(reportUrl);
+                // Base URL for SSRS
+                var ssrsBaseUrl = _configuration["SsrsSettings:BaseUrl"].TrimEnd('/');
 
-                if (response.IsSuccessStatusCode)
+                // Ensure the path starts with a single slash and does not contain extra slashes
+                var normalizedPath = reportPath.TrimStart('/').TrimEnd('/');
+                var fullUrl = $"{ssrsBaseUrl}/ReportServer?/{Uri.EscapeDataString(normalizedPath)}&rs:Command=Render&rs:Format=PDF";
+
+                // Append query parameters
+                if (parameters != null && parameters.Count > 0)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    var queryParams = parameters
+                        .Select(param => $"{Uri.EscapeDataString(param.Key)}={Uri.EscapeDataString(param.Value)}");
+                    fullUrl += $"&{string.Join("&", queryParams)}";
                 }
-                else
+
+                // Use HttpClientHandler to support NTLM authentication
+                var handler = new HttpClientHandler()
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Failed to reach SSRS server. Status Code: {response.StatusCode}, Error: {errorContent}");
+                    Credentials = new NetworkCredential(
+                        _configuration["SsrsSettings:Username"], // SSRS Username
+                        _configuration["SsrsSettings:Password"], // SSRS Password
+                        _configuration["SsrsSettings:Domain"]    // Domain, if applicable
+                    ),
+                    PreAuthenticate = true,
+                    AllowAutoRedirect = true
+                };
+
+                // Create HttpClient with the handler
+                using (var client = new HttpClient(handler))
+                {
+                    // Set headers to expect PDF
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/pdf"));
+
+                    // Make the GET request to the SSRS server
+                    var response = await client.GetAsync(fullUrl);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var errorContent = await response.Content.ReadAsStringAsync();
+                        throw new Exception($"Error fetching report. Status Code: {response.StatusCode}, Response: {errorContent}");
+                    }
+
+                    // Return the PDF content as a byte array
+                    return await response.Content.ReadAsByteArrayAsync();
                 }
             }
-        }
-        catch (HttpRequestException e)
-        {
-            Console.WriteLine($"An error occurred: {e.Message}");
+            catch (Exception ex)
+            {
+                throw new Exception($"Error generating report: {ex.Message}", ex);
+            }
         }
 
-        return reportUrl;
+
     }
 }

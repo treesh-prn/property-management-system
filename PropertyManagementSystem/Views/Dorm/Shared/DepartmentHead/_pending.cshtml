@@ -1,403 +1,130 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel;
-@inject PropertyManagementSystem.Services.IRoleService RoleService
-@{
-    var employee = await RoleService.GetUserName(User);
-}
-<form asp-action="UpdateReservationDetails" asp-controller="Dorm" method="post">
-    <div class="modal-body">
-        <input type="hidden" name="reservationId" value="@Model.ReservationHeader.ReservationId">
-        <input type="hidden" class="form-control" name="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" asp-for="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-        <div id="dynamic-rows">
-            <label class="form-label">Unit Applied For</label>
-            <div class="form-selectgroup-boxes row mb-3">
-                <div class="col-lg-6">
-                    <label class="form-selectgroup-item">
-                        <input type="radio" name="_unitApplied" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().AppliedUnit" readonly>
-                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                            <span class="me-3">
-                                <span class="form-selectgroup-check"></span>
-                            </span>
-                            <span class="form-selectgroup-label-content">
-                                <span class="form-selectgroup-title strong mb-1">Dorm</span>
-                            </span>
-                        </span>
-                    </label>
-                </div>
-                <div class="col-lg-6">
-                    <label class="form-selectgroup-item">
-                        <input type="radio" name="_unitApplied" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().AppliedUnit" readonly>
-                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                            <span class="me-3">
-                                <span class="form-selectgroup-check"></span>
-                            </span>
-                            <span class="form-selectgroup-label-content">
-                                <span class="form-selectgroup-title strong mb-1">Housing</span>
-                            </span>
-                        </span>
-                    </label>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-lg-6">
-                    <label class="form-label">Schedule Type</label>
-                    <div class="form-selectgroup-boxes row mb-3">
-                        <div class="col-lg-4">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" name="_schedType" id="regularRadio" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ScheduleType" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Regular</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" name="_schedType" value="1" id="swingRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ScheduleType" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Swing</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="col-lg-5">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" name="_schedType" value="2" id="gyRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ScheduleType" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Graveyard</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <label class="form-label">
-                        Contact Number
-                    </label>
-                    <div class="input-group pb-2">
-                        <span class="input-group-text">
-                            +63
-                        </span>
-                        <input type="text" class="form-control pb-2" name="_contactNumber" placeholder="Contact Number" asp-for="@Model.ReservationDetails.FirstOrDefault().ContactNumber" maxlength="10" readonly>
-                    </div>
-
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-lg-12">
-                    <div>
-                        <label class="form-label">
-                            Permanent Home Address
-                        </label>
-                        <input type="text" class="form-control" name="_permanentAdd" placeholder="Permanent Home Address" asp-for="@Model.ReservationDetails.FirstOrDefault().PermanentAddress" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-5">
-                <div class="col-lg-12">
-                    <div>
-                        <label class="form-label">
-                            Current Home Address
-                        </label>
-                        <input type="text" class="form-control" name="_currentAdd" placeholder="Current Home Address" asp-for="@Model.ReservationDetails.FirstOrDefault().CurrentAddress" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-lg-6">
-                    <label class="form-label">Home Ownership</label>
-                    <div class="form-selectgroup-boxes row mb-3">
-                        <div class="col-lg-4">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" name="_homeOwnership" id="ownedRadio" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Owned</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" name="_homeOwnership" value="1" id="rentedRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Rented</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="col-lg-5">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" name="_homeOwnership" value="2" id="livingWithParentsRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Living with Family</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="form-label">Location of Owned House</label>
-                        <div class="form-selectgroup-boxes row mb-3">
-                            <div class="col-lg-6">
-                                <label class="form-selectgroup-item">
-                                    <input type="radio" id="ownedHouseLocWithin" name="_ownedLocation" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().OwnedHouseLocation" readonly>
-                                    <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                        <span class="me-3">
-                                            <span class="form-selectgroup-check"></span>
-                                        </span>
-                                        <span class="form-selectgroup-label-content">
-                                            <span class="form-selectgroup-title strong mb-1">Within Pampanga</span>
-                                        </span>
-                                    </span>
-                                </label>
-                            </div>
-                            <div class="col-lg-6">
-                                <label class="form-selectgroup-item">
-                                    <input type="radio" id="ownedHouseLocOutside" name="_ownedLocation" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().OwnedHouseLocation" readonly>
-                                    <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                        <span class="me-3">
-                                            <span class="form-selectgroup-check"></span>
-                                        </span>
-                                        <span class="form-selectgroup-label-content">
-                                            <span class="form-selectgroup-title strong mb-1">Outside Pampanga</span>
-                                        </span>
-                                    </span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col">
-                                <label class="form-label">Specific Location</label>
-                                <input type="text" id="specificLoc" class="form-control" name="_specificLocation" placeholder="Specific Location" asp-for="@Model.ReservationDetails.FirstOrDefault().SpecificLocation" readonly>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <input type="hidden" id="add-row"> </input>
-                <div class="col-lg-6">
-                    <label class="form-label">Mode of Transportation</label>
-                    <div class="form-selectgroup-boxes row mb-3">
-                        <div class="col-lg-6">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" id="ownVehicle" name="_modeOfTransport" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ModeOfTransportation" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Own Vehicle</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                        <div class="col-lg-6">
-                            <label class="form-selectgroup-item">
-                                <input type="radio" id="commute" name="_modeOfTransport" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ModeOfTransportation" readonly>
-                                <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                    <span class="me-3">
-                                        <span class="form-selectgroup-check"></span>
-                                    </span>
-                                    <span class="form-selectgroup-label-content">
-                                        <span class="form-selectgroup-title strong mb-1">Commute</span>
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="row mb-4">
-                            <div class="col">
-                                <label class="form-label mb-2">Type of Vehicle</label>
-                                <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Type of Vehicle" asp-for="@Model.ReservationDetails.FirstOrDefault().VehicleType" readonly>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="row mb-3">
-                            <div class="col-lg-6">
-                                <label class="form-label">Travel Time</label>
-                                <input type="text" id="travelTime" class="form-control" name="_travelTime" placeholder="Travel Time" asp-for="@Model.ReservationDetails.FirstOrDefault().TravelTime" readonly>
-                            </div>
-                            <div class="col-lg-6">
-                                <label class="form-label">Fare</label>
-                                <input type="text" id="fare" class="form-control" name="_fare" placeholder="Fare" asp-for="@Model.ReservationDetails.FirstOrDefault().Fare" value="@Model.ReservationDetails.FirstOrDefault().Fare" readonly>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <label class="form-label">Civil Status</label>
-            <div class="form-selectgroup-boxes row mb-3">
-                <div class="col-lg-4">
-                    <label class="form-selectgroup-item">
-                        <input type="radio" name="_civilStat" value="SINGLE" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus" readonly>
-                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                            <span class="me-3">
-                                <span class="form-selectgroup-check"></span>
-                            </span>
-                            <span class="form-selectgroup-label-content">
-                                <span class="form-selectgroup-title strong mb-1">Single</span>
-                            </span>
-                        </span>
-                    </label>
-                </div>
-                <div class="col-lg-4">
-                    <label class="form-selectgroup-item">
-                        <input type="radio" name="_civilStat" value="MARRIED" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus" readonly>
-                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                            <span class="me-3">
-                                <span class="form-selectgroup-check"></span>
-                            </span>
-                            <span class="form-selectgroup-label-content">
-                                <span class="form-selectgroup-title strong mb-1">Married</span>
-
-                            </span>
-                        </span>
-                    </label>
-                </div>
-                <div class="col-lg-4">
-                    <label class="form-selectgroup-item">
-                        <input type="radio" name="_civilStat" value="WIDOWED" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus" readonly>
-                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                            <span class="me-3">
-                                <span class="form-selectgroup-check"></span>
-                            </span>
-                            <span class="form-selectgroup-label-content">
-                                <span class="form-selectgroup-title strong mb-1">Widowed</span>
-
-                            </span>
-                        </span>
-                    </label>
-                </div>
-            </div>
-            <div id="dynamic-rows-dependent-label">
-                <label class="form-label">Dependents</label>
-                <div class="row mb-3">
-                    <div class="col-lg-2">
-                        <label class="form-label">Name</label>
-                    </div>
-                    <div class="col-lg-1">
-                        <label class="form-label">Age</label>
-                    </div>
-                    <div class="col-lg-4">
-                        <label class="form-label">Other Information</label>
-                    </div>
-                    <div class="col-lg-2" id="location1">
-                        <label class="form-label">Location</label>
-                    </div>
-                    <div class="col-lg-2" id="position1">
-                        <label class="form-label">Position</label>
-                    </div>
-                </div>
-            </div>
-            <div id="dynamic-rows-dependent">
-                <div class="row mb-3">
-                    <div class="col-lg-2">
-                        <input type="text" class="form-control" name="_dependents[]" placeholder="Name" readonly>
-                    </div>
-                    <div class="col-lg-1">
-                        <input type="text" class="form-control" name="_age[]" placeholder="Age" readonly>
-                    </div>
-                    <div class="col-lg-2">
-                        <label class="form-selectgroup-item">
-                            <input type="radio" name="dependent-status" value="studying" class="form-selectgroup-input" readonly>
-                            <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                <span class="me-3">
-                                    <span class="form-selectgroup-check"></span>
-                                </span>
-                                <span class="form-selectgroup-label-content">
-                                    <span class="form-selectgroup-title strong mb-1">Studying</span>
-
-                                </span>
-                            </span>
-                        </label>
-                    </div>
-                    <div class="col-lg-2">
-                        <label class="form-selectgroup-item">
-                            <input type="radio" name="dependent-status" value="working" class="form-selectgroup-input" readonly>
-                            <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                <span class="me-3">
-                                    <span class="form-selectgroup-check"></span>
-                                </span>
-                                <span class="form-selectgroup-label-content">
-                                    <span class="form-selectgroup-title strong mb-1">Working</span>
-
-                                </span>
-                            </span>
-                        </label>
-                    </div>
-                    <div class="col-lg-4" id="position">
-                        <input type="text" class="form-control" name="_position[]" placeholder="Position" readonly>
-                    </div>
-                    <div class="col-lg-4" id="location">
-                        <input type="text" class="form-control" name="_location[]" placeholder="Location" readonly>
-                    </div>
-                    <div class="col-sm-1 d-flex align-items-end">
-                        <button type="button" id="add-dependent" class="btn btn-primary ml-2 custom-padding" readonly>
-                            <i class="ti ti-plus"></i>
-                        </button>
-                        <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
-                            <i class="ti ti-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-12">
-                <div>
-                    <label class="form-label">
-                    Letter of Intent
-                    </label>
-                    <input type="hidden" name="filePath" id="filePath" />
-                    <div id="uploadedFilesLinks">
-                        <ul id="fileLinksList">
-                            <li>
-                                <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">@Model.ReservationDetails.FirstOrDefault().FileAttachment</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-           
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+<div class="card-body">
+    <div class="row align-items-start">
+        <div class="col-2">
+            <img src="@Url.Content("~/img/dorm-room.jpg")" alt="Accommodation" class="rounded img-fluid">
         </div>
+        <div class="col-9">
+            <div class="text-primary h3 d-flex align-items-center">
+                <!-- Reservation Code -->
+                <span>@Model.ReservationHeader.ReservationCode</span>
 
-        <div class="modal-footer">
-            <a href="@Url.Action("ReservationList", "Dorm")" class="btn btn-link link-secondary">
-                Go Back
-            </a>
-            <div class="ms-auto">
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-                    <i class="ti ti-ban m-1"></i> Disapprove
-                </button>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-assign-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-                    <i class="ti ti-plus m-1"></i> Approve
-                </button>
+                <!-- Status placed at the end of the reservation code with a space -->
+                <span class="ms-3">
+                    <!-- Margin for spacing -->
+                    @if (Model.ReservationHeader.Status == "APPROVED")
+                    {
+                        <span class='status status-teal'>
+                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                        </span>
+                    }
+                    else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                    {
+                        <span class='status status-teal'>
+                            <span class='status-dot status-dot-animated'></span>FOR APPROVAL
+                        </span>
+                    }
+                    else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
+                    {
+                        <span class='status status-red'>
+                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                        </span>
+                    }
+                    else
+                    {
+                        <span class='status status-blue'>
+                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                        </span>
+                    }
+                </span>
+            </div>
+
+            <div class="row mt-3">
+                <!-- Rest of the content remains the same -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Requestor</div>
+                        <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Email</div>
+                        <div class="datagrid-content">@Model.ReservationHeader.RequestorEmail</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Department</div>
+                        <div class="datagrid-content">@Model.Department.DepartmentCode</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Contact Number</div>
+                        <div class="datagrid-content">+63 @Model.ReservationDetails.FirstOrDefault().ContactNumber</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Date Filed</div>
+                        <div class="datagrid-content">@Model.ReservationHeader.DateFiled</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Schedule Type</div>
+                        @if (Model.ReservationDetails.FirstOrDefault().ScheduleType == 0)
+                        {
+                            <div class="datagrid-content">Regular</div>
+                        }
+                        else
+                        {
+                            <div class="datagrid-content">Shifting</div>
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Applied Unit</div>
+                        @if (Model.ReservationDetails.FirstOrDefault().AppliedUnit == 0)
+                        {
+                            <div class="datagrid-content">Dorm</div>
+                        }
+                        else
+                        {
+                            <div class="datagrid-content">Housing</div>
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Letter of Intent</div>
+                        <div class="datagrid-content">
+                            <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
+                                @Model.ReservationDetails.FirstOrDefault().FileAttachment
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-</form>
+    </div>
+</div>
+<div class="card-footer d-flex justify-content-between align-items-center">
+    <a href="@Url.Action("ReservationList", "Dorm")" class="btn btn-link link-secondary">
+        Go Back
+    </a>
+    <div>
+        <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+            <i class="ti ti-ban m-1"></i> Disapprove
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-assign-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+            <i class="ti ti-check m-1"></i> Approve
+        </button>
+    </div>
+</div>
+
 @*ASSIGN FACILITY MODAL*@
 <div class="modal modal-blur fade" id="modal-assign-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -447,3 +174,45 @@
     </div>
 </div>
 @*END OF MODAL*@
+@*CANCEL MODAL*@
+<div class="modal modal-blur fade" id="modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
+                <h3>Are you sure?</h3>
+                <div class="text-secondary">Do you really want to cancel this reservation? This action cannot be undone.</div>
+            </div>
+            <form asp-action="UpdateReservationStatus" method="post">
+                @Html.AntiForgeryToken()
+                <div class="m-1">
+                    <div>
+                        <label class="form-label">Remarks <span class="form-label-description"></span></label>
+                        <textarea class="form-control" rows="2" name="Remarks" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="w-100">
+                        <input type="hidden" value="@Model.ReservationHeader.Status" />
+                        <div class="row">
+                            <div class="col">
+                                <a href="#" class="btn w-100" data-bs-dismiss="modal">
+                                    Go Back
+                                </a>
+                            </div>
+                            <div class="col">
+                                <button type="submit" name="action" value="Reject" class="btn btn-danger w-100">
+                                    <i class="ti ti-ban m-1"></i> Disapprove
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId" />
+            </form>
+        </div>
+    </div>
+</div>
+@*CANCEL DELETE MODAL*@

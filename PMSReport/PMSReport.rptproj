@@ -8,11 +8,11 @@
     <OverwriteDataSources>True</OverwriteDataSources>
     <TargetServerVersion>SSRS2016</TargetServerVersion>
     <Platform>Win32</Platform>
-    <TargetReportFolder>Reports</TargetReportFolder>
+    <TargetReportFolder>PMS</TargetReportFolder>
     <TargetDatasetFolder>Datasets</TargetDatasetFolder>
     <TargetDatasourceFolder>Data Sources</TargetDatasourceFolder>
     <TargetReportPartFolder>PMS Parts</TargetReportPartFolder>
-    <TargetServerURL>http://10.151.5.183/efi</TargetServerURL>
+    <TargetServerURL>http://10.151.5.200/root</TargetServerURL>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'DebugLocal' ">
     <FullPath>DebugLocal</FullPath>
@@ -49,6 +49,14 @@
     <Reports>@(Report)</Reports>
   </PropertyGroup>
   <ItemGroup>
+    <DataSet Include="GenerateCompanyBilling.rsd" />
+  </ItemGroup>
+  <ItemGroup>
+    <DataSource Include="TGI_Source.rds" />
+  </ItemGroup>
+  <ItemGroup>
+    <Report Include="GFMS_GenerateCompanyBilling.rdl" />
+    <Report Include="GFMS_GetReservationOccupancy.rdl" />
     <Report Include="ReservationReport.rdl" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Reporting Services\Microsoft.ReportingServices.MSBuilder.targets" />

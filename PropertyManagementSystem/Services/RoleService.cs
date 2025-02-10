@@ -13,10 +13,10 @@ namespace PropertyManagementSystem.Services
     }
     public class RoleService : IRoleService
     {
-        private readonly UserManager<IdentityUser> _user;
+        private readonly UserManager<ApplicationUser> _user;
         private readonly DAL _context;
 
-        public RoleService(UserManager<IdentityUser> user, DAL context)
+        public RoleService(UserManager<ApplicationUser> user, DAL context)
         {
             _user = user;
             _context = context;
@@ -24,18 +24,31 @@ namespace PropertyManagementSystem.Services
         public async Task<IEnumerable<string>> GetRolesAsync(ClaimsPrincipal user)
         {
             var applicationUser = await _user.GetUserAsync(user);
+            if (applicationUser == null)
+            {
+                return Enumerable.Empty<string>();
+            }
+
             var userRoles = await _user.GetRolesAsync(applicationUser);
-            var gfmsRoles = userRoles.Where(r => r.StartsWith("GFMS"));
-            return gfmsRoles;
+            return userRoles.Where(r => r.StartsWith("GFMS"));
         }
 
         public async Task<string> GetActiveRoleAsync(ClaimsPrincipal user)
         {
             var applicationUser = await _user.GetUserAsync(user);
+
+        
+            if (applicationUser == null)
+            {
+                return null; 
+            }
+
             var userClaims = await _user.GetClaimsAsync(applicationUser);
             var activeRole = userClaims.FirstOrDefault(c => c.Type == "GFMS.Active Role")?.Value;
+
             return activeRole;
         }
+
 
         public async Task<Gen_Employee> GetUserName(ClaimsPrincipal user)
         {

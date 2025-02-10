@@ -45,7 +45,10 @@ namespace PropertyManagementSystem.Models
         public bool? isCritical { get; set; }
         public bool? isOnCall { get; set; }
         public string? DeptHeadRemarks { get; set; }
+        public string? OtherInfo { get; set; }
 
         public GFMS_ReservationHeader ReservationHeader { get; set; }
+        public virtual GFMS_Rooms Room { get; set; }
+        public virtual GFMS_Facility Facility { get; set; }
     }
 }

@@ -2696,7 +2696,7 @@ progress {
     --tblr-table-border-color: var(--tblr-border-color-translucent);
     --tblr-table-accent-bg: transparent;
     --tblr-table-striped-color: inherit;
-    --tblr-table-striped-bg: var(--tblr-bg-surface-tertiary);
+    --tblr-table-striped-bg: var(--tblr-bg-surface-secondary);
     --tblr-table-active-color: inherit;
     --tblr-table-active-bg: rgba(0, 0, 0, 0.1);
     --tblr-table-hover-color: inherit;
@@ -28049,4 +28049,75 @@ span.k-button-text{
 }
 .k-grid td, .k-grid th {
     border-left-color: rgb(221, 228, 228 ) !important;
+}
+
+.color-legend {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+
+.legend-item {
+    display: flex;
+    font-size:smaller;
+    align-items: center;
+}
+
+.legend-box {
+    width: 15px;
+    height: 15px;
+    display: inline-block;
+    margin-right: 5px;
+    border-radius: 3px;
+}
+
+.legend-fully-booked {
+    background-color: #F47C7C;
+}
+
+.legend-available {
+    background-color: #2fb344bf;
+}
+
+.legend-current {
+    background-color: #206BC4;
+}
+
+/* Default font color for calendar dates (A1DE93) */
+.k-calendar .k-item {
+    color: #A1DE93 !important;
+}
+
+/* Fully booked dates text color (F47C7C) */
+.k-calendar .fully-booked {
+    color: #F47C7C !important;
+    font-weight: bold; 
+}
+
+/* Current date text color (70A1D7) */
+.k-calendar .current {
+    color: #70A1D7 !important; 
+    font-weight: bold; 
+}
+
+/* Available dates text color (A1DE93) */
+.k-calendar .available {
+    color: #2fb344bf !important;
+    font-weight: bold;
+}
+
+/* Booked slots text color (Blue or custom color) */
+.k-calendar .booking {
+    color: #007bff !important;
+    font-weight: bold;
+}
+    /* Styling the booking details below the date (small font) */
+.k-calendar .booking small {
+    font-size: 0.8em;
+    color: lightgray;
+}
+
+
+#facilityRoomWrapper {
+    display: none;
 }

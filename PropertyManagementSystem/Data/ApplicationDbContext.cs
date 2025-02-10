@@ -5,7 +5,7 @@ using PropertyManagementSystem.Models;
 
 namespace PropertyManagementSystem.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -30,6 +30,7 @@ namespace PropertyManagementSystem.Data
         public virtual DbSet<GFMS_ReservationHeader> ReservationHeaders { get; set; }
         public virtual DbSet<GFMS_ReservationDetails> ReservationDetails { get; set; }
         public virtual DbSet<HRIS_EmploymentLevel> EmploymentLevels { get; set; }
+        public DbSet<ReservationReport> ReservationReports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<GFMS_Rooms>()
@@ -52,6 +53,8 @@ namespace PropertyManagementSystem.Data
             modelBuilder.Entity<GFMS_ReservationDetails>()
             .Property(e => e.EndDate)
             .HasColumnType("datetime");
+
+            modelBuilder.Entity<ReservationReport>().HasNoKey();
         }
     }
 

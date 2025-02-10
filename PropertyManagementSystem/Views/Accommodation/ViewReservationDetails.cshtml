@@ -1,10 +1,10 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel
+﻿@model PropertyManagementSystem.Models.ReservationViewModel;
 
 @{
     ViewData["Title"] = "View Reservation Details";
 }
 @inject PropertyManagementSystem.Services.IRoleService RoleService
-@inject SignInManager<IdentityUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 @using Microsoft.AspNetCore.Identity
 
 @{
@@ -13,25 +13,46 @@
     var activeRole = await RoleService.GetActiveRoleAsync(User);
 }
 <div class="page-wrapper">
+    <div class="col-lg-6 ms-auto alert alert-warning alert-dismissible fade show custom-alert" role="alert"
+         style="display:@(TempData["AlertMessage"] != null ? "block" : "none");">
+        <div class="d-flex">
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <circle cx="12" cy="12" r="9" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+            </div>
+            <div>
+                <h4 class="alert-title">@TempData["AlertType"]</h4>
+                <div class="text-secondary">
+                    @if (TempData["AlertMessage"] != null)
+                    {
+                        <strong>@TempData["AlertMessage"]</strong>
+                        <br />
+                        @TempData["AlertSubMessage"]
+                    }
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
+                    <!-- Page pre-title -->
                     <div class="page-pretitle">
                         View Reservation
                     </div>
                     <h2 class="page-title">
-                        Reservation Details
+                        Guesthouse Reservation
                     </h2>
+
                 </div>
-                <div class="col-auto ms-auto d-print-none">
-                    @*  <div class="btn-list">
-                    <a href="@Url.Action("Index", "Accommodation")" class="btn btn-primary bg-green">
-                    <i class="ti ti-arrow-left icon"></i>
-                    Go Back
-                    </a>
-                    </div> *@
-                </div>
+                <!-- Page title actions -->
             </div>
         </div>
     </div>
@@ -39,125 +60,107 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards">
-                <div class="col-lg-3">
-                    <div class="card text-center">
-                        <div class="card-header card-header-light">
-                            <h3 class="card-title">@Model.ReservationHeader.ReservationCode</h3>
-                            <div class="ms-auto">
-                                @if (Model.ReservationHeader.Status == "APPROVED")
-                                {
-                                    <span class='status status-teal'><span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status</span>
-                                }
-                                else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                                {
-                                    <span class='status status-teal'><span class='status-dot status-dot-animated'></span>FOR APPROVAL</span>
-                                }
-                                else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
-                                {
-                                    <span class='status status-red'><span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status</span>
-                                }
-                                else
-                                {
-                                    <span class='status status-blue'><span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status</span>
-                                }
-                            </div>
-                        </div>
-                        <img class="img-responsive2 mx-auto" src="@Url.Content("~/img/calendar.jpg")" alt="Reservation Image">
-                        <h5 class="card-title">Reservation Details</h5>
-                        <table class="table table-borderless text-left">
-                            <tbody>
-                                <tr>
-                                    <th scope="row">Requestor:</th>
-                                    <td>@Model.ReservationHeader.Requestor</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">Email:</th>
-                                    <td>@Model.ReservationHeader.RequestorEmail</td>
-                                </tr>
-                                <tr>
-                                    <th scope="row">Date Filed:</th>
-                                    <td>@Model.ReservationHeader.DateFiled</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="col-lg-9">
+
+                <div class="col-lg-12">
                     <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                Guesthouse Reservation Details
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="modal-content">
-                                @if (User.IsInRole("GFMS.Requestor"))
+
+                        @if (User.IsInRole("GFMS.Requestor"))
+                        {
+                            @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
+                            {
+                                <partial name="Shared/_update" />
+                            }
+                            else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED")
+                            {
+                                <partial name="Shared/_view" />
+                            }
+                            else
+                            {
+                                <partial name="Shared/_draft" />
+                            }
+                        }
+                        else if (User.IsInRole("GFMS.Department Head"))
+                        {
+                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
+                            {
+                                <partial name="Shared/_view" />
+                            }
+                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
+                            {
+                                <partial name="Shared/DepartmentHead/_pending" />
+                            }
+                            else if (Model.ReservationHeader.Approver == employee.Fullname)
+                            {
+                                <partial name="Shared/_view" />
+                            }
+                        }
+                        else if (User.IsInRole("GFMS.Admin Manager"))
+                        {
+                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
+                            {
+                                <partial name="Shared/_view" />
+                            }
+                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                            {
+                                <partial name="Shared/AdminManager/_pending" />
+                            }
+                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                            {
+                                <partial name="Shared/_view" />
+                            }
+                        }
+                        else if (User.IsInRole("GFMS.Admin Approver"))
+                        {
+                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
+                            {
+                                <partial name="Shared/_view" />
+                            }
+                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
+                            {
+                                <partial name="Shared/AdminApprover/_pending" />
+                            }
+                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
+                            {
+                                <partial name="Shared/_view" />
+                            }
+                        }
+                    </div>
+                    @if (User.IsInRole("GFMS.Admin Approver") || User.IsInRole("GFMS.Admin Manager"))
+                    {
+                        <div class="row mt-3">
+                            <div class="col-lg-12 col-md-12">
+
+                                @if (Model.ReservationHeader.Requestor != employee.Fullname && (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL"))
                                 {
-                                    @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
-                                    {
-                                        <partial name="Shared/_update" />
-                                    }
-                                    else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
-                                    {
-                                        <partial name="Shared/_view" />
-                                    }
-                                    else
-                                    {
-                                        <partial name="Shared/_draft" />
-                                    }
+                                    <partial name="Shared/_grid" />
                                 }
-                                else if (User.IsInRole("GFMS.Department Head"))
-                                {
-                                    @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                                    {
-                                        <partial name="Shared/_view" />
-                                    }
-                                    else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
-                                    {
-                                        <partial name="Shared/DepartmentHead/_pending" />
-                                    }
-                                    else if (Model.ReservationHeader.Approver == employee.Fullname)
-                                    {
-                                        <partial name="Shared/_view" />
-                                    }
-                                }
-                                else if (User.IsInRole("GFMS.Admin Approver"))
-                                {
-                                    @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                                    {
-                                        <partial name="Shared/_view" />
-                                    }
-                                    else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
-                                    {
-                                        <partial name="Shared/AdminApprover/_pending" />
-                                    }
-                                    else if (Model.ReservationHeader.Requestor != employee.Fullname)
-                                    {
-                                        <partial name="Shared/_view" />
-                                    }
-                                }
-                                else if (User.IsInRole("GFMS.Admin Manager"))
-                                {
-                                    @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                                    {
-                                        <partial name="Shared/_view" />
-                                    }
-                                    else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                                    {
-                                        <partial name="Shared/AdminManager/_pending" />
-                                    }
-                                    else if (Model.ReservationHeader.Requestor != employee.Fullname)
-                                    {
-                                        <partial name="Shared/_view" />
-                                    }
-                                }
-                                else
-                                {
-                                    <partial name="Shared/_view" />
-                                }
+
                             </div>
                         </div>
-                    </div>
+                        <div class="card mt-1">
+                            <form asp-action="UpdateReservationStatus" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                                <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId">
+                                <div class="card-footer d-flex justify-content-between align-items-center">
+                                    <button type="submit" name="action" value="Revert" class="btn btn-link link-secondary">
+                                        Go Back
+                                    </button>
+                                    <div class="ms-auto">
+                                        <button type="button" class="btn btn-red" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                                            <i class="ti ti-ban m-1"></i> Disapprove
+                                        </button>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-approve-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                                            <i class="ti ti-check m-1"></i> Approve
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <partial name="Shared/_approve" />
+                            <partial name="Shared/_disapprove" />
+                        </div>
+                    }
+
                 </div>
             </div>
         </div>

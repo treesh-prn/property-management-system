@@ -1,4 +1,4 @@
-﻿@model PropertyManagementSystem.Models.GFMS_Equipments;
+﻿@model PropertyManagementSystem.Models.EquipmentViewModel;
 
 @*
     For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -121,6 +121,17 @@
                                         </div>
                                     </div>
                                     <div class="datagrid-item">
+                                        <div class="datagrid-title">Remarks</div>
+                                        @if (Model.Remarks == null)
+                                        {
+                                            <div class="datagrid-content">-</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="datagrid-content">@Model.Remarks</div>
+                                        }
+                                    </div>
+                                    <div class="datagrid-item">
                                         <div class="datagrid-title">Active Status</div>
                                         <div class="datagrid-content">
                                             @if (Model.isActive.Equals(false))
@@ -138,15 +149,43 @@
                                         </div>
                                     </div>
                                     <div class="datagrid-item">
-                                        <div class="datagrid-title">Remarks</div>
-                                        @if(Model.Remarks == null)
+                                        <div class="datagrid-title">Facility Equipment?</div>
+                                        <div class="datagrid-content">
+                                            @if (Model.isFacilityEquipment.Equals(false))
+                                            {
+                                                <span class="status status-red">
+                                                    No
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="status status-green">
+                                                    Yes
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Facility</div>
+                                        @if (Model.FacilityId == null)
                                         {
                                             <div class="datagrid-content">-</div>
                                         }
                                         else
                                         {
-                                            <div class="datagrid-content">@Model.Remarks</div>
-                                        }                                       
+                                            <div class="datagrid-content">@Model.FacilityName</div>
+                                        }
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Room</div>
+                                        @if (Model.RoomId == null)
+                                        {
+                                            <div class="datagrid-content">-</div>
+                                        }
+                                        else
+                                        {
+                                            <div class="datagrid-content">@Model.RoomName</div>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -164,7 +203,7 @@
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
-                <partial name="Shared/_update" />
+                    <partial name="Shared/_update"/>
                 </div>
             </div>
         </div>

@@ -1,0 +1,72 @@
+﻿@using System.Globalization
+@model IEnumerable<PropertyManagementSystem.Models.ReservationReport>
+
+
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        REPORTS
+                    </div>
+                    <h2 class="page-title">
+                        COMPANY AND DEPARTMENT CHARGES
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                </div>
+            </div>
+        </div>
+        <div class="container-xl mt-4">
+            <div class="card">
+                <div class="card-body">
+                    <form id="filterForm" class="row g-3" method="get" asp-action="GenerateReport">
+                        <!-- Start Date Field -->
+                        <div class="col-lg-3">
+                            <label for="_startDate" class="form-label">Start Date</label>
+                            @(Html.Kendo().DatePicker()
+                                .Name("_startDate")
+                                .Value(DateTime.Today)
+                                .Format("yyyy/MM/dd")
+                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                                .HtmlAttributes(new { id = "_startDate", style = "width: 100%;" })
+                                )
+                        </div>
+
+                        <!-- End Date Field -->
+                        <div class="col-lg-3">
+                            <label for="_endDate" class="form-label">End Date</label>
+                            @(Html.Kendo().DatePicker()
+                                .Name("_endDate")
+                                .Value(DateTime.Today)
+                                .Format("yyyy/MM/dd")
+                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                                .HtmlAttributes(new { id = "_endDate", style = "width: 100%;" })
+                                )
+                        </div>
+
+                        <!-- Prepared By Field -->
+                        <div class="col-lg-3">
+                            <label for="_preparedBy" class="form-label">Prepared By</label>
+                            <input type="text"
+                                   id="_preparedBy"
+                                   name="_preparedBy"
+                                   class="form-control"
+                                   placeholder="Enter Name"
+                                   style="font-size: 15px; font-weight: normal; border-color: var(--tblr-muted); opacity: .8;" />
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="col-lg-3 d-flex align-items-end justify-content-end">
+                            <button type="submit" class="btn btn-primary">Generate Report</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+</div>

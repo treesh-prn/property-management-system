@@ -144,10 +144,11 @@
                                 .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0))
                                 .EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0))
                                 .MajorTick(60)
-                                .MinorTickCount(1)
+                                //.MinorTickCount(1)
                                 .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
                                 .Views(views =>
                                 {
+                                    
                                     views.TimelineWorkWeekView(timeline =>
                                     {
                                         timeline.EventHeight(50);
@@ -210,7 +211,6 @@
                                 .DataBound("onDataBound")
                                 .Edit("onEditView"))
                                 )
-
                         </div>
                     </div>
                 </div>

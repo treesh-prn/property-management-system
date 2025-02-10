@@ -7,9 +7,11 @@ using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.IO;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class GlobalController : Controller
     {
         private readonly DAL _context;
@@ -27,9 +29,9 @@ namespace PropertyManagementSystem.Controllers
 
         public JsonResult getCompanies()
         {
-            var _companyList = _context.Companies.Select(c => new { c.Id, Company = c.Company.ToUpper(), CompanyCode = c.CompanyCode}).AsQueryable().ToList();
+            var _companyList = _context.Companies.Select(c => new { c.Id, Company = c.Company.ToUpper(), CompanyCode = c.CompanyCode }).AsQueryable().ToList();
 
-            return Json(_companyList , new JsonSerializerSettings());
+            return Json(_companyList, new JsonSerializerSettings());
         }
         public string GenerateId()
         {
@@ -39,12 +41,38 @@ namespace PropertyManagementSystem.Controllers
             return unique;
         }
 
-        public JsonResult getDepartments()
+        public JsonResult getDepartments(int companyId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var _deptList = _context.Departments.AsQueryable().ToList();
+            var _deptList = _context.Departments.Where(d => d.CompanyId == companyId);
 
-            return Json(_deptList , new JsonSerializerSettings());
+            return Json(_deptList, new JsonSerializerSettings());
+        }
+
+        public IActionResult GetAllFacility()
+        {
+            var facilities = _context.Facilities
+                .Where(f => f.isActive == true)
+                .Select(f => new
+                {
+                    FacilityId = f.FacilityId,
+                    FacilityName = f.FacilityName,
+
+                }).ToList();
+
+            return Json(facilities);
+        }
+
+        public IActionResult GetAllRooms(int facilityId)
+        {
+            var rooms = _context.Rooms
+               .Where(room => room.FacilityId == facilityId)
+               .Select(r => new
+               {
+                   RoomId = r.RoomId,
+                   RoomName = r.RoomName
+               }).ToList();
+
+            return Json(rooms);
         }
 
         public IActionResult GetFacility(int ReservationDetailId)
@@ -69,26 +97,38 @@ namespace PropertyManagementSystem.Controllers
                     AvailableRooms = f.Rooms.Where(room =>
                         !_context.ReservationDetails.Any(rd =>
                             rd.RoomId == room.RoomId &&
+                            rd.ReservationDetailId != ReservationDetailId &&
                             ((rd.StartDate <= startDate && rd.EndDate > startDate) ||
                              (rd.StartDate <= endDate && rd.EndDate >= endDate) ||
                              (rd.StartDate >= startDate && rd.EndDate <= endDate))))
                 })
-                .Where(f => f.AvailableRooms.Any())
                 .Select(f => new
                 {
                     FacilityId = f.Facility.FacilityId,
-                    FacilityName = f.Facility.FacilityName,
-                    FacilityClass = f.Facility.FacilityClassification
+                    FacilityName = f.Facility.FacilityName
                 })
                 .OrderBy(f => f.FacilityName)
                 .ToList();
 
+            var selectedFacility = _context.Facilities
+                .Where(f => f.FacilityId == reservation.FacilityId)
+                .Select(f => new { FacilityId = f.FacilityId, FacilityName = f.FacilityName })
+                .FirstOrDefault();
+
+            if (selectedFacility != null && !facilities.Any(f => f.FacilityId == selectedFacility.FacilityId))
+            {
+                facilities.Insert(0, selectedFacility);
+            }
+
+
             return Json(facilities);
         }
-        public IActionResult GetRoom(int? facilityId, int reservationId)
+        public IActionResult GetRoom(int? facilityId, int reservationDetailId)
         {
+            Console.WriteLine("FacilityId: " + facilityId);
+            Console.WriteLine("Reservation Id: " + reservationDetailId);
             var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationId == reservationId);
+                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
 
             if (reservation == null)
             {
@@ -99,16 +139,16 @@ namespace PropertyManagementSystem.Controllers
             var endDate = reservation.EndDate;
 
             var rooms = _context.Rooms
-                .Where(room => room.FacilityId == facilityId &&
-                               !_context.ReservationDetails.Any(rd =>
-                                   rd.RoomId == room.RoomId &&
-                                   ((rd.StartDate <= startDate && rd.EndDate > startDate) ||
-                                    (rd.StartDate <= endDate && rd.EndDate >= endDate) ||
-                                    (rd.StartDate >= startDate && rd.EndDate <= endDate))))
-                .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
-                .ToList();
+         .Where(room => room.FacilityId == facilityId &&
+                   !_context.ReservationDetails.Any(rd =>
+                       rd.RoomId == room.RoomId &&
+                       rd.ReservationDetailId != reservationDetailId && 
+                       ((rd.StartDate <= startDate && rd.EndDate > startDate) ||
+                        (rd.StartDate <= endDate && rd.EndDate >= endDate) ||
+                        (rd.StartDate >= startDate && rd.EndDate <= endDate))))
+         .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
+         .ToList();
 
-            // Add the initially selected room if it's not already in the list
             var selectedRoom = _context.Rooms
                 .Where(room => room.RoomId == reservation.RoomId)
                 .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
@@ -119,8 +159,10 @@ namespace PropertyManagementSystem.Controllers
                 rooms.Insert(0, selectedRoom);
             }
 
+
             return Json(rooms);
         }
+
         public IActionResult GetGH(int ReservationDetailId)
         {
             var reservation = _context.ReservationDetails
@@ -135,7 +177,7 @@ namespace PropertyManagementSystem.Controllers
             var endDate = reservation.EndDate;
 
             var facilities = _context.Facilities
-                .Where(f => f.FacilityClassification == "GUESTHOUSE")
+                .Where(f => f.FacilityClassification == "GUESTHOUSE" || f.FacilityId == reservation.FacilityId)
                 .Select(f => new
                 {
                     Facility = f,
@@ -173,9 +215,25 @@ namespace PropertyManagementSystem.Controllers
                 .OrderBy(f => f.FacilityName)
                 .ToList();
 
+            // Select the current facility based on the reservation's FacilityId
+            var selectedFacility = _context.Facilities
+        .Where(f => f.FacilityId == reservation.FacilityId)
+        .Select(f => new
+        {
+            FacilityId = f.FacilityId,
+            FacilityName = f.FacilityName,
+            FacilityClass = f.FacilityClassification // Include FacilityClass
+        })
+        .FirstOrDefault();
+
+            // Insert the selected facility at the top if it's not already in the list
+            if (selectedFacility != null && !facilities.Any(f => f.FacilityId == selectedFacility.FacilityId))
+            {
+                facilities.Insert(0, selectedFacility);
+            }
+
             return Json(facilities);
         }
-
         public IActionResult GetGHRoom(int? facilityId, int reservationDetailId)
         {
             Console.WriteLine(facilityId);
@@ -354,21 +412,42 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(rooms);
         }
-
-        public ActionResult GetEquipments()
+        [HttpGet]
+        public IActionResult GetEquipmentFNAssign(int facilityId, int roomId)
         {
-            List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();
+            var equipment = _context.Equipments
+                .Where(e => e.FacilityId == facilityId && e.RoomId == roomId && e.isActive == true)
+                .Select(e => new { e.Id })
+                .ToList();
+
+            return Json(equipment);
+        }
+        public ActionResult GetEquipments(DateTime startDate, DateTime endDate)
+        {
+            // Fetch all equipment data
+            List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable()
+                .Where(eq => eq.isFacilityEquipment == false).ToList();
             List<equipmentList> _eqList = new List<equipmentList>();
-            foreach(var item in _Equipments)
+
+            foreach (var item in _Equipments)
             {
+                // Check if the equipment is currently reserved
+                bool isReserved = _context.ReservationDetails
+                    .Any(r => r.EquipmentNeeded.Contains(item.Id.ToString())
+                              && r.StartDate <= DateTime.Now
+                              && r.EndDate >= DateTime.Now);
+
+                // Add equipment to the list with reservation status
                 _eqList.Add(new equipmentList
                 {
                     Id = item.Id,
                     EquipmentName = item.EquipmentName,
                 });
             }
+
             return Json(_eqList);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CancelReservation(int ReservationId, string Remarks, string reservationType)
@@ -390,7 +469,7 @@ namespace PropertyManagementSystem.Controllers
 
                     return RedirectToAction("ReservationList", "FunctionRoom");
                 }
-                else if(reservationType == "GH")
+                else if (reservationType == "GH")
                 {
                     reservation.Status = "CANCELLED";
                     reservation.Remarks = Remarks;
@@ -404,7 +483,7 @@ namespace PropertyManagementSystem.Controllers
                     return RedirectToAction("Index", "Home");
                 }
             }
-            
+
         }
         public ActionResult getDormList([DataSourceRequest] DataSourceRequest request)
         {

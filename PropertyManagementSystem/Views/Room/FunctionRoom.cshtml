@@ -47,7 +47,7 @@
                         <div class="card-header">
                             <h3 class="card-title"></h3>
                             <div class="card-actions">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#modal-newRoom" class="btn btn-primary">
+                                <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
                                     <i class="ti ti-home-plus icon"></i>
                                     New Function Room
                                 </a>
@@ -110,80 +110,69 @@
     </div>
 
 </div>
-
-@*NEW ROOM MODAL *@
-<div class="modal modal-blur fade" id="modal-newRoom" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">New Guest Room</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+@*off canvas edit form*@
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+    <div class="offcanvas-header">
+        <h2 class="offcanvas-title" id="offcanvasEndLabel">New Function Room</h2>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+       <form id="fcFRM1" asp-controller="Room" asp-action="newFNRoom" enctype="multipart/form-data" method="post">
+            <div class="mb-3">
+                <label class="form-label required">Room Name </label>
+                <input class="form-control" name="_name" type="text" required="required">
             </div>
-            <form id="fcFRM1" asp-controller="Room" asp-action="newFNRoom" enctype="multipart/form-data" method="post">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label required">Room Name </label>
-                        <input class="form-control" name="_name" type="text" required="required">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Location</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_facility")
-                            .DataTextField("FacilityName")
-                            .DataValueField("FacilityId")
-                            .DataSource(source =>
-                            {
-                                source.Read(read =>
-                                {
-                                    read.Action("getFNList", "Facility");
-                                });
-                            })
-                            .HtmlAttributes(new { style = "width: 100%" })
-                            )
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Status</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_status")
-                            .BindTo(new List<SelectListItem>
+            <div class="mb-3">
+                <label class="form-label required">Location</label>
+                @(Html.Kendo().DropDownList()
+                    .Name("_facility")
+                    .DataTextField("FacilityName")
+                    .DataValueField("FacilityId")
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
                         {
-                        new SelectListItem() {
-                        Text = "Open",
-                        Value = "Open"
-                        },
-                        new SelectListItem() {
-                        Text = "Occupied",
-                        Value = "Occupied"
-                        },
-                        new SelectListItem() {
-                        Text = "Under Maintenance",
-                        Value = "Under Maintenance"
-                        },
-                        })
-                            .HtmlAttributes(new { style = "width: 100%" })
-                            )
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Capacity</label>
-                        <input class="form-control" name="_capacity" type="number" required="required">
-                    </div>
-                    <label class="row">
-                        <span class="col form-label">Is Active</span>
-                        <span class="col-auto">
-                            <label class="form-check form-check-single form-switch">
-                                <input class="form-check-input" id="switch" name="_isActive" type="checkbox" value="true" checked>
-                            </label>
-                        </span>
-                    </label>
+                            read.Action("getFNList", "Facility");
+                        });
+                    })
+                    .HtmlAttributes(new { style = "width: 100%" })
+                    )
+            </div>
+            <div class="mb-3">
+                <label class="form-label required">Status</label>
+                @(Html.Kendo().DropDownList()
+                    .Name("_status")
+                    .BindTo(new List<SelectListItem>
+                {
+                new SelectListItem() {
+                Text = "Open",
+                Value = "Open"
+                },
+                new SelectListItem() {
+                Text = "Occupied",
+                Value = "Occupied"
+                },
+                new SelectListItem() {
+                Text = "Under Maintenance",
+                Value = "Under Maintenance"
+                },
+                })
+                    .HtmlAttributes(new { style = "width: 100%" })
+                    )
+            </div>
+            <div class="mb-3">
+                <label class="form-label required">Capacity</label>
+                <input class="form-control" name="_capacity" type="number" required="required">
+            </div>
+            <div class="mb-3 d-flex align-items-center">
+                <label for="isActiveCheckbox" class="form-label me-auto">Is Active</label>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" id="switch" name="_isActive" type="checkbox" value="true" checked>
                 </div>
-                <div class="modal-footer">
-                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Save</button>
-                </div>
-            </form>
-        </div>
+            </div>
+       </form>
     </div>
 </div>
-@*END - NEW Room MODAL *@
 @*DELETE MODAL*@
 <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">

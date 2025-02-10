@@ -10,9 +10,11 @@ using System.Collections.Generic;
 using PropertyManagementSystem.Services;
 using System.Security.Claims;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class DormController : Controller
     {
         private readonly DAL _context;
@@ -66,72 +68,6 @@ namespace PropertyManagementSystem.Controllers
             ViewData["Facilities"] = facilities;
 
             return View(viewModel);
-        }
-
-        public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
-        {
-            var currUser = User.Identity.Name;
-            Console.WriteLine("Current User: " + currUser);
-            bool isRequestor = User.IsInRole("GFMS.Requestor");
-            bool isDeptHead = User.IsInRole("GFMS.Department Head");
-
-            var reservationsQuery = from resDetails in _context.ReservationDetails
-                                    join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
-                                    join room in _context.Rooms on resDetails.RoomId equals room.RoomId
-                                    join facility in _context.Facilities on resDetails.FacilityId equals facility.FacilityId
-                                    select new
-                                    {
-                                        resDetails.ReservationId,
-                                        resHeader.GUID,
-                                        resHeader.Requestor,
-                                        resHeader.RequestorEmail,
-                                        resHeader.ChargeToCompany,
-                                        resHeader.Status,
-                                        resHeader.ReservationType,
-                                        resDetails.StartDate,
-                                        resDetails.EndDate,
-                                        resDetails.Purpose,
-                                        resDetails.RoomId,
-                                        resDetails.FacilityId,
-                                        RoomName = room.RoomName,
-                                        FacilityName = facility.FacilityName,
-                                        FacilityLocation = facility.FacilityLocation
-                                    };
-
-            if (isRequestor || isDeptHead)
-            {
-                reservationsQuery = reservationsQuery.Where(r => r.RequestorEmail == currUser && r.ReservationType == "DRM");
-            }
-
-            var reservationList = reservationsQuery.ToList();
-
-            var groupedReservations = reservationList.GroupBy(r => r.ReservationId)
-                                                     .Select(group => {
-                                                         var firstItem = group.First();
-                                                         DateTime startDate = firstItem.StartDate ?? DateTime.MinValue;
-                                                         DateTime endDate = firstItem.EndDate ?? DateTime.MinValue;
-
-                                                         return new ReservationViewModel
-                                                         {
-                                                             ReservationId = group.Key,
-                                                             GUID = firstItem.GUID,
-                                                             Requestor = firstItem.Requestor,
-                                                             ChargeToCompany = firstItem.ChargeToCompany,
-                                                             Status = firstItem.Status,
-                                                             Start = DateTime.SpecifyKind(startDate, DateTimeKind.Utc),
-                                                             End = DateTime.SpecifyKind(endDate, DateTimeKind.Utc),
-                                                             Title = firstItem.Requestor,
-                                                             Purpose = firstItem.Purpose,
-                                                             StartDate = firstItem.StartDate.HasValue ? firstItem.StartDate.Value.ToShortTimeString() : "",
-                                                             RoomId = firstItem.RoomId,
-                                                             FacilityId = firstItem.FacilityId,
-                                                             RoomName = firstItem.RoomName,
-                                                             FacilityName = firstItem.FacilityName,
-                                                             FacilityLocation = firstItem?.FacilityLocation,
-                                                         };
-                                                     }).ToList();
-
-            return Json(groupedReservations.ToDataSourceResult(request));
         }
 
         public IActionResult ReservationList()
@@ -201,49 +137,6 @@ namespace PropertyManagementSystem.Controllers
             }
 
             return Content("");
-        }
-
-        public IActionResult ViewReservationDetails(string id) 
-        {
-
-            try
-            {
-                if (string.IsNullOrEmpty(id))
-                {
-                    return BadRequest("GUID cannot be null or empty");
-                }
-
-                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == id);
-                if (reservationHeader == null)
-                {
-                    return NotFound("Reservation Header not found");
-                }
-
-                var reservationDetails = _context.ReservationDetails
-                    .Where(x => x.ReservationId == reservationHeader.ReservationId)
-                    .ToList();
-                var employee = _context.Employees.FirstOrDefault(e => e.Email == reservationHeader.RequestorEmail);
-                Console.WriteLine("Employee:" + employee);
-                var department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
-                var position = _context.Positions.FirstOrDefault(p => p.Id == employee.PositionId);
-                var level = _context.EmploymentLevels.FirstOrDefault(l => l.Id == employee.EmploymentLevelId);
-
-                var detailViewModel = new ReservationViewModel
-                {
-                    Department = department,
-                    EmploymentLevel = level,
-                    Position = position,
-                    ReservationHeader = reservationHeader,
-                    ReservationDetails = reservationDetails
-                };
-
-                return View(detailViewModel);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred: {ex.Message}");
-                return StatusCode(500, "Internal server error");
-            }
         }
 
         public ActionResult getDormReservation([DataSourceRequest] DataSourceRequest request, string gridType, int FacilityId, int RoomId)
@@ -354,16 +247,29 @@ namespace PropertyManagementSystem.Controllers
 
         private string GenerateReservationCode()
         {
-            int year = DateTime.Now.Year;
+            int currentYear = DateTime.Now.Year;
             int sequenceNumber = 1;
 
-            var lastReservation = _context.ReservationHeaders.Where(r => r.ReservationType == "FN").Count();
+            var lastReservation = _context.ReservationHeaders
+                .Where(r => r.ReservationType == "DRM")
+                .OrderByDescending(r => r.DateSubmitted)
+                .FirstOrDefault();
+
             if (lastReservation != null)
             {
-                sequenceNumber = lastReservation + 1;
+                string[] codeParts = lastReservation.ReservationCode?.Split('-');
+                if (codeParts?.Length == 4 &&
+                    int.TryParse(codeParts[2], out int lastYear) &&
+                    int.TryParse(codeParts[3], out int lastSequenceNumber))
+                {
+                    if (lastYear == currentYear)
+                    {
+                        sequenceNumber = lastSequenceNumber + 1;
+                    }
+                }
             }
 
-            return $"RSQ-DRM-{year}-{sequenceNumber:D4}";
+            return $"RSQ-DRM-{currentYear}-{sequenceNumber:D4}";
         }
 
         /*Create Reservation*/
@@ -403,9 +309,86 @@ namespace PropertyManagementSystem.Controllers
             _context.ReservationHeaders.Add(_reservation);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("ReservationDetails", new { Id = unique});
+            return RedirectToAction("ViewReservationDetails", new { Id = unique});
 
         }
+
+        public IActionResult ViewReservationDetails(string Id)
+        {
+            if (string.IsNullOrEmpty(Id))
+            {
+                return BadRequest("GUID cannot be null or empty");
+            }
+
+            try
+            {
+                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(x => x.GUID == Id);
+                if (reservationHeader == null)
+                {
+                    return NotFound("Reservation Header not found");
+                }
+
+                int reservationId = reservationHeader.ReservationId;
+                var requestorEmail = reservationHeader.RequestorEmail;
+
+                Console.WriteLine("Requestor Email: " + requestorEmail);
+
+                var reservationDetails = _context.ReservationDetails
+                    .Where(x => x.ReservationId == reservationId)
+                    .ToList();
+
+
+                Gen_Department department = null;
+                GFMS_Facility facility = null;
+                GFMS_Rooms rooms = null;
+
+                var employee = _context.Employees.FirstOrDefault(e => e.Email == requestorEmail);
+                Console.WriteLine("Employee:" + employee.Email);
+
+                if (reservationDetails.Any())
+                {
+                    var firstDetail = reservationDetails.FirstOrDefault();
+                    facility = _context.Facilities.FirstOrDefault(f => f.FacilityId == firstDetail.FacilityId);
+                    rooms = _context.Rooms.FirstOrDefault(r => r.RoomId == firstDetail.RoomId);
+                }
+
+                department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
+                var position = _context.Positions.FirstOrDefault(p => p.Id == employee.PositionId);
+                var level = _context.EmploymentLevels.FirstOrDefault(l => l.Id == employee.EmploymentLevelId);
+
+
+                var reservation = new ReservationViewModel
+                {
+                    Department = department,
+                    Facility = facility,
+                    Room = rooms,
+                    EmploymentLevel = level,
+                    Position = position,
+                    ReservationHeader = reservationHeader,
+                    ReservationDetails = reservationDetails,
+                    NumberOfGuest = reservationDetails.Sum(rd => rd.NumberOfGuest)
+                };
+
+                return View(reservation);
+            }
+            catch (InvalidCastException ex)
+            {
+
+                Console.WriteLine($"InvalidCastException: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                return RedirectToAction("Error", "Error");
+            }
+            catch (Exception ex)
+            {
+
+                Console.WriteLine($"Exception: {ex.Message}");
+                return RedirectToAction("Error", "Error");
+            }
+        }
+
         public IActionResult ReservationDetails(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -456,45 +439,53 @@ namespace PropertyManagementSystem.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-
         /*Create*/
-        public IActionResult CreateReservationDetails(int _reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, string[] _dependents, string[] _age, string[] _location, string[] _position, string filepath)
+        public IActionResult CreateReservationDetails(
+            int _reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation,int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat,string[] _dependents, string[] _age, string[] _location, string[] _position, string filepath, string[] _dependent_status)
         {
             try
             {
-                if (_dependents != null && _age != null && (_position != null || _location != null))
+                if (_dependents != null && _age != null && _position != null && _location != null && _dependent_status != null)
                 {
-                    int length = Math.Min(Math.Min(_dependents.Length, _age.Length), _position.Length);
-
+                    int length = Math.Min(
+                Math.Min(_dependents.Length, _age.Length),
+                Math.Min(_location.Length, Math.Min(_position.Length, _dependent_status.Length)));
                     for (int i = 0; i < length; i++)
                     {
+                        Console.WriteLine($"Dependent Name: {_dependents[i]}, Status: {_dependent_status[i]}");
+                        // Create a new reservation detail object and populate it with form values
                         GFMS_ReservationDetails reservationDetails = new GFMS_ReservationDetails()
                         {
                             ReservationId = _reservationId,
                             AppliedUnit = _unitApplied,
                             ScheduleType = _schedType,
-                            ContactNumber = _contactNumber,
-                            PermanentAddress = _permanentAdd,
-                            CurrentAddress = _currentAdd,
+                            ContactNumber = _contactNumber ?? string.Empty,
+                            PermanentAddress = _permanentAdd ?? string.Empty,
+                            CurrentAddress = _currentAdd ?? string.Empty,
                             HomeOwnership = _homeOwnership,
                             OwnedHouseLocation = _ownedLocation,
-                            SpecificLocation = _specificLocation,
+                            SpecificLocation = _specificLocation ?? string.Empty,
                             ModeOfTransportation = _modeOfTransport,
-                            VehicleType = _vehicleType,
-                            TravelTime = _travelTime,
-                            Fare = _fare,
-                            CivilStatus = _civilStat,
-                            DependentName = _dependents[i],
-                            DependentAge = _age[i],
-                            WorkPosition = _position[i],
-                            StudyLocation = _location[i],
+                            VehicleType = _vehicleType ?? string.Empty,
+                            TravelTime = _travelTime ?? string.Empty,
+                            Fare = _fare ?? string.Empty,
+                            CivilStatus = _civilStat ?? string.Empty,
+                            DependentName = _dependents[i] ?? string.Empty,
+                            DependentAge = _age[i] ?? string.Empty,
+                            WorkPosition = _position[i] ?? string.Empty,
+                            StudyLocation = _location[i] ?? string.Empty,
+                            OtherInfo = _dependent_status[i] ?? string.Empty,
                             DateAdded = DateTime.UtcNow,
-                            FileAttachment = filepath
+                            FileAttachment = filepath ?? string.Empty
                         };
+                        Console.WriteLine($"Dependent Status for row {i}: {_dependent_status[i]}");
+                        var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
+                        if (reservationHeader != null)
+                        {
+                            reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
+                        }
 
                         _context.ReservationDetails.Add(reservationDetails);
-                        var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
-                        reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
                     }
 
                     _context.SaveChanges();
@@ -512,28 +503,26 @@ namespace PropertyManagementSystem.Controllers
 
             return RedirectToAction("Index", "Dorm");
         }
-        /*Update*/
+
+
+
         [HttpPost]
-        public IActionResult UpdateReservationDetails(int reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, List<string> _dependents, List<string> _age, List<string> _location, List<string> _position, string filepath)
+        public IActionResult UpdateReservationDetails(int reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, List<string> _dependents, List<string> _age, List<string> _location, List<string> _position, List<string> _dependent_status, string filepath)
         {
-            List<string> filePaths = new List<string>();
-            Console.WriteLine("Reservation Id: " + reservationId);
+            // Retrieve the existing reservation details
             var existingReservationDetails = _context.ReservationDetails
                 .Where(rd => rd.ReservationId == reservationId)
                 .ToList();
 
-            
-
+            // Loop through the existing reservation details
             for (int i = 0; i < existingReservationDetails.Count; i++)
             {
                 var existingDetail = existingReservationDetails[i];
-
-
                 var index = _dependents.FindIndex(g => string.Equals(g, existingDetail.DependentName, StringComparison.OrdinalIgnoreCase));
-
 
                 if (index != -1)
                 {
+                    // Update details
                     existingDetail.AppliedUnit = _unitApplied;
                     existingDetail.ScheduleType = _schedType;
                     existingDetail.ContactNumber = _contactNumber;
@@ -551,50 +540,35 @@ namespace PropertyManagementSystem.Controllers
                     existingDetail.DependentAge = _age[index];
                     existingDetail.StudyLocation = _location[index];
                     existingDetail.WorkPosition = _position[index];
-                    existingDetail.FileAttachment = filepath;
+
+                    // Update the dependent status (studying/working)
+                    if (_dependent_status != null && _dependent_status.Count > index)
+                    {
+                        existingDetail.OtherInfo = _dependent_status[index];  // Assuming OtherInfo is where you store the dependent status
+                    }
+
+                    // Handle the file update - if a new file is uploaded, replace the old one
+                    if (!string.IsNullOrEmpty(filepath))
+                    {
+                        existingDetail.FileAttachment = filepath;
+                    }
+
                     _context.ReservationDetails.Update(existingDetail);
                 }
                 else
                 {
+                    // If the dependent is not in the new list, remove it
                     _context.ReservationDetails.Remove(existingDetail);
                 }
             }
 
-
-            for (int i = 0; i < _dependents.Count; i++)
-            {
-                var existingDetail = existingReservationDetails.FirstOrDefault(rd => string.Equals(rd.DependentName, _dependents[i], StringComparison.OrdinalIgnoreCase));
-                if (existingDetail == null)
-                {
-                    GFMS_ReservationDetails newDetail = new GFMS_ReservationDetails
-                    {
-                        ReservationId = reservationId,
-                        AppliedUnit = _unitApplied,
-                        ScheduleType = _schedType,
-                        ContactNumber = _contactNumber,
-                        PermanentAddress = _permanentAdd,
-                        CurrentAddress = _currentAdd,
-                        HomeOwnership = _homeOwnership,
-                        OwnedHouseLocation = _ownedLocation,
-                        SpecificLocation = _specificLocation,
-                        ModeOfTransportation = _modeOfTransport,
-                        VehicleType = _vehicleType,
-                        TravelTime = _travelTime,
-                        Fare = _fare,
-                        CivilStatus = _civilStat,
-                        DependentName = _dependents[i],
-                        DependentAge = _age[i],
-                        StudyLocation = _location[i],
-                        WorkPosition = _position[i],
-                        FileAttachment = filepath
-                    };
-
-                    _context.ReservationDetails.Add(newDetail);
-                }
-            }
+            // Save the changes to the database
             _context.SaveChanges();
-            return RedirectToAction("ReservationList", "Dorm");
+
+            return RedirectToAction("Index", "Dorm");
         }
+
+
         /*Delete*/
         public IActionResult DeleteReservationDetail(int ReservationId)
         {

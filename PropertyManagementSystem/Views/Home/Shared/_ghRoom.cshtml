@@ -13,8 +13,7 @@
             });
             views.AgendaView();
         })
-        .Timezone("Etc/UTC")
-        .Group(g => g.Resources("Rooms", "Facilities").Orientation(SchedulerGroupOrientation.Vertical))
+        .Timezone("Etc/UTC")  
         .DataSource(d => d
         .Model(m =>
         {

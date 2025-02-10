@@ -1,5 +1,5 @@
 ﻿@inject PropertyManagementSystem.Services.IRoleService RoleService
-@inject SignInManager<IdentityUser> SignInManager
+@inject SignInManager<ApplicationUser> SignInManager
 @using Microsoft.AspNetCore.Identity
 
 @{
@@ -30,38 +30,24 @@
                                 <span class="badge bg-success"></span>@employee.NameInitials
                             </span>
                             <div class="d-none d-xl-block ps-2">
-                                @if (employee != null)
-                                {
-                                    <div>@employee.Fullname</div>
-                                }
-                                <div class="mt-1 small text-secondary">
-                                    <div>@User.Identity.Name</div>
-                                </div>
-                                <div class="mt-1 small text-secondary">
-                                    <div>
-                                        @if (gfmsRoles != null && gfmsRoles.Any())
-                                        {
-                                            @foreach (var role in gfmsRoles)
-                                            {
-                                                <span>@role</span>
-                                            }
-                                        }
-                                        else
-                                        {
-                                            <span>No roles assigned</span>
-                                        }
-                                    </div>
-                                </div>
+                                <div>@employee?.Fullname</div>
+                                <div class="mt-1 small text-white">@activeRole</div>
                             </div>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                            <a href="#" class="dropdown-item">Status</a>
-                            <a href="./profile.html" class="dropdown-item">Profile</a>
-                            <a href="#" class="dropdown-item">Feedback</a>
+                            <div class="hr-text my-3">Sign Is As</div>
+                            @foreach (var role in gfmsRoles)
+                            {
+                                <a class="dropdown-item @(role == activeRole ? "text-danger active-role fw-semibold" : "")"
+                                   asp-controller="Home" asp-action="ChangeRole" asp-route-role="@role">
+                                    @role
+                                </a>
+                            }
                             <div class="dropdown-divider"></div>
-                            <a href="./settings.html" class="dropdown-item">Settings</a>
-                            <form method="post">
-                                <a asp-area="Identity" asp-page="/Account/Login" class="dropdown-item">Logout</a>
+                            <a asp-area="Identity" asp-page="/Account/Manage/Index" class="dropdown-item">Profile</a>
+                            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout"
+                                  asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                <button type="submit" class="nav-link btn btn-link text-white">Logout</button>
                             </form>
                         </div>
                     </div>
@@ -137,6 +123,9 @@
                                             </span>
                                         </a>
                                         <div class="dropdown-menu" id="maintenance">
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
+                                                <strong>Facilities</strong>
+                                            </a>
                                             <a class="dropdown-item" href="@Url.Action("GuestRoom", "Room")">
                                                 <strong>Guest Room</strong>
                                             </a>
@@ -146,26 +135,33 @@
                                             <a class="dropdown-item" href="@Url.Action("DormRoom", "Room")">
                                                 <strong>Dorm Room</strong>
                                             </a>
-                                            <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
-                                                <strong>Facilities</strong>
-                                            </a>
                                             <a class="dropdown-item" href="@Url.Action("Index", "Equipment")">
                                                 <strong>Equipments</strong>
                                             </a>
                                         </div>
                                     </li>
-                                    
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle" href="#navbar-third" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
+                                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                                <i class="ti ti-article icon"></i>
+                                            </span>
+                                            <span class="nav-link-title">
+                                                <strong>Reports</strong>
+                                            </span>
+                                        </a>
+                                        <div class="dropdown-menu" id="maintenance">
+                                            <a class="dropdown-item" href="@Url.Action("MonthlyChargesReport", "Report")">
+                                                <strong>Company & Department Charges</strong>
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Report")">
+                                                <strong>Weekly Occupancy</strong>
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Report")">
+                                                <strong>Reservation Details</strong>
+                                            </a>
+                                        </div>
+                                    </li>
                                 }
-                                <li class="nav-item">
-                                    <a class="nav-link" href="@Url.Action("Index", "Dorm")">
-                                        <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                            <i class="ti ti-article"></i>
-                                        </span>
-                                        <span class="nav-link-title">
-                                            <strong>Reports</strong>
-                                        </span>
-                                    </a>
-                                </li>
                             </ul>
                         </div>
                         <div class="col-2 d-none d-xxl-block">

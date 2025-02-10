@@ -1,0 +1,93 @@
+﻿
+<input type="hidden" id="reservationId" value="@Model.ReservationId" />
+ @(Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
+        .Name("approvalGrid")
+        .Columns(columns =>
+        {
+            columns.Bound(c => c.ReservationDetailId).Visible(false);
+            columns.Bound(c => c.GuestName);
+            columns.Bound(c => c.Company);
+            columns.Bound(c => c.Relationship);
+            columns.Bound(c => c.StartDate).Title("Arrival Date and Time");
+            columns.Bound(c => c.EndDate).Title("Departure Date and Time").Format("{0:yyyy-MM-dd HH:mm:ss}");
+            columns.Bound(c => c.FacilityName).Title("Facility Name");
+            columns.Bound(c => c.RoomName).Title("Room Name");
+            columns.Command(command =>
+            {
+                command.Custom("View")
+                .Text("<i class='ti ti-eye'></i>Assign")
+                .Click("openAssignModal")
+                .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
+            })
+            .Title("Actions")
+            .Width(300)
+            .Exportable(false);
+        })
+        .DataSource(dataSource => dataSource
+        .Ajax()
+        .Read(read => read.Action("getGHApprovals", "Accommodation").Data("function() { return { reservationId: $('#reservationId').val() }; }"))
+
+        )
+        )
+
+<!-- Facility Assignment Modal -->
+<div class="modal modal-blur fade" id="assignFacilityModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <h5 class="modal-title">Facility Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+             <form asp-action="UpdateReservationStatus" method="post">
+                @Html.AntiForgeryToken()
+            <div class="modal-body p-3">
+                    <input type="hidden" name="reservationDetailId" id="ReservationDetailId">
+                    <input type="hidden" name="ReservationId" id="ReservationId" value="@Model.ReservationId" />
+                <div class="mb-2">
+                    @(
+                        Html.Kendo().DropDownList()
+                        .Name("_facilityId")
+                        .DataTextField("FacilityName")
+                        .DataValueField("FacilityId")
+
+                        .DataSource(source =>
+                        {
+                            source.Read(read =>
+                            {
+                                read.Action("GetGH", "Global").Data("filterFacilities");
+                            });
+                        })
+                        .HtmlAttributes(new { style = "width: 100%" })
+                        .OptionLabel("Select Facility")
+                        .Events(e => e.Change("onFacilityChange"))
+                        )
+                </div>
+
+                <div class="mb-2">
+                    @(
+                        Html.Kendo().DropDownList()
+                        .Name("_roomId")
+                        .DataTextField("RoomName")
+                        .DataValueField("RoomId")
+                        .CascadeFrom("_facilityId")
+                        .DataSource(source =>
+                        {
+                            source.Read(read =>
+                            {
+                                read.Action("GetGHRoom", "Global").Data("filterRooms2");
+                            }).ServerFiltering(true);
+                        })
+                        .HtmlAttributes(new { style = "width: 100%" })
+                        .OptionLabel("Select Room")
+                        .Events(e => e.Change("onRoomChange"))
+                        )
+                </div>
+            </div>
+            <div class="modal-footer py-2">
+                <button type="button" class="btn me-auto" data-bs-dismiss="modal">Close</button>
+                <button type="submit" name="action" value="Assign" data-bs-dismiss="modal" class="btn  btn-primary">Assign</button>
+                </div>
+            </form>
+    </div>
+</div>
+

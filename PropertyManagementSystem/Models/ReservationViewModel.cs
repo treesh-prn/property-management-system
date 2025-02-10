@@ -5,10 +5,16 @@ namespace PropertyManagementSystem.Models
     public class ReservationViewModel : ISchedulerEvent
     {
         public GFMS_ReservationHeader? ReservationHeader { get; set; }
+        public GFMS_Facility? Facility { get; set; }
+        public GFMS_Rooms? Room { get; set; }
         public Gen_Department? Department { get; set; }
+        public Gen_Company? Companies { get; set; }
         public Gen_Position? Position { get; set; }
+        public List<string> Equipments { get; set; }
         public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
+        
+
 
 
         public int FacilityId { get; set; }
@@ -38,6 +44,9 @@ namespace PropertyManagementSystem.Models
         public string? GUID { get; set; }
         public string? GuestName { get; set; }
         public string? Status { get; set; }
+        public string? Relationship { get; set; }
+        public string? Company { get; set; }
+        public bool? CanDelete { get; set; }
         public DateTime? DateSubmitted { get; set; }
         public string? ReservationCode { get; set; }
         public string? Approver { get; set; }
@@ -47,10 +56,11 @@ namespace PropertyManagementSystem.Models
         public int NumberOfGuest { get; set; }
         public string? Purpose { get; set; }
         public string? EquipmentNeeded {  get; set; }
+        public List<string>? EquipmentNames {  get; set; }
 
         public int? ScheduleType {  get; set; }
 
-        public string StartDate { get; set; }
+        public string? StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime DateFiled { get; set; }
 
@@ -62,5 +72,15 @@ namespace PropertyManagementSystem.Models
         public int OccupiedRoomsCount { get; set; }
         public int AvailableRoomsCount { get; set; }
         public IEnumerable<ReservationViewModel>? Reservations { get; set; }
+
+        //hours spent
+        public double? HourSpent { get; set; }
+        public double? EquipmentTotalCost {  get; set; }
+        public double? RoomTotalCost { get; set; }
+        public double SubTotalCost {  get; set; }
+        public double TotalCost {  get; set; }
+
+        //total booking for today
+        public IEnumerable<dynamic> TodaysBookings { get; set; }
     }
 }

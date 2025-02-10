@@ -1,0 +1,77 @@
+﻿@using System.Globalization
+@model IEnumerable<PropertyManagementSystem.Models.ReservationReport>
+
+
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        REPORTS
+                    </div>
+                    <h2 class="page-title">
+                        WEEKLY OCCUPANCY
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                </div>
+            </div>
+        </div>
+        <div class="container-xl mt-4">
+            <div class="card">
+                <div class="card-body">
+                    <form id="filterForm" class="row g-3" method="get" asp-action="GenerateWeelyOccupancy">
+                        <!-- Start Date Field -->
+                        <div class="col-lg-3">
+                            <label for="_startDate" class="form-label">Start Date</label>
+                            @(Html.Kendo().DatePicker()
+                                .Name("_startDate")
+                                .Value(DateTime.Today)
+                                .Format("yyyy/MM/dd")
+                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                                .HtmlAttributes(new { id = "_startDate", style = "width: 100%;" })
+                                )
+                        </div>
+
+                        <!-- End Date Field -->
+                        <div class="col-lg-3">
+                            <label for="_endDate" class="form-label">End Date</label>
+                            @(Html.Kendo().DatePicker()
+                                .Name("_endDate")
+                                .Value(DateTime.Today)
+                                .Format("yyyy/MM/dd")
+                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                                .HtmlAttributes(new { id = "_endDate", style = "width: 100%;" })
+                                )
+                        </div>
+
+                        <!-- Facility/Guesthouse Dropdown -->
+                        <div class="col-lg-3">
+                            <label for="_facility" class="form-label">Select Type</label>
+                            @(Html.Kendo().DropDownList()
+                                .Name("_facility")
+                                .OptionLabel("Select Type")
+                                .DataTextField("Text")
+                                .DataValueField("Value")
+                                .BindTo(new List<SelectListItem> {
+                            new SelectListItem { Text = "Facility", Value = "FN" },
+                            new SelectListItem { Text = "Guesthouse", Value = "GH" }
+                            })
+                                .HtmlAttributes(new { id = "_facility", style = "width: 100%;" })
+                                )
+                        </div>
+                        <!-- Submit Button -->
+                        <div class="col-lg-3 d-flex align-items-end justify-content-end">
+                            <button type="submit" class="btn btn-primary">Generate Report</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>

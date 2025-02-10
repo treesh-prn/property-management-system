@@ -8,15 +8,24 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+    <Compile Remove="wwwroot\Reports\**" />
+    <Compile Remove="wwwroot\Uploads\**" />
     <Content Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+    <Content Remove="wwwroot\Reports\**" />
+    <Content Remove="wwwroot\Uploads\**" />
     <EmbeddedResource Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+    <EmbeddedResource Remove="wwwroot\Reports\**" />
+    <EmbeddedResource Remove="wwwroot\Uploads\**" />
     <None Remove="Views\FunctionRoom\Shared\DepartmentHead - Copy\**" />
+    <None Remove="wwwroot\Reports\**" />
+    <None Remove="wwwroot\Uploads\**" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MailKit" Version="4.7.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.24" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.24">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -28,9 +37,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Telerik.UI.for.AspNet.Core" Version="2022.1.301" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="wwwroot\Uploads\" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="Views\Dorm\Shared\_newReservation.cshtml">

@@ -1,0 +1,126 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<div class="card card-md">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-6">
+                <p class="h5" style="color:dimgray">@DateTime.Now</p>
+            </div>
+            <div class="col-6 text-end">
+                <p class="h5" style="color:dimgray">This is your copy.</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-6">
+                <img src="@Url.Content("~/img/Logo.png")" width="110" height="32" alt="Tabler" class="navbar-brand-image">
+                <p class="h1">Reservation Report</p>
+            </div>
+            <div class="col-6 text-end">
+                <p class="h2">Reservation Code</p>
+                <div class="text-secondary" style="font-weight:bold">@Model.ReservationHeader.ReservationCode</div>
+            </div>
+        </div>
+        <div class="col-12 my-0">
+            <h3>REQUESTOR DETAILS</h3>
+        </div>
+        <table class="table table-transparent table-responsive">
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Requestor</p>
+                    @* <div class="text-secondary">Logo and business cards design</div> *@
+                </td>
+                <td class="text-center"></td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.ReservationHeader.Requestor</td>
+            </tr>
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Email Address</p>
+                </td>
+                <td class="text-center">
+                </td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.ReservationHeader.RequestorEmail</td>
+            </tr>
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Date Submitted</p>
+                </td>
+                <td class="text-center"></td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.ReservationHeader.DateSubmitted</td>
+            </tr>
+        </table>
+        <div class="col-12 my-0">
+            <h3>RESERVATION DETAILS</h3>
+        </div>
+        <table class="table table-transparent table-responsive">
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Facility</p>
+                    @* <div class="text-secondary">Logo and business cards design</div> *@
+                </td>
+                <td class="text-center"></td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.FacilityName</td>
+            </tr>
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Room</p>
+                </td>
+                <td class="text-center">
+                </td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.RoomName</td>
+            </tr>
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Start Date and Time</p>
+                </td>
+                <td class="text-center"></td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.ReservationDetails.FirstOrDefault().StartDate</td>
+            </tr>
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">End Date and Time</p>
+                </td>
+                <td class="text-center"></td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.ReservationDetails.FirstOrDefault().EndDate</td>
+            </tr>
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Number of Attendee/s</p>
+                </td>
+                <td class="text-center"></td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.ReservationDetails.FirstOrDefault().NumberOfGuest</td>
+            </tr>
+            <tr>
+                <td class="text-center"></td>
+                <td>
+                    <p class="strong mb-1">Purpose</p>
+                </td>
+                <td class="text-center"></td>
+                <td class="text-end"></td>
+                <td class="text-end">@Model.ReservationDetails.FirstOrDefault().Purpose</td>
+            </tr>
+        </table>
+        <p class="text-secondary text-center mt-5">
+            This report is system generated. © 2024 TIPCO Estates Corporation. All rights reserved.
+        </p>
+    </div>
+</div>
