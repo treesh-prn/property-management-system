@@ -10,9 +10,11 @@ using System.Collections.Generic;
 using PropertyManagementSystem.Services;
 using System.Security.Claims;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class DormController : Controller
     {
         private readonly DAL _context;

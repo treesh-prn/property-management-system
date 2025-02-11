@@ -8,10 +8,11 @@ using PropertyManagementSystem.Models;
 using PropertyManagementSystem.Services;
 using System.Reflection.PortableExecutable;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
-
+[Authorize]
     public class FunctionRoomController : Controller
     {
         private readonly DAL _context;

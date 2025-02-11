@@ -10,11 +10,13 @@ using Microsoft.EntityFrameworkCore;
 using PropertyManagementSystem.Services;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using static Kendo.Mvc.UI.UIPrimitives;
 using Microsoft.Reporting.Map.WebForms.BingMaps;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class AccommodationController : Controller
     {
         private readonly DAL _context;

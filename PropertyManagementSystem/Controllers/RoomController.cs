@@ -5,9 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PropertyManagementSystem.Controllers
 {
+    [Authorize]
     public class RoomController : Controller
     {
         private readonly DAL _context;

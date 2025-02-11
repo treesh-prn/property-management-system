@@ -6,6 +6,7 @@ using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using PropertyManagementSystem.Services;
 using System.Diagnostics;
+using System.Security.Claims;
 
 
 
@@ -16,17 +17,19 @@ namespace PropertyManagementSystem.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IRoleService _roleService;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly DAL _context;
         private readonly EmployeeService _employeeService;
 
-        public HomeController(ILogger<HomeController> logger, DAL context, UserManager<IdentityUser> userManager, EmployeeService employeeService, IRoleService roleService)
+        public HomeController(ILogger<HomeController> logger, DAL context, UserManager<ApplicationUser> userManager, EmployeeService employeeService, IRoleService roleService, SignInManager<ApplicationUser> signInManager)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _employeeService = employeeService;
             _roleService = roleService;
+            _signInManager = signInManager;
         }
 
         public async Task<IActionResult> Index()
@@ -211,6 +214,27 @@ namespace PropertyManagementSystem.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        
+        public async Task<IActionResult> ChangeRole(string role)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            var _currentRole = await _userManager.GetClaimsAsync(user);
+            foreach (var claim in _currentRole.Where(c => c.Type == "GFMS.Active Role"))
+            {
+                await _userManager.RemoveClaimAsync(user, claim);
+            }
+
+
+            var newCurrent = new Claim("GFMS.Active Role", role);
+
+            await _userManager.AddClaimAsync(user, newCurrent);
+            await _signInManager.SignOutAsync();
+            await _signInManager.SignInAsync(user, isPersistent: false);
+
+            return RedirectToAction("Index", "Home");
+
         }
     }
 }
