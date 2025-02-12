@@ -199,7 +199,7 @@
         </div>
     </div>
 </form>
-@*ASSIGN FACILITY MODAL*@
+@*UPDATE MODAL*@
 @foreach (var detail in Model.ReservationDetails)
 {
     <div class="modal modal-blur fade" id="modal-update" tabindex="-1" role="dialog" aria-hidden="true">
@@ -241,21 +241,27 @@
                                             <label class="form-label">Start Date</label>
                                             @(
                                                 Html.Kendo().DateTimePicker()
-                                                .Name("StartDate")
+                                                .Name("_startDate")
                                                 .Value(detail.StartDate)
+                                                .Min(DateTime.Today)
                                                 .DateInput(true)
                                                 .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                 .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                .Events(e => e.Open("onDateTimePickerOpen"))
+                                                .HtmlAttributes(new { id = "_startDate", onkeydown = "return false;" })
                                                 )
                                         </div>
                                         <div class="col-lg-6">
                                             <label class="form-label">End Date</label>
                                             @(
                                                 Html.Kendo().DateTimePicker()
-                                                .Name("EndDate")
+                                                .Name("_endDate")
                                                 .Value(detail.EndDate)
+                                                .Min(DateTime.Today)
                                                 .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                 .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                .Events(e => e.Open("onDateTimePickerOpen"))
+                                                .HtmlAttributes(new { id = "_endDate", onkeydown = "return false;" })
 
                                                 )
                                         </div>
@@ -306,7 +312,6 @@
                         <div class="ms-auto">
                             @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
                             {
-
                                 <button type="submit" class="btn btn-primary ms-auto">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
                                     Update

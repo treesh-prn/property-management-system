@@ -9,6 +9,7 @@ using PropertyManagementSystem.Services;
 using System.Reflection.PortableExecutable;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -393,8 +394,9 @@ namespace PropertyManagementSystem.Controllers
             }
 
             var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == _reservationId).Select(rh => rh.GUID).FirstOrDefault();
+            DateTime now = DateTime.Now;
 
-            if(_endDate < _startDate)
+            if (_endDate < _startDate)
             {
                 TempData["AlertMessage"] = "End date cannot be earlier than the start date.";
                 TempData["AlertSubMessage"] = "Please select a valid end date.";
@@ -402,6 +404,13 @@ namespace PropertyManagementSystem.Controllers
 
 
                 return RedirectToAction("ViewReservationDetails", new { id = guid});
+            }else if (_startDate.Date == now.Date && _startDate < now)
+            {
+                TempData["AlertMessage"] = "You cannot file a reservation for the same day if the start time has already passed.";
+                TempData["AlertSubMessage"] = "Please select a future start time.";
+                TempData["AlertType"] = "Warning";
+
+                return RedirectToAction("ViewReservationDetails", new { id = guid });
             }
 
             try
@@ -508,10 +517,10 @@ namespace PropertyManagementSystem.Controllers
 
         /*EditReservation*/
         [HttpPost]
-        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime StartDate, DateTime EndDate, string _purpose, string[] EquipmentNeeded, string _contactNumber)
+        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, string[] EquipmentNeeded, string _contactNumber)
         {
-            if (StartDate < new DateTime(1753, 1, 1) || StartDate > new DateTime(9999, 12, 31) ||
-                EndDate < new DateTime(1753, 1, 1) || EndDate > new DateTime(9999, 12, 31))
+            if (_startDate < new DateTime(1753, 1, 1) || _startDate > new DateTime(9999, 12, 31) ||
+                _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
             {
                 throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
             }
@@ -521,12 +530,32 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound("Reservation detail not found.");
             }
+            var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == ReservationId).Select(rh => rh.GUID).FirstOrDefault();
+            DateTime now = DateTime.Now;
+
+            if (_endDate < _startDate)
+            {
+                TempData["AlertMessage"] = "End date cannot be earlier than the start date.";
+                TempData["AlertSubMessage"] = "Please select a valid end date.";
+                TempData["AlertType"] = "Warning";
+
+
+                return RedirectToAction("ViewReservationDetails", new { id = guid });
+            }
+            else if (_startDate.Date == now.Date && _startDate < now)
+            {
+                TempData["AlertMessage"] = "You cannot file a reservation for the same day if the start time has already passed.";
+                TempData["AlertSubMessage"] = "Please select a future start time.";
+                TempData["AlertType"] = "Warning";
+
+                return RedirectToAction("ViewReservationDetails", new { id = guid });
+            }
 
             reservationDetail.NumberOfGuest = NumberOfGuest;
             reservationDetail.FacilityId = _facilityId;
             reservationDetail.RoomId = _roomId;
-            reservationDetail.StartDate = StartDate;
-            reservationDetail.EndDate = EndDate;
+            reservationDetail.StartDate = _startDate;
+            reservationDetail.EndDate = _endDate;
             reservationDetail.ContactNumber = _contactNumber;
             reservationDetail.Purpose = _purpose;
 
@@ -543,7 +572,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 TempData["AlertMessage"] = "Reservation details updated successfully!";
                 TempData["AlertSubMessage"] = "Your reservation has been updated";
-                TempData["AlertType"] = "success";
+                TempData["AlertType"] = "Success";
                 _context.ReservationDetails.Update(reservationDetail);
                 _context.SaveChanges();
             }
@@ -557,7 +586,7 @@ namespace PropertyManagementSystem.Controllers
                 throw;
             }
 
-            return RedirectToAction("ReservationList", "FunctionRoom");
+            return RedirectToAction("ViewReservationDetails", new { id = guid });
         }
 
         /*Delete*/

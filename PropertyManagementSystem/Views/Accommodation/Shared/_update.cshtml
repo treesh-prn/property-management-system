@@ -247,23 +247,27 @@
                             <label class="form-label required">Arrival Date and Time</label>
                             @(
                                 Html.Kendo().DateTimePicker()
-                                .Name("StartDate")
+                                .Name("_startDate")
                                 .Value(Model.ReservationDetails.FirstOrDefault()?.StartDate)
+                                .Min(DateTime.Today)
                                 .DateInput(true)
                                 .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                .Events(e => e.Open("onDateTimePickerOpen"))
                                 .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;" })
+                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_startDate", onkeydown = "return false;" })
                                 )
                         </div>
                         <div class="col-lg-6">
                             <label class="form-label required">Departure Date and Time</label>
                             @(
                                 Html.Kendo().DateTimePicker()
-                                .Name("EndDate")
+                                .Name("_endDate")
                                 .Value(Model.ReservationDetails.FirstOrDefault()?.EndDate)
+                                .Min(DateTime.Today)
                                 .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                .Events(e => e.Open("onDateTimePickerOpen"))
                                 .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;" })
+                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_endDate", onkeydown = "return false;" })
                                 )
                         </div>
                     </div>
@@ -306,7 +310,7 @@
             <div class="modal-body text-center py-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
                 <h3>Are you sure?</h3>
-                <div class="text-secondary">Do you really want to disapprove this reservation? This action cannot be undone.</div>
+                <div class="text-secondary">Do you really want to cancel this reservation? This action cannot be undone.</div>
             </div>
             <form asp-action="UpdateReservationStatus" method="post">
                 @Html.AntiForgeryToken()
@@ -326,8 +330,8 @@
                                 </a>
                             </div>
                             <div class="col">
-                                <button type="submit" name="action" value="Reject" class="btn btn-danger w-100">
-                                    <i class="ti ti-ban m-1"></i> Disapprove
+                                <button type="submit" name="action" value="Cancel" class="btn btn-danger w-100">
+                                    <i class="ti ti-ban m-1"></i> Cancel
                                 </button>
                             </div>
                         </div>

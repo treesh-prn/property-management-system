@@ -343,9 +343,9 @@ namespace PropertyManagementSystem.Controllers
                         GFMS_ReservationDetails reservationDetails = new GFMS_ReservationDetails()
                         {
                             ReservationId = _reservationId,
-                            GuestName = _guests[i],
-                            Company = _company[i],
-                            Relationship = _relationship[i],
+                            GuestName = _guests[i].ToUpper(),
+                            Company = _company[i].ToUpper(),
+                            Relationship = _relationship[i].ToUpper(),
                             StartDate = _startDate,
                             EndDate = _endDate,
                             Purpose = _purpose,
@@ -546,17 +546,17 @@ namespace PropertyManagementSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateReservationDetails(int ReservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime startDate, DateTime endDate, string purpose)
+        public IActionResult UpdateReservationDetails(int ReservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime _startDate, DateTime _endDate, string _purpose)
         {
 
-            if (startDate < new DateTime(1753, 1, 1) || startDate > new DateTime(9999, 12, 31) ||
-                endDate < new DateTime(1753, 1, 1) || endDate > new DateTime(9999, 12, 31))
+            if (_startDate < new DateTime(1753, 1, 1) || _startDate > new DateTime(9999, 12, 31) ||
+                _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
             {
                 throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
             }
             var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == ReservationId).Select(rh => rh.GUID).FirstOrDefault();
 
-            if (endDate < startDate)
+            if (_endDate < _startDate)
             {
                 TempData["AlertMessage"] = "End date cannot be earlier than the start date.";
                 TempData["AlertSubMessage"] = "Please select a valid end date.";
@@ -581,12 +581,12 @@ namespace PropertyManagementSystem.Controllers
 
                 if (index != -1)
                 {
-                    existingDetail.GuestName = _guests[index];
-                    existingDetail.Company = _company[index];
-                    existingDetail.Relationship = _relationship[index];
-                    existingDetail.StartDate = startDate;
-                    existingDetail.EndDate = endDate;
-                    existingDetail.Purpose = purpose;
+                    existingDetail.GuestName = _guests[index].ToUpper();
+                    existingDetail.Company = _company[index].ToUpper();
+                    existingDetail.Relationship = _relationship[index].ToUpper();
+                    existingDetail.StartDate = _startDate;
+                    existingDetail.EndDate = _endDate;
+                    existingDetail.Purpose = _purpose;
 
 
                     _context.ReservationDetails.Update(existingDetail);
@@ -606,12 +606,12 @@ namespace PropertyManagementSystem.Controllers
                     GFMS_ReservationDetails newDetail = new GFMS_ReservationDetails
                     {
                         ReservationId = ReservationId,
-                        GuestName = _guests[i],
-                        Company = _company[i],
-                        Relationship = _relationship[i],
-                        StartDate = startDate,
-                        EndDate = endDate,
-                        Purpose = purpose
+                        GuestName = _guests[i].ToUpper(),
+                        Company = _company[i].ToUpper(),
+                        Relationship = _relationship[i].ToUpper(),
+                        StartDate = _startDate,
+                        EndDate = _endDate,
+                        Purpose = _purpose
                     };
 
                     _context.ReservationDetails.Add(newDetail);
@@ -619,9 +619,9 @@ namespace PropertyManagementSystem.Controllers
             }
             TempData["AlertMessage"] = "Reservation details updated successfully!";
             TempData["AlertSubMessage"] = "Your reservation has been updated";
-            TempData["AlertType"] = "success";
+            TempData["AlertType"] = "Success";
             _context.SaveChanges();
-            return RedirectToAction("ReservationList", "Accommodation");
+            return RedirectToAction("ViewReservationDetails", new { id = guid });
         }
 
         /*Delete*/
@@ -729,6 +729,11 @@ namespace PropertyManagementSystem.Controllers
                 _context.SaveChanges(); // Save changes after modifying records
 
                 return RedirectToAction("ReservationList", "Accommodation");
+            }
+            else if (action == "Cancel")
+            {
+                reservation.Status = "CANCELLED";
+                reservation.Remarks = Remarks;
             }
 
             else

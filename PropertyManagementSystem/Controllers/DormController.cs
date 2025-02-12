@@ -444,20 +444,51 @@ namespace PropertyManagementSystem.Controllers
         }
         /*Create*/
         public IActionResult CreateReservationDetails(
-            int _reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation,int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat,string[] _dependents, string[] _age, string[] _location, string[] _position, string filepath, string[] _dependent_status)
+    int _reservationId, int _unitApplied, int _schedType, string _contactNumber,
+    string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation,
+    string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime,
+    string _fare, string _civilStat, string[] _dependents, string[] _age, string[] _location,
+    string[] _position, string filepath, string[] _dependent_status)
         {
             try
             {
-                if (_dependents != null && _age != null && _position != null && _location != null && _dependent_status != null)
+                bool hasDependents = (_dependents != null && _dependents.Length > 0 &&
+                                      _age != null && _position != null && _location != null && _dependent_status != null);
+
+                if (_civilStat != "MARRIED")
+                {
+                    var reservationDetails = new GFMS_ReservationDetails()
+                    {
+                        ReservationId = _reservationId,
+                        AppliedUnit = _unitApplied,
+                        ScheduleType = _schedType,
+                        ContactNumber = _contactNumber ?? string.Empty,
+                        PermanentAddress = _permanentAdd ?? string.Empty,
+                        CurrentAddress = _currentAdd ?? string.Empty,
+                        HomeOwnership = _homeOwnership,
+                        OwnedHouseLocation = _ownedLocation,
+                        SpecificLocation = _specificLocation ?? string.Empty,
+                        ModeOfTransportation = _modeOfTransport,
+                        VehicleType = _vehicleType ?? string.Empty,
+                        TravelTime = _travelTime ?? string.Empty,
+                        Fare = _fare ?? string.Empty,
+                        CivilStatus = _civilStat ?? string.Empty,
+                        DateAdded = DateTime.UtcNow,
+                        FileAttachment = filepath ?? string.Empty
+                    };
+
+                    _context.ReservationDetails.Add(reservationDetails);
+                }
+                else
                 {
                     int length = Math.Min(
-                Math.Min(_dependents.Length, _age.Length),
-                Math.Min(_location.Length, Math.Min(_position.Length, _dependent_status.Length)));
+                        Math.Min(_dependents.Length, _age.Length),
+                        Math.Min(_location.Length, Math.Min(_position.Length, _dependent_status.Length))
+                    );
+
                     for (int i = 0; i < length; i++)
                     {
-                        Console.WriteLine($"Dependent Name: {_dependents[i]}, Status: {_dependent_status[i]}");
-                        // Create a new reservation detail object and populate it with form values
-                        GFMS_ReservationDetails reservationDetails = new GFMS_ReservationDetails()
+                        var reservationDetails = new GFMS_ReservationDetails()
                         {
                             ReservationId = _reservationId,
                             AppliedUnit = _unitApplied,
@@ -481,31 +512,28 @@ namespace PropertyManagementSystem.Controllers
                             DateAdded = DateTime.UtcNow,
                             FileAttachment = filepath ?? string.Empty
                         };
-                        Console.WriteLine($"Dependent Status for row {i}: {_dependent_status[i]}");
-                        var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
-                        if (reservationHeader != null)
-                        {
-                            reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
-                        }
 
                         _context.ReservationDetails.Add(reservationDetails);
                     }
+                }
 
-                    _context.SaveChanges();
-                }
-            }
-            catch (DbUpdateException ex)
-            {
-                Console.WriteLine($"An error occurred while saving changes: {ex.Message}");
-                if (ex.InnerException != null)
+                var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
+                if (reservationHeader != null)
                 {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
                 }
+
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
                 throw;
             }
 
-            return RedirectToAction("Index", "Dorm");
+            return RedirectToAction("ReservationList", "Dorm");
         }
+
 
 
 

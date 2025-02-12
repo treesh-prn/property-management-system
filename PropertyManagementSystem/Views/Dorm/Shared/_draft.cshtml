@@ -380,6 +380,7 @@
                                     </label>
                                     @(Html.Kendo().Upload()
                                         .Name("files")
+                                        .Multiple(true)
                                         .Async(a => a
                                         .Save("Upload", "Dorm")
                                         .Remove("Remove", "Dorm")

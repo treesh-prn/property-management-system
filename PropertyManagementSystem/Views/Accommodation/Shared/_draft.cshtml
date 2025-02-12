@@ -13,15 +13,15 @@
                     <div class="card-body">
                         <div id="dynamic-rows">
                             <div class="row mb-3">
-                                <div class="col-lg-5">
+                                <div class="col-md-3">
                                     <label class="form-label">Guest Name</label>
                                     <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name">
                                 </div>
-                                <div class="col-lg-3">
+                                <div class="col-md-4">
                                     <label class="form-label"> Company (N/A if not applicable)</label>
                                     <input type="text" class="form-control" name="_company[]" placeholder="Company (N/A if not applicable)">
                                 </div>
-                                <div class="col-lg-3">
+                                <div class="col-md-4">
                                     <label class="form-label">Relationship (N/A if not applicable)</label>
                                     <input type="text" class="form-control" name="_relationship[]" placeholder="Relationship (N/A if not applicable)">
                                 </div>
@@ -113,11 +113,17 @@
                                 <div class="row mt-3">
                                     <dl class="row">
                                         <dt class="col-4 text-primary">Requestor:</dt>
-                                        <dd class="col-8 ">@Model.ReservationHeader.Requestor</dd>
+                                        <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            @Model.ReservationHeader.Requestor
+                                        </dd>
                                         <dt class="col-4 text-primary">Email:</dt>
-                                        <dd class="col-8">@Model.ReservationHeader.RequestorEmail</dd>
+                                        <dd class="col-8 text-truncate" style="font-size: white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            @Model.ReservationHeader.RequestorEmail
+                                        </dd>
                                         <dt class="col-4 text-primary">Department:</dt>
-                                        <dd class="col-8">@Model.Department.DepartmentCode</dd>
+                                        <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            @Model.Department.DepartmentCode
+                                        </dd>
                                     </dl>
                                 </div>
                             </div>

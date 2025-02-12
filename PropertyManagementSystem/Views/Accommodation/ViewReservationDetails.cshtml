@@ -11,33 +11,69 @@
     var employee = await RoleService.GetUserName(User);
     var gfmsRoles = await RoleService.GetRolesAsync(User);
     var activeRole = await RoleService.GetActiveRoleAsync(User);
+
+    var alertMessage = TempData["AlertMessage"] as string;
+    var alertSubMessage = TempData["AlertSubMessage"] as string;
+    var alertType = TempData["AlertType"] as string;
 }
 <div class="page-wrapper">
-    <div class="col-lg-6 ms-auto alert alert-warning alert-dismissible fade show custom-alert" role="alert"
-         style="display:@(TempData["AlertMessage"] != null ? "block" : "none");">
-        <div class="d-flex">
-            <div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <circle cx="12" cy="12" r="9" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-            </div>
-            <div>
-                <h4 class="alert-title">@TempData["AlertType"]</h4>
-                <div class="text-secondary">
-                    @if (TempData["AlertMessage"] != null)
-                    {
-                        <strong>@TempData["AlertMessage"]</strong>
-                        <br />
-                        @TempData["AlertSubMessage"]
-                    }
+    @if (!string.IsNullOrEmpty(alertMessage))
+    {
+
+        @if (alertType == "Success")
+        {
+            <div class="col-lg-6 ms-auto alert alert-success alert-dismissible fade show custom-alert" role="alert"
+                 style="display:@(TempData["AlertMessage"] != null ? "block" : "none");">
+                <div class="d-flex">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon icon-2">
+                            <path d="M5 12l5 5l10 -10"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="alert-title">@TempData["AlertType"]</h4>
+                        <div class="text-secondary">
+                            @if (TempData["AlertMessage"] != null)
+                            {
+                                <strong>@TempData["AlertMessage"]</strong>
+                                <br />
+                                @TempData["AlertSubMessage"]
+                            }
+                        </div>
+                    </div>
                 </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+        }
+        else if (alertType == "Warning")
+        {
+            <div class="col-lg-6 ms-auto alert alert-warning alert-dismissible fade show custom-alert" role="alert"
+                 style="display:@(TempData["AlertMessage"] != null ? "block" : "none");">
+                <div class="d-flex">
+                    <div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <circle cx="12" cy="12" r="9" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="alert-title">@TempData["AlertType"]</h4>
+                        <div class="text-secondary">
+                            @if (TempData["AlertMessage"] != null)
+                            {
+                                <strong>@TempData["AlertMessage"]</strong>
+                                <br />
+                                @TempData["AlertSubMessage"]
+                            }
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+    }
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -70,7 +106,7 @@
                             {
                                 <partial name="Shared/_update" />
                             }
-                            else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED")
+                            else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED" || Model.ReservationHeader.Status == "CANCELLED")
                             {
                                 <partial name="Shared/_view" />
                             }
