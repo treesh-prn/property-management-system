@@ -39,7 +39,7 @@
                 <div class="col-lg-12">
                     <div class="card">
                         
-                        @if (User.IsInRole("GFMS.Requestor"))
+                        @if (activeRole  == ("GFMS.Requestor"))
                         {
                             @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
                             {
@@ -54,7 +54,7 @@
                                 <partial name="Shared/_draft" />
                             }
                         }
-                        else if (User.IsInRole("GFMS.Department Head"))
+                        else if (activeRole  == ("GFMS.Department Head"))
                         {
                             @if (Model.ReservationHeader.Requestor == employee.Fullname)
                             {
@@ -69,7 +69,7 @@
                                 <partial name="Shared/_view" />
                             }
                         }
-                        else if (User.IsInRole("GFMS.Admin Manager"))
+                        else if (activeRole  == ("GFMS.Admin Manager"))
                         {
                             @if (Model.ReservationHeader.Requestor == employee.Fullname)
                             {
@@ -84,7 +84,7 @@
                                 <partial name="Shared/_view" />
                             }
                         }
-                        else if (User.IsInRole("GFMS.Admin Approver"))
+                        else if (activeRole  == ("GFMS.Admin Approver"))
                         {
                             @if (Model.ReservationHeader.Requestor == employee.Fullname)
                             {

@@ -8,6 +8,7 @@
     //var facilityNames = ViewData["Facility"] as List<GFMS_Facility>;
 
     var employee = await RoleService.GetUserName(User);
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
 }
 <div class="page-wrapper">
     <!-- Page header -->
@@ -31,10 +32,13 @@
                                 Reservation List
                             </a>
                         </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservation">
-                            <i class="ti ti-plus"></i>
-                            Create New Reservation
-                        </a>
+                        @if(activeRole == "GFMS.Requestor")
+                        {
+                            <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservation">
+                                <i class="ti ti-plus"></i>
+                                Create New Reservation
+                            </a>
+                        }
                     </div>
                 </div>
             </div>

@@ -6,7 +6,7 @@
         {
             columns.Bound(c => c.ReservationDetailId).Visible(false);
             columns.Bound(c => c.GuestName);
-            columns.Bound(c => c.Company);
+            columns.Bound(c => c.Company).Width(350);
             columns.Bound(c => c.Relationship);
             columns.Bound(c => c.StartDate).Title("Arrival Date and Time");
             columns.Bound(c => c.EndDate).Title("Departure Date and Time").Format("{0:yyyy-MM-dd HH:mm:ss}");
@@ -20,9 +20,10 @@
                 .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
             })
             .Title("Actions")
-            .Width(300)
+            .Width(250)
             .Exportable(false);
         })
+        .Scrollable()
         .DataSource(dataSource => dataSource
         .Ajax()
         .Read(read => read.Action("getGHApprovals", "Accommodation").Data("function() { return { reservationId: $('#reservationId').val() }; }"))

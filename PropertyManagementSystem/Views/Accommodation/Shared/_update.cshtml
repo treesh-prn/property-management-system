@@ -3,343 +3,319 @@
 @{
     var employee = await RoleService.GetUserName(User);
 }
-<div class="card-header">
-    <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-update">
-        Update Reservation
-    </button>
-</div>
-<div class="card-body">
-    <div class="row align-items-start">
-        <div class="col-2">
-            <img src="@Url.Content("~/img/facility-room.jpg")" alt="Accommodation" class="rounded img-fluid">
-        </div>
-        <div class="col-9">
-            <div class="text-primary h3 d-flex align-items-center">
-                <!-- Reservation Code -->
-                <span>@Model.ReservationHeader.ReservationCode</span>
+<div class="card">
+    @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
+    {
+        if (Model.ReservationDetails.FirstOrDefault()?.StartDate >= DateTime.Now.AddHours(1))
+        {
+            <div class="card-header">
+                <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-update">
+                    Update Reservation
+                </button>
+            </div>
+        }
+    }
+    <div class="card-body">
+        <div class="row align-items-start">
+            <div class="col-2">
+                <img src="@Url.Content("~/img/facility-room.jpg")" alt="Accommodation" class="rounded img-fluid">
+            </div>
+            <div class="col-9">
+                <div class="text-primary h3 d-flex align-items-center">
+                    <!-- Reservation Code -->
+                    <span>@Model.ReservationHeader.ReservationCode</span>
 
-                <!-- Status placed at the end of the reservation code with a space -->
-                <span class="ms-3">
-                    <!-- Margin for spacing -->
-                    @if (Model.ReservationHeader.Status == "APPROVED")
+                    <!-- Status placed at the end of the reservation code with a space -->
+                    <span class="ms-3">
+                        <!-- Margin for spacing -->
+                        @if (Model.ReservationHeader.Status == "APPROVED")
+                        {
+                            <span class='status status-teal'>
+                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                            </span>
+                        }
+                        else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                        {
+                            <span class='status status-teal'>
+                                <span class='status-dot status-dot-animated'></span>FOR APPROVAL
+                            </span>
+                        }
+                        else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
+                        {
+                            <span class='status status-red'>
+                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                            </span>
+                        }
+                        else
+                        {
+                            <span class='status status-blue'>
+                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                            </span>
+                        }
+                    </span>
+                </div>
+                <div class="row mt-3">
+                    <!-- Rest of the content remains the same -->
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Requestor</div>
+                            <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Email</div>
+                            <div class="datagrid-content">@Model.ReservationHeader.RequestorEmail</div>
+                        </div>
+                    </div>
+                    @if(Model.ReservationHeader.isPersonal == false)
                     {
-                        <span class='status status-teal'>
-                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                        </span>
-                    }
-                    else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                    {
-                        <span class='status status-teal'>
-                            <span class='status-dot status-dot-animated'></span>FOR APPROVAL
-                        </span>
-                    }
-                    else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
-                    {
-                        <span class='status status-red'>
-                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                        </span>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Chrge To</div>
+                                <div class="datagrid-content">@Model.Department.DepartmentCode</div>
+                            </div>
+                        </div>
                     }
                     else
                     {
-                        <span class='status status-blue'>
-                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                        </span>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Chrge To</div>
+                                <div class="datagrid-content">Personal </div>
+                            </div>
+                        </div>
                     }
-                </span>
-            </div>
-
-            <div class="row mt-3">
-                <!-- Rest of the content remains the same -->
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Requestor</div>
-                        <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Email</div>
-                        <div class="datagrid-content">@Model.ReservationHeader.RequestorEmail</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Department</div>
-                        <div class="datagrid-content">@Model.Department.DepartmentCode</div>
-                    </div>
-                </div>
-
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Date Filed</div>
-                        <div class="datagrid-content">@Model.ReservationHeader.DateFiled</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-@if (Model.ReservationDetails.FirstOrDefault().ReservationId != 0)
-{
-    <div class="accordion" id="accordion-example">
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="heading-1">
-                <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true">
-                    RESERVATION DETAILS
-                </button>
-            </h2>
-            <div id="collapse-1" class="accordion-collapse collapse show" data-bs-parent="#accordion-example">
-                <div class="accordion-body pt-0">
-                    <div class="card-body">
-                        <div class="row align-items-start">
-                            <div class="col-2">
-                            </div>
-                            <div class="col-9">
-                                <div class="row mt-3">
-                                    <div class="col-lg-3 col-md-6 mb-4">
-                                        <div class="datagrid-item">
-                                            <div class="datagrid-title text-primary">Guest Name</div>
-                                            @foreach (var guest in Model.ReservationDetails)
-                                            {
-                                                <div class="datagrid-content">@guest.GuestName</div>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6 mb-4">
-                                        <div class="datagrid-item">
-                                            <div class="datagrid-title text-primary">Company</div>
-                                            @foreach (var comp in Model.ReservationDetails)
-                                            {
-                                                <div class="datagrid-content">@comp.Company</div>
-                                            }
-                                        </div>
-                                    </div>
-                                    @if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
-                                    {
-                                        <div class="col-lg-3 col-md-6 mb-4">
-                                            <div class="datagrid-item">
-                                                <div class="datagrid-title text-primary">Facility Name</div>
-                                                @foreach (var fac in Model.ReservationDetails)
-                                                {
-                                                    <div class="datagrid-content">@fac.Facility.FacilityName</div>
-                                                }
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-3 col-md-6 mb-4">
-                                            <div class="datagrid-item">
-                                                <div class="datagrid-title text-primary">Room Name</div>
-                                                @foreach (var room in Model.ReservationDetails)
-                                                {
-                                                    <div class="datagrid-content">@room.Room.RoomName</div>
-                                                }
-                                            </div>
-                                        </div>
-                                    }
-                                    <div class="col-lg-3 col-md-6 mb-4">
-                                        <div class="datagrid-item">
-                                            <div class="datagrid-title text-primary">Arrival Date and Time</div>
-                                            <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().StartDate</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-3 col-md-6 mb-4">
-                                        <div class="datagrid-item">
-                                            <div class="datagrid-title text-primary">Departure Date and Time</div>
-                                            <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().EndDate</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-3 col-md-6 mb-4">
-                                        <div class="datagrid-item">
-                                            <div class="datagrid-title text-primary">Purpose</div>
-                                            <div class="datagrid-content">
-                                                @Model.ReservationDetails.FirstOrDefault().Purpose
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Date Filed</div>
+                            <div class="datagrid-content">@Model.ReservationHeader.DateFiled</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-}
-<form asp-action="UpdateReservationStatus" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-    <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId">
-    <div class="card-footer d-flex justify-content-between align-items-center">
-        <a href="@Url.Action("ReservationList", "Accommodation")" class="btn btn-link link-secondary">
-            Go Back
-        </a>
-        <div class="ms-auto">
-            @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
-            {
-                if (Model.ReservationDetails.FirstOrDefault()?.StartDate >= DateTime.Now.AddHours(1))
-                {
-                    <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
-                        <span>
-                            <i class="ti ti-x m-1"></i>
-                        </span>
-                        Cancel
+    @if (Model.ReservationDetails.FirstOrDefault().ReservationId != 0)
+    {
+        <div class="accordion" id="accordion-example">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-1">
+                    <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true">
+                        RESERVATION DETAILS
                     </button>
+                </h2>
+                <div id="collapse-1" class="accordion-collapse collapse show" data-bs-parent="#accordion-example">
+                    <div class="accordion-body pt-0">
+                        <div class="card-body">
+                            <div class="row align-items-start">
+                                <div class="col-2">
+                                </div>
+                                <div class="col-9">
+                                    <div class="row mt-3">
+                                        <div class="col-lg-3 col-md-6 mb-4">
+                                            <div class="datagrid-item">
+                                                <div class="datagrid-title text-primary">Guest Name</div>
+                                                @foreach (var guest in Model.ReservationDetails)
+                                                {
+                                                    <div class="datagrid-content">@guest.GuestName</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-md-6 mb-4">
+                                            <div class="datagrid-item">
+                                                <div class="datagrid-title text-primary">Company</div>
+                                                @foreach (var comp in Model.ReservationDetails)
+                                                {
+                                                    <div class="datagrid-content">@comp.Company</div>
+                                                }
+                                            </div>
+                                        </div>
+                                        @if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
+                                        {
+                                            <div class="col-lg-3 col-md-6 mb-4">
+                                                <div class="datagrid-item">
+                                                    <div class="datagrid-title text-primary">Facility Name</div>
+                                                    @foreach (var fac in Model.ReservationDetails)
+                                                    {
+                                                        <div class="datagrid-content">@fac.Facility.FacilityName</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-3 col-md-6 mb-4">
+                                                <div class="datagrid-item">
+                                                    <div class="datagrid-title text-primary">Room Name</div>
+                                                    @foreach (var room in Model.ReservationDetails)
+                                                    {
+                                                        <div class="datagrid-content">@room.Room.RoomName</div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                        <div class="col-lg-3 col-md-6 mb-4">
+                                            <div class="datagrid-item">
+                                                <div class="datagrid-title text-primary">Arrival Date and Time</div>
+                                                <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().StartDate</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-md-6 mb-4">
+                                            <div class="datagrid-item">
+                                                <div class="datagrid-title text-primary">Departure Date and Time</div>
+                                                <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().EndDate</div>
+                                            </div>
+                                        </div>
 
+                                        <div class="col-lg-3 col-md-6 mb-4">
+                                            <div class="datagrid-item">
+                                                <div class="datagrid-title text-primary">Purpose</div>
+                                                <div class="datagrid-content">
+                                                    @Model.ReservationDetails.FirstOrDefault().Purpose
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    <form asp-action="UpdateReservationStatus" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+        <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId">
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("ReservationList", "Accommodation")" class="btn btn-link link-secondary">
+                Go Back
+            </a>
+            <div class="ms-auto">
+                @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
+                {
+                    if (Model.ReservationDetails.FirstOrDefault()?.StartDate >= DateTime.Now.AddHours(1))
+                    {
+                        <button type="button" class="btn btn-red m-1" data-bs-toggle="modal" data-bs-target="#modal-danger">
+                            <span>
+                                <i class="ti ti-x m-1"></i>
+                            </span>
+                            Cancel
+                        </button>
+
+                    }
                 }
-            }
-        </div>
-    </div>
-</form>
-@*ASSIGN FACILITY MODAL*@
-<div class="modal modal-blur fade" id="modal-update" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Reservation</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form asp-action="UpdateReservationDetails" asp-controller="Accommodation" method="post">
-
-                <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId">
-                <div class="modal-body">
-                    <div class="row mb-3">
-                        <div class="col-lg-5">
-                            <label class="form-label">Guest Name</label>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label">Company</label>
-                        </div>
-                        <div class="col-lg-3">
-                            <label class="form-label">Relationship</label>
-                        </div>
-                    </div>
-                    <div id="dynamic-rows">
-                        @foreach (var detail in Model.ReservationDetails)
-                        {
-                            <div class="row mb-3">
-                                <input type="hidden" class="form-control" name="@detail.ReservationDetailId" placeholder="Guest Name" value="@detail.ReservationDetailId">
-                                <div class="col-lg-5">
-                                    @* <label class="form-label">Guest Name</label> *@
-                                    <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" value="@detail.GuestName">
-                                </div>
-                                <div class="col-lg-3">
-                                    @* <label class="form-label">Company</label> *@
-                                    <input type="text" class="form-control" name="_company[]" placeholder="Company" value="@detail.Company">
-                                </div>
-                                <div class="col-lg-3">
-                                    @* <label class="form-label">Relationship</label> *@
-                                    <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable" value="@detail.Relationship">
-                                </div>
-                                <div class="col-sm-1 d-flex align-items-end">
-                                    <button type="button" id="add-row" class="btn btn-primary ml-2 custom-padding">
-                                        <i class="ti ti-plus"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                    <div class="row mb-3">
-                        <label class="form-label">Duration of Stay</label>
-                        <div class="col-lg-6">
-                            <label class="form-label required">Arrival Date and Time</label>
-                            @(
-                                Html.Kendo().DateTimePicker()
-                                .Name("_startDate")
-                                .Value(Model.ReservationDetails.FirstOrDefault()?.StartDate)
-                                .Min(DateTime.Today)
-                                .DateInput(true)
-                                .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                .Events(e => e.Open("onDateTimePickerOpen"))
-                                .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_startDate", onkeydown = "return false;" })
-                                )
-                        </div>
-                        <div class="col-lg-6">
-                            <label class="form-label required">Departure Date and Time</label>
-                            @(
-                                Html.Kendo().DateTimePicker()
-                                .Name("_endDate")
-                                .Value(Model.ReservationDetails.FirstOrDefault()?.EndDate)
-                                .Min(DateTime.Today)
-                                .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                .Events(e => e.Open("onDateTimePickerOpen"))
-                                .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_endDate", onkeydown = "return false;" })
-                                )
-                        </div>
-                    </div>
-                    <div class="col-lg-12">
-                        <div>
-                            <label class="form-label">
-                                Purpose
-                                <span id="charCount" class="form-label-description">0/50</span>
-                            </label>
-                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50">@Model.ReservationDetails.FirstOrDefault()?.Purpose</textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <a href="@Url.Action("Index", "Accommodation")" class="btn btn-link link-secondary">
-                        Go Back
-                    </a>
-                    <div class="ms-auto">
-                        @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
-                        {
-                            <button type="submit" class="btn btn-primary ms-auto">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                                Update
-                            </button>
-                        }
-                    </div>
-                </div>
-            </form>
         </div>
-    </div>
-</div>
-@*END OF MODAL*@
-
-@*CANCEL MODAL*@
-<div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            <div class="modal-status bg-danger"></div>
-            <div class="modal-body text-center py-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v4" /><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" /><path d="M12 16h.01" /></svg>
-                <h3>Are you sure?</h3>
-                <div class="text-secondary">Do you really want to cancel this reservation? This action cannot be undone.</div>
-            </div>
-            <form asp-action="UpdateReservationStatus" method="post">
-                @Html.AntiForgeryToken()
-                <div class="m-1">
-                    <div>
-                        <label class="form-label">Reason <span class="form-label-description"></span></label>
-                        <textarea class="form-control" rows="2" name="Remarks" required></textarea>
-                    </div>
+    </form>
+    @*ASSIGN FACILITY MODAL*@
+    <div class="modal modal-blur fade" id="modal-update" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Reservation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-footer">
-                    <div class="w-100">
-                        <input type="hidden" value="@Model.ReservationHeader.Status" />
-                        <div class="row">
-                            <div class="col">
-                                <a href="#" class="btn w-100" data-bs-dismiss="modal">
-                                    Go Back
-                                </a>
+                <form asp-action="UpdateReservationDetails" asp-controller="Accommodation" method="post">
+
+                    <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId">
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-lg-5">
+                                <label class="form-label">Guest Name</label>
                             </div>
-                            <div class="col">
-                                <button type="submit" name="action" value="Cancel" class="btn btn-danger w-100">
-                                    <i class="ti ti-ban m-1"></i> Cancel
+                            <div class="col-lg-3">
+                                <label class="form-label">Company</label>
+                            </div>
+                            <div class="col-lg-3">
+                                <label class="form-label">Relationship</label>
+                            </div>
+                        </div>
+                        <div id="dynamic-rows">
+                            @foreach (var detail in Model.ReservationDetails)
+                            {
+                                <div class="row mb-3">
+                                    <input type="hidden" class="form-control" name="@detail.ReservationDetailId" placeholder="Guest Name" value="@detail.ReservationDetailId">
+                                    <div class="col-lg-5">
+                                        @* <label class="form-label">Guest Name</label> *@
+                                        <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" value="@detail.GuestName">
+                                    </div>
+                                    <div class="col-lg-3">
+                                        @* <label class="form-label">Company</label> *@
+                                        <input type="text" class="form-control" name="_company[]" placeholder="Company" value="@detail.Company">
+                                    </div>
+                                    <div class="col-lg-3">
+                                        @* <label class="form-label">Relationship</label> *@
+                                        <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable" value="@detail.Relationship">
+                                    </div>
+                                    <div class="col-sm-1 d-flex align-items-end">
+                                        <button type="button" id="add-row" class="btn btn-primary ml-2 custom-padding">
+                                            <i class="ti ti-plus"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="row mb-3">
+                            <label class="form-label">Duration of Stay</label>
+                            <div class="col-lg-6">
+                                <label class="form-label required">Arrival Date and Time</label>
+                                @(
+                                    Html.Kendo().DateTimePicker()
+                                    .Name("_startDate")
+                                    .Value(Model.ReservationDetails.FirstOrDefault()?.StartDate)
+                                    .Min(DateTime.Today)
+                                    .DateInput(true)
+                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                    .Events(e => e.Open("onDateTimePickerOpen"))
+                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                    .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_startDate", onkeydown = "return false;" })
+                                    )
+                            </div>
+                            <div class="col-lg-6">
+                                <label class="form-label required">Departure Date and Time</label>
+                                @(
+                                    Html.Kendo().DateTimePicker()
+                                    .Name("_endDate")
+                                    .Value(Model.ReservationDetails.FirstOrDefault()?.EndDate)
+                                    .Min(DateTime.Today)
+                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                    .Events(e => e.Open("onDateTimePickerOpen"))
+                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                    .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_endDate", onkeydown = "return false;" })
+                                    )
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div>
+                                <label class="form-label">
+                                    Purpose
+                                    <span id="charCount" class="form-label-description">0/50</span>
+                                </label>
+                                <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50">@Model.ReservationDetails.FirstOrDefault()?.Purpose</textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="@Url.Action("Index", "Accommodation")" class="btn btn-link link-secondary">
+                            Go Back
+                        </a>
+                        <div class="ms-auto">
+                            @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
+                            {
+                                <button type="submit" class="btn btn-primary ms-auto">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                                    Update
                                 </button>
-                            </div>
+                            }
                         </div>
                     </div>
-                </div>
-                <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId" />
-            </form>
+                </form>
+            </div>
         </div>
     </div>
+    @*END OF MODAL*@
+    <partial name="Shared/_cancel" />  
 </div>
-@*CANCEL DELETE MODAL*@

@@ -10,6 +10,7 @@ using System.Reflection.PortableExecutable;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System;
+using static Kendo.Mvc.UI.UIPrimitives;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -79,13 +80,15 @@ namespace PropertyManagementSystem.Controllers
 
         }
 
-        public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
+        public async Task<IActionResult> ViewReservation([DataSourceRequest] DataSourceRequest request)
         {
             var currUser = User.Identity.Name;
             Console.WriteLine("Current User: " + currUser);
-            bool isRequestor = User.IsInRole("GFMS.Requestor");
-            bool isDeptHead = User.IsInRole("GFMS.Department Head");
 
+            string currentRole = await _roleService.GetActiveRoleAsync(User); 
+
+            bool isRequestor = currentRole == "GFMS.Requestor";
+            bool isDeptHead = currentRole == "GFMS.Department Head";
 
             var reservationsQuery = from resDetails in _context.ReservationDetails
                                     join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
@@ -161,8 +164,10 @@ namespace PropertyManagementSystem.Controllers
             return Json(rooms.Select(p => new { RoomId = p.RoomId, RoomName = p.RoomName }).ToList());
         }
 
-        public ActionResult GetFunctionRoomReservation([DataSourceRequest] DataSourceRequest request, string gridType)
+        public async Task<ActionResult> GetFunctionRoomReservationAsync([DataSourceRequest] DataSourceRequest request, string gridType)
         {
+            string currentRole = await _roleService.GetActiveRoleAsync(User);
+
             Task<Gen_Employee> employeeTask = _roleService.GetUserName(User);
             var employee = employeeTask.Result;
 
@@ -179,15 +184,15 @@ namespace PropertyManagementSystem.Controllers
             }
             else if (gridType == "reservationApproval")
             {
-                if (User.IsInRole("GFMS.Department Head"))
+                if (currentRole == "GFMS.Department Head")
                 {
                     query = query.Where(x => x.Approver == employee.Fullname && x.Status == "FOR DEPARTMENT HEAD'S APPROVAL" && x.DateSubmitted <= targetDateTime);
                 }
-                else if (User.IsInRole("GFMS.Admin Approver"))
+                else if (currentRole == "GFMS.Admin Approver")
                 {
                     query = query.Where(x => x.Status == "FOR ADMIN APPROVER'S APPROVAL" && x.DateSubmitted <= targetDateTime);
                 }
-                else if (User.IsInRole("GFMS.Admin Manager"))
+                else if (currentRole == "GFMS.Admin Manager")
                 {
                     query = query.Where(x => x.Status == "FOR ADMIN MANAGER'S APPROVAL" && x.DateSubmitted <= targetDateTime);
                 }
@@ -270,6 +275,7 @@ namespace PropertyManagementSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
         {
+            string currentRole = await _roleService.GetActiveRoleAsync(User);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             Console.WriteLine("User Id: " + userId);
             Console.WriteLine("Department Id: " + _department);
@@ -279,7 +285,7 @@ namespace PropertyManagementSystem.Controllers
 
             Console.WriteLine("Role :" + role);
 
-            if ((managerEmail == null || managerFullName == null) && !User.IsInRole("GFMS.Admin Manager"))
+            if ((managerEmail == null || managerFullName == null) && currentRole != "GFMS.Admin Manager")
             {
                 return NotFound("Manager not found for the given department.");
             }
@@ -383,6 +389,8 @@ namespace PropertyManagementSystem.Controllers
         }
         public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, List<string> _equipment, string _contactNumber, string _requestorEmail)
         {
+            string currentRole = await _roleService.GetActiveRoleAsync(User);
+
             Console.WriteLine($"Requestor Email: {_requestorEmail}");
             Console.WriteLine($"Start Date: {_startDate}");
             Console.WriteLine($"End Date: {_endDate}");
@@ -438,7 +446,7 @@ namespace PropertyManagementSystem.Controllers
                 var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
                 if (reservationHeader != null)
                 {
-                    if (User.IsInRole("GFMS.Admin Approver"))
+                    if (User.IsInRole("GFMS.Admin Approver") && currentRole == "GFMS.Requestor")
                     {
                         reservationHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
                         /*if (reservationHeader != null)
@@ -454,8 +462,14 @@ namespace PropertyManagementSystem.Controllers
                                 _purpose
                             );
                         }*/
+
                     }
-                    else if (User.IsInRole("GFMS.Department Head"))
+                    else if (User.IsInRole("GFMS.Admin Manager") && currentRole == "GFMS.Requestor")
+                    {
+                        reservationHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
+
+                    }
+                    else if (User.IsInRole("GFMS.Department Head") && currentRole == "GFMS.Requestor")
                     {
                         reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
                         /*
@@ -493,6 +507,7 @@ namespace PropertyManagementSystem.Controllers
                             );
                         }
                          */
+
                     }
                 }
                 _context.SaveChanges();
@@ -632,6 +647,7 @@ namespace PropertyManagementSystem.Controllers
             }
 
             var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
+            var guid = reservation.GUID;
             var reservationDetails = _context.ReservationDetails.FirstOrDefault(r => r.ReservationId == reservation.ReservationId);
             var roomName = _context.Rooms.Where(r => r.RoomId == _roomId).Select(r => r.RoomName).FirstOrDefault();
             var facilityName = _context.Facilities.Where(f => f.FacilityId == _facilityId).Select(f => f.FacilityName).FirstOrDefault();
@@ -651,6 +667,14 @@ namespace PropertyManagementSystem.Controllers
             }
             else if (action == "Approve" && reservation.Status == "FOR ADMIN APPROVER'S APPROVAL")
             {
+                if ((_facilityId == 0 || _roomId == 0) || (_facilityId == null || _roomId == null))
+                {
+                    TempData["AlertMessage"] = "No Rooms and Facility Assigned";
+                    TempData["AlertSubMessage"] = "Select a room and facility for this reservation.";
+                    TempData["AlertType"] = "Warning";
+
+                    return RedirectToAction("ViewReservationDetails", new { id = guid });
+                }
                 reservation.Status = "FOR ADMIN MANAGER'S APPROVAL";
                 reservationDetails.FacilityId = _facilityId;
                 reservationDetails.RoomId = _roomId;
@@ -685,6 +709,14 @@ namespace PropertyManagementSystem.Controllers
             }
             else if (action == "Approve" && reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
             {
+                if ((_facilityId == 0 || _roomId == 0) ||(_facilityId == null || _roomId == null))
+                {
+                    TempData["AlertMessage"] = "No Rooms and Facility Assigned";
+                    TempData["AlertSubMessage"] = "Select a room and facility for this reservation.";
+                    TempData["AlertType"] = "Warning";
+
+                    return RedirectToAction("ViewReservationDetails", new { id = guid });
+                }
                 reservation.Status = "APPROVED";
                 reservationDetails.FacilityId = _facilityId;
                 reservationDetails.RoomId = _roomId;

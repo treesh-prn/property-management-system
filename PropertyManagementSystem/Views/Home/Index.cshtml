@@ -6,6 +6,7 @@
     var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
 
     var employee = await RoleService.GetUserName(User);
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
 }
 
 <div class="page-wrapper">
@@ -52,9 +53,19 @@
                                                 <div class="font-weight-medium" style="font-weight:600">
                                                     Function Room
                                                 </div>
-                                                <div class="text-secondary">
-                                                    @Model.NewFNReservationsCount waiting for approval
-                                                </div>
+                                                @if(activeRole != "GFMS.Requestor")
+                                                {
+                                                    <div class="text-secondary">
+                                                        @Model.NewFNReservationsCount waiting for approval
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="text-secondary">
+                                                        @Model.NewFNReservationsCount pending for approval
+                                                    </div>
+                                                }
+
                                             </div>
                                         </div>
                                     </div>
@@ -75,9 +86,18 @@
                                                 <div class="font-weight-medium" style="font-weight:600">
                                                     Accommodation
                                                 </div>
-                                                <div class="text-secondary">
-                                                    @Model.NewGHReservationsCount waiting for approval
-                                                </div>
+                                                @if (activeRole != "GFMS.Requestor")
+                                                {
+                                                    <div class="text-secondary">
+                                                        @Model.NewGHReservationsCount waiting for approval
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="text-secondary">
+                                                        @Model.NewGHReservationsCount pending for approval
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -98,9 +118,18 @@
                                                 <div class="font-weight-medium" style="font-weight:600">
                                                     Dorm
                                                 </div>
-                                                <div class="text-secondary">
-                                                    @Model.NewDRMReservationsCount waiting for approval
-                                                </div>
+                                                @if (activeRole != "GFMS.Requestor")
+                                                {
+                                                    <div class="text-secondary">
+                                                        @Model.NewDRMReservationsCount waiting for approval
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="text-secondary">
+                                                        @Model.NewDRMReservationsCount pending for approval
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     </div>

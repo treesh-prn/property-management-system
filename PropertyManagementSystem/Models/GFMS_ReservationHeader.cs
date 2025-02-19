@@ -29,6 +29,7 @@ namespace PropertyManagementSystem.Models
         public string? ReservationType { get; set; }
         public string? Remarks { get; set; }
         public string? ApprovedBy {  get; set; }
+        public bool? isPersonal { get; set; }
 
         //public ICollection<GFMS_ReservationDetails> ReservationDetails { get; set; }
     }

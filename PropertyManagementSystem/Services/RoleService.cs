@@ -44,9 +44,7 @@ namespace PropertyManagementSystem.Services
             }
 
             var userClaims = await _user.GetClaimsAsync(applicationUser);
-            var activeRole = userClaims.FirstOrDefault(c => c.Type == "GFMS.Active Role")?.Value;
-
-            return activeRole;
+            return userClaims.FirstOrDefault(c => c.Type == "GFMS.Active Role")?.Value;
         }
 
 

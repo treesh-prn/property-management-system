@@ -46,6 +46,7 @@ namespace PropertyManagementSystem.Models
         public string? Status { get; set; }
         public string? Relationship { get; set; }
         public string? Company { get; set; }
+        public bool? isPersonal { get; set; }
         public bool? CanDelete { get; set; }
         public DateTime? DateSubmitted { get; set; }
         public string? ReservationCode { get; set; }

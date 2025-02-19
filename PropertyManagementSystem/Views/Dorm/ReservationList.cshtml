@@ -1,5 +1,7 @@
-﻿@{
+﻿@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
     ViewData["Title"] = "Home Page";
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
 }
 <div class="page-wrapper">
     <!-- Page header -->
@@ -18,10 +20,13 @@
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
-                            <i class="ti ti-plus"></i>
-                            Create New Application
-                        </a>
+                        @if (activeRole == "GFMS.Requestor")
+                        {
+                            <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
+                                <i class="ti ti-plus"></i>
+                                Create New Application
+                            </a>
+                        }
                     </div>
                 </div>
             </div>
@@ -40,7 +45,7 @@
                                 effect.Fade(FadeDirection.In)))
                                 .Items(tabstrip =>
                                 {
-                                if (!User.IsInRole("GFMS.Requestor"))
+                                if (activeRole != ("GFMS.Requestor"))
                                 {
                                     tabstrip.Add().Text("Reservation Request")
                                     .Encoded(false)
@@ -50,13 +55,7 @@
                                         <partial name="Shared/_myApprovals" />   
                                     </div>
                                     </text>);
-                                    tabstrip.Add().Text("My Reservation")
-                                    .Encoded(false)
-                                    .Content(@<text>
-                                    <div id="myReservation">
-                                        <partial name="Shared/_myReservation" />
-                                    </div>
-                                    </text>);
+                                   
                                 }else{
                                      tabstrip.Add().Text("My Reservation")
                                     .Encoded(false)

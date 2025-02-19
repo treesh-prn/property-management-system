@@ -17616,7 +17616,7 @@ textarea.form-control-lg {
     --tblr-spacer-8: 8rem;
     --tblr-spacer: 1rem;
     --tblr-bg-surface: var(--tblr-white);
-    --tblr-bg-surface-secondary: var(--tblr-gray-100);
+    --tblr-bg-surface-secondary: var(--tblr-gray-100-rgb);
     --tblr-bg-surface-tertiary: var(--tblr-gray-50);
     --tblr-bg-surface-dark: var(--tblr-dark);
     --tblr-bg-forms: var(--tblr-bg-surface);
@@ -19955,8 +19955,8 @@ body.theme-dark .hide-theme-dark, body[data-bs-theme=dark] .hide-theme-dark {
 
 .avatar {
     --tblr-avatar-size: 2.5rem;
-    --tblr-avatar-bg: var(--tblr-bg-surface-secondary);
-    --tblr-avatar-shadow: inset var(--tblr-border-color-translucent) 0 0 0 1px;
+    --tblr-avatar-bg: var(--tblr-primary);
+    --tblr-avatar-shadow: inset var(--tblr-border-color-translucent) 0 0 0 2px;
     position: relative;
     width: var(--tblr-avatar-size);
     height: var(--tblr-avatar-size);

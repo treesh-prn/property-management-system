@@ -4,7 +4,7 @@
     var employee = await RoleService.GetUserName(User);
 }
 @*NEW RESERVATION MODAL *@
-<div class="modal modal-blur fade" id="modal-newReservation" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal modal-blur fade" id="modal-newReservation" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -13,6 +13,35 @@
             </div>
             <form id="fcFRM1" asp-controller="Accommodation" asp-action="CreateReservation" method="post">
                 <div class="modal-body">
+                    <div class="form-selectgroup-boxes row mb-3">
+                        <label class="form-label required">Request Type</label>
+                        <div class="col-lg-6">
+                            <label class="form-selectgroup-item">
+                                <input type="radio" name="_isPersonal" value="false" class="form-selectgroup-input" checked>
+                                <span class="form-selectgroup-label d-flex align-items-center p-2">
+                                    <span class="me-3">
+                                        <span class="form-selectgroup-check"></span>
+                                    </span>
+                                    <span class="form-selectgroup-label-content">
+                                        <span class="form-selectgroup-title strong mb-1">Corporate</span>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                        <div class="col-md-6 col-lg-6">
+                            <label class="form-selectgroup-item">
+                                <input type="radio" name="_isPersonal" value="true" class="form-selectgroup-input">
+                                <span class="form-selectgroup-label d-flex align-items-center p-2">
+                                    <span class="me-3">
+                                        <span class="form-selectgroup-check"></span>
+                                    </span>
+                                    <span class="form-selectgroup-label-content">
+                                        <span class="form-selectgroup-title strong m-1">Personal</span>
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                     <div class="row mb-3">
                         <div class="col-lg-6">
                             <label class="form-label required">Requestor Name</label>
@@ -23,41 +52,43 @@
                             <input class="form-control" name="_requestorEmail" type="email" value="@employee.Email" readonly>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Charge to Company:</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_company")
-                            .DataTextField("Company")
-                            .DataValueField("Id")
-                            .Value(employee.CompanyId.ToString())
-                            .DataSource(source =>
-                            {
-                                source.Read(read =>
+                    <div id="chargeTo">
+                        <div class="mb-3">
+                            <label class="form-label required">Charge to Company:</label>
+                            @(Html.Kendo().DropDownList()
+                                .Name("_company")
+                                .DataTextField("Company")
+                                .DataValueField("Id")
+                                .Value(employee.CompanyId.ToString())
+                                .DataSource(source =>
                                 {
-                                    read.Action("getCompanies", "Global");
-                                });
-                            })
-                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
-                            .OptionLabel("Select Company")
-                            )
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label required">Charge to Department</label>
-                        @(Html.Kendo().DropDownList()
-                            .Name("_department")
-                            .DataTextField("DepartmentName")
-                            .DataValueField("Id")
-                            .CascadeFrom("_company")
-                            .Value(employee.DepartmentId.ToString())
-                            .DataSource(source =>
-                            {
-                                source.Read(read =>
+                                    source.Read(read =>
+                                    {
+                                        read.Action("getCompanies", "Global");
+                                    });
+                                })
+                                .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
+                                .OptionLabel("Select Company")
+                                )
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label required">Charge to Department</label>
+                            @(Html.Kendo().DropDownList()
+                                .Name("_department")
+                                .DataTextField("DepartmentName")
+                                .DataValueField("Id")
+                                .CascadeFrom("_company")
+                                .Value(employee.DepartmentId.ToString())
+                                .DataSource(source =>
                                 {
-                                    read.Action("getDepartments", "Global").Data("filterDepartments");
-                                }).ServerFiltering(true);
-                            })
-                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
-                            )
+                                    source.Read(read =>
+                                    {
+                                        read.Action("getDepartments", "Global").Data("filterDepartments");
+                                    }).ServerFiltering(true);
+                                })
+                                .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
+                                )
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -549,6 +549,43 @@ $(document).ready(function () {
     });
 });
 
+$(document).ready(function () {
+    function toggleChargeTo() {
+        var isPersonal = $('input[name="_isPersonal"]:checked').val() === "true";
+
+        if (isPersonal) {
+            $("#chargeTo").slideUp();
+            var companyDropdown = $("#_company").data("kendoDropDownList");
+            var departmentDropdown = $("#_department").data("kendoDropDownList");
+
+            if (companyDropdown) companyDropdown.enable(false);
+            if (departmentDropdown) departmentDropdown.enable(false);
+        } else {
+            $("#chargeTo").slideDown();
+            var companyDropdown = $("#_company").data("kendoDropDownList");
+            var departmentDropdown = $("#_department").data("kendoDropDownList");
+
+            if (companyDropdown) companyDropdown.enable(true);
+            if (departmentDropdown) departmentDropdown.enable(true);
+        }
+    }
+
+    // Handle modal show/hide
+    $("#modal-newReservation").on("shown.bs.modal", function () {
+        toggleChargeTo();
+    });
+
+    $("#modal-newReservation").on("hidden.bs.modal", function () {
+        // Remove focus from any element inside the modal to prevent aria-hidden issues
+        $(this).find(":focus").blur();
+    });
+
+    // Handle radio button change
+    $(document).on("change", 'input[name="_isPersonal"]', function () {
+        toggleChargeTo();
+    });
+});
+
 //guesthouse accommodation - guests
 document.getElementById('add-row').addEventListener('click', function () {
     var rowToClone = document.querySelector('#dynamic-rows .row');
@@ -589,6 +626,9 @@ document.getElementById('dynamic-rows').addEventListener('click', function (e) {
         }
     }
 });
+
+
+
 
 //dorm - civil status
 $(document).ready(function () {

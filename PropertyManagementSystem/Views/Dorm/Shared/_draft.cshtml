@@ -445,11 +445,17 @@
                                     <div class="row mt-3">
                                         <dl class="row">
                                             <dt class="col-4 text-primary">Requestor:</dt>
-                                            <dd class="col-8 ">@Model.ReservationHeader.Requestor</dd>
+                                            <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                @Model.ReservationHeader.Requestor
+                                            </dd>
                                             <dt class="col-4 text-primary">Email:</dt>
-                                            <dd class="col-8">@Model.ReservationHeader.RequestorEmail</dd>
+                                            <dd class="col-8 text-truncate" style="font-size: white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                @Model.ReservationHeader.RequestorEmail
+                                            </dd>
                                             <dt class="col-4 text-primary">Department:</dt>
-                                            <dd class="col-8"> @Model.Department.DepartmentCode </dd>
+                                            <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                @Model.Department.DepartmentCode
+                                            </dd>
                                         </dl>
                                     </div>
                                 </div>
@@ -467,7 +473,7 @@
         <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
             <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
             <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-            Create
+            Submit
         </button>
     </div>
 </form>

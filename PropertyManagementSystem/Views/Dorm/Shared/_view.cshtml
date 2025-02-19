@@ -97,7 +97,14 @@
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Number of Dependents</div>
-                        <div class="datagrid-content">@Model.ReservationDetails.Count()</div>
+                        @if (@Model.ReservationDetails.FirstOrDefault().CivilStatus == "MARRIED")
+                        {
+                            <div class="datagrid-content">@Model.ReservationDetails.Count()</div>
+                        }
+                        else
+                        {
+                            <div class="datagrid-content">-</div>
+                        }
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">

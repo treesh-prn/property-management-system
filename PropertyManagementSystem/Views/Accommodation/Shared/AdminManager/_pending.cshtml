@@ -1,79 +1,120 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
-<div class="card-body">
-    <div class="row align-items-start">
-        <div class="col-2">
-            <img src="@Url.Content("~/img/facility-room.jpg")" alt="Accommodation" class="rounded img-fluid">
-        </div>
-        <div class="col-9">
-            <div class="text-primary h3 d-flex align-items-center">
-                <!-- Reservation Code -->
-                <span>@Model.ReservationHeader.ReservationCode</span>
+<div class="card">
+    <div class="card-body">
+        <div class="row align-items-start">
+            <div class="col-2">
+                <img src="@Url.Content("~/img/facility-room.jpg")" alt="Accommodation" class="rounded img-fluid">
+            </div>
+            <div class="col-9">
+                <div class="text-primary h3 d-flex align-items-center">
+                    <!-- Reservation Code -->
+                    <span>@Model.ReservationHeader.ReservationCode</span>
 
-                <!-- Status placed at the end of the reservation code with a space -->
-                <span class="ms-3">
-                    <!-- Margin for spacing -->
-                    @if (Model.ReservationHeader.Status == "APPROVED")
+                    <!-- Status placed at the end of the reservation code with a space -->
+                    <span class="ms-3">
+                        <!-- Margin for spacing -->
+                        @if (Model.ReservationHeader.Status == "APPROVED")
+                        {
+                            <span class='status status-teal'>
+                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                            </span>
+                        }
+                        else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                        {
+                            <span class='status status-teal'>
+                                <span class='status-dot status-dot-animated'></span>FOR APPROVAL
+                            </span>
+                        }
+                        else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
+                        {
+                            <span class='status status-red'>
+                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                            </span>
+                        }
+                        else
+                        {
+                            <span class='status status-blue'>
+                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                            </span>
+                        }
+                    </span>
+                </div>
+
+                <div class="row mt-3">
+                    <!-- Rest of the content remains the same -->
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Requestor</div>
+                            <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Email</div>
+                            <div class="datagrid-content">@Model.ReservationHeader.RequestorEmail</div>
+                        </div>
+                    </div>
+                    @if (Model.ReservationHeader.isPersonal == false)
                     {
-                        <span class='status status-teal'>
-                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                        </span>
-                    }
-                    else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                    {
-                        <span class='status status-teal'>
-                            <span class='status-dot status-dot-animated'></span>FOR APPROVAL
-                        </span>
-                    }
-                    else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
-                    {
-                        <span class='status status-red'>
-                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                        </span>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Chrg To Dept</div>
+                                <div class="datagrid-content">@Model.Department.DepartmentCode</div>
+                            </div>
+                        </div>
                     }
                     else
                     {
-                        <span class='status status-blue'>
-                            <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                        </span>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Chrge To</div>
+                                <div class="datagrid-content">Personal</div>
+                            </div>
+                        </div>
                     }
-                </span>
-            </div>
-
-            <div class="row mt-3">
-                <!-- Rest of the content remains the same -->
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Requestor</div>
-                        <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Date Filed</div>
+                            <div class="datagrid-content">@Model.ReservationHeader.DateFiled</div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Email</div>
-                        <div class="datagrid-content">@Model.ReservationHeader.RequestorEmail</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Department</div>
-                        <div class="datagrid-content">@Model.Department.DepartmentCode</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Date Filed</div>
-                        <div class="datagrid-content">@Model.ReservationHeader.DateFiled</div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Purpose</div>
-                        <div class="datagrid-content">
-                            @Model.ReservationDetails.FirstOrDefault().Purpose
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Purpose</div>
+                            <div class="datagrid-content">
+                                @Model.ReservationDetails.FirstOrDefault().Purpose
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-lg-12 col-md-12">
+        <partial name="Shared/_grid" />
+    </div>
+    <div class="card mt-1">
+        <form asp-action="UpdateReservationStatus" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault()?.ReservationDetailId">
+            <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault()?.ReservationId">
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <button type="submit" name="action" value="Revert" class="btn btn-link link-secondary">
+                    Go Back
+                </button>
+                <div class="ms-auto">
+                    <button type="button" class="btn btn-red" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault()?.ReservationDetailId">
+                        <i class="ti ti-ban m-1"></i> Disapprove
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-approve-@Model.ReservationDetails.FirstOrDefault()?.ReservationDetailId">
+                        <i class="ti ti-check m-1"></i> Approve
+                    </button>
+                </div>
+            </div>
+        </form>
+        <partial name="Shared/_approve" />
+        <partial name="Shared/_disapprove" />
     </div>
 </div>
