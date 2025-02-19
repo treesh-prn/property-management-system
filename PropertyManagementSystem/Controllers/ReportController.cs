@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PropertyManagementSystem.Attributes;
 using PropertyManagementSystem.Services;
 
 namespace PropertyManagementSystem.Controllers
@@ -16,12 +17,12 @@ namespace PropertyManagementSystem.Controllers
         {
             _ssrsService = ssrsService ?? throw new ArgumentNullException(nameof(ssrsService));
         }
-
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
         public IActionResult Index()
         {
             return View();
         }
-
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
         // Monthly charges report
         public IActionResult MonthlyChargesReport()
         {

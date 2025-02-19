@@ -6,6 +6,7 @@ using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
+using PropertyManagementSystem.Attributes;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -17,11 +18,12 @@ namespace PropertyManagementSystem.Controllers
         {
             _context = context;
         }
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
         public IActionResult Index()
         {
             return View();
         }
-
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
         public IActionResult GuestRoom(string roomName)
         {
 
@@ -66,12 +68,14 @@ namespace PropertyManagementSystem.Controllers
 
             return View(roomViewModel);
         }
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
         public IActionResult FunctionRoom()
         {
 
             return View();
 
         }
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
         public IActionResult DormRoom()
         {
 

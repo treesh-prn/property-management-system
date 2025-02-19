@@ -7,6 +7,7 @@ using PropertyManagementSystem.Models;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
+using PropertyManagementSystem.Attributes;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -19,6 +20,7 @@ namespace PropertyManagementSystem.Controllers
         {
             _context = context;
         }
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
         public IActionResult Index()
         {
             return View();
