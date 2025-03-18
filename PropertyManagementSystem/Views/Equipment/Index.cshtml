@@ -91,6 +91,7 @@
                                     .Exportable(false);
 
                                 })
+                                .Pageable()
                                 .Scrollable()
                                 .ToolBar(toolbar =>
                                 {
@@ -108,15 +109,23 @@
                 </div>
             </div>
             @*off canvas edit form*@
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
-                <div class="offcanvas-header">
-                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Add Equipment</h2>
-                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <form id="fcFRM1" asp-controller="Equipment" asp-action="newEquipments" enctype="multipart/form-data" method="post">
+                <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+                    <div class="offcanvas-header">
+                        <h2 class="offcanvas-title" id="offcanvasEndLabel">Add Equipment</h2>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body">
+                        <partial name="Shared/_add" />
+                    </div>
+                    <div class="offcanvas-footer border-top p-3">
+                        <div class="mt-2 text-end">
+                            <button type="submit" class="btn btn-primary">Create</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="offcanvas-body">
-                    <partial name="Shared/_add" />
-                </div>
-            </div>
+            </form>
+            @*end of off canvas edit form*@
         </div>
     </div>
 </div>

@@ -66,7 +66,17 @@
                                             )
                                     </div>
                                 </div>
-                                @if (activeRole == ("GFMS.Admin Manager"))
+                                @if (activeRole == "GFMS.Requestor" && User.IsInRole("GFMS.Admin Approver"))
+                                {
+                                    <div class="col-lg-12">
+                                        <label class="form-label">Recurrence</label>
+                                        @(Html.Kendo().RecurrenceEditor()
+                                            .Name("RecurrenceEditor")
+                                            )
+                                    </div>
+                                    <input type="hidden" name="RecurrenceRule" id="RecurrenceRule">
+                                }
+                                @if (activeRole == ("GFMS.Requestor") && User.IsInRole("GFMS.Admin Manager"))
                                 {
                                     <div class="row mb-3">
                                         <div class="col-lg-6">
@@ -189,14 +199,36 @@
                                                 <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                     @Model.ReservationHeader.Requestor
                                                 </dd>
+                                                <dt class="col-4 text-primary">Employee Id:</dt>
+                                                <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                    @Model.Employees.EmployeeID
+                                                </dd>
                                                 <dt class="col-4 text-primary">Email:</dt>
                                                 <dd class="col-8 text-truncate" style="font-size: white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                     @Model.ReservationHeader.RequestorEmail
                                                 </dd>
-                                                <dt class="col-4 text-primary">Chrg To Dept:</dt>
+                                                <dt class="col-4 text-primary">Department:</dt>
                                                 <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                     @Model.Department.DepartmentCode
                                                 </dd>
+                                                @if(User.IsInRole("GFMS.Admin Approver"))
+                                                {
+                                                    <dt class="col-4 text-primary">Free Charge:</dt>
+                                                    <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                        @if (@Model.ReservationHeader.isPersonal == true)
+                                                        {
+                                                            <span class="status status-green">
+                                                                Yes
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="status status-green">
+                                                                Yes
+                                                            </span>
+                                                        }
+                                                    </dd>
+                                                }
                                             </dl>
                                         </div>
                                     </div>
@@ -212,11 +244,46 @@
                 Go Back
             </a>
             <div class="ms-auto">
-                <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
+                <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-confirmation">
                     <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
                     Submit
                 </button>
+            </div>
+        </div>
+        <!-- Confirmation Modal -->
+        <div class="modal modal-blur fade" id="modal-confirmation" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-status bg-warning"></div>
+                    <div class="modal-body text-center py-4">
+                        <!-- Warning Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon mb-2 text-yellow icon-lg">
+                            <path d="M12 2L2 22h20L12 2z"></path>
+                            <path d="M12 16h.01"></path>
+                            <path d="M12 10h.01"></path>
+                        </svg>
+                        <h3>Cancellation Policy Notice</h3>
+                        <p class="text-secondary">
+                            Non-cancelled reservations within an hour before the reservation date and time
+                            will be <strong>charged to the department.</strong>
+                            Do you want to proceed?
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="w-100">
+                            <div class="row">
+                                <div class="col">
+                                    <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                                <div class="col">
+                                    <button type="submit" class="btn btn-primary w-100" id="confirmSubmit">Confirm & Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

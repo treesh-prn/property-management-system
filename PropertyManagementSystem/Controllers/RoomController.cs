@@ -31,8 +31,7 @@ namespace PropertyManagementSystem.Controllers
             
 
         }
-
-        public IActionResult ViewGuestRoom(int RoomId, [DataSourceRequest] DataSourceRequest request) 
+        public IActionResult ViewGuestRoom(int RoomId, [DataSourceRequest] DataSourceRequest request)
         {
             var roomDetails = (from room in _context.Rooms
                                join facilityList in _context.Facilities on room.FacilityId equals facilityList.FacilityId
@@ -45,14 +44,31 @@ namespace PropertyManagementSystem.Controllers
                                    FacilityName = facilityList.FacilityName,
                                    FacilityLocation = facilityList.FacilityLocation,
                                    Capacity = room.Capacity,
+                                   CostPerDay = room.CostPerDay,
+                                   CostPerWeek = room.CostPerWeek,
+                                   CostPerMonth = room.CostPerMonth,
                                    isActive = room.isActive,
                                    RoomType = room.RoomType
-
                                }).FirstOrDefault();
+
             if (roomDetails == null)
             {
                 return NotFound();
             }
+
+            // Get the list of equipment for this room
+            var equipmentList = (from re in _context.RoomEquipments
+                                 join eq in _context.Equipments on re.EquipmentId equals eq.Id
+                                 where re.RoomId == RoomId
+                                 select new { eq.Id, eq.EquipmentName }).ToList();
+
+            Console.WriteLine($"RoomId: {roomDetails.RoomId}, RoomName: {roomDetails.RoomName}");
+            Console.WriteLine($"Equipment Count: {equipmentList.Count}");
+            foreach (var eq in equipmentList)
+            {
+                Console.WriteLine($"Equipment: {eq}");
+            }
+
             var roomViewModel = new RoomViewModel
             {
                 RoomId = roomDetails.RoomId,
@@ -62,8 +78,12 @@ namespace PropertyManagementSystem.Controllers
                 FacilityLocation = roomDetails.FacilityLocation,
                 Capacity = roomDetails.Capacity,
                 isActive = roomDetails.isActive,
-                RoomType = roomDetails.RoomType
-
+                RoomType = roomDetails.RoomType,
+                CostPerDay = roomDetails.CostPerDay,
+                CostPerMonth = roomDetails.CostPerMonth,
+                CostPerWeek = roomDetails.CostPerWeek,
+                EquipmentNames = equipmentList.Select(e => e.EquipmentName).ToList(),
+                SelectedEquipmentIds = equipmentList.Select(e => e.Id).ToList(),
             };
 
             return View(roomViewModel);
@@ -172,15 +192,18 @@ namespace PropertyManagementSystem.Controllers
         }
         /*Create*/
         [HttpPost]
-        public IActionResult newGHRoom(string _name, string _status, int _facility,  int _capacity, bool _isActive)
+        public IActionResult newGHRoom(string _name, string _status, int _facility,  int _capacity, bool _isActive, int _costPerDay, int _costPerWeek, int _costPerMonth)
         {
             GFMS_Rooms _room = new GFMS_Rooms()
             {
-                RoomName = _name,
+                RoomName = _name.ToUpper(),
                 RoomStatus = _status,
                 Capacity = _capacity,
                 FacilityId = _facility,
                 isActive = _isActive,
+                CostPerDay = _costPerDay,
+                CostPerWeek = _costPerWeek,
+                CostPerMonth = _costPerMonth,
                 RoomType = 0
             };
 
@@ -191,34 +214,56 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("GuestRoom", "Room");
         }
         [HttpPost]
-        public IActionResult newFNRoom(string _name, string _status, int _facility, int _capacity, bool _isActive)
+        public IActionResult newFNRoom(string _name, string _status, int _facility, int _capacity, bool _isActive, int _costPerDay, int _costPerWeek, int _costPerMonth, List<int> SelectedEquipments)
         {
+            // Create new room entity
             GFMS_Rooms _room = new GFMS_Rooms()
             {
-                RoomName = _name,
+                RoomName = _name.ToUpper(),
                 RoomStatus = _status,
                 Capacity = _capacity,
                 FacilityId = _facility,
+                CostPerDay = _costPerDay,
+                CostPerWeek = _costPerWeek,
+                CostPerMonth = _costPerMonth,
                 isActive = _isActive,
                 RoomType = 1
             };
 
-
+            // Add room to the database
             _context.Rooms.Add(_room);
             _context.SaveChanges();
+
+            // Save selected equipment if any
+            if (SelectedEquipments != null && SelectedEquipments.Any())
+            {
+                foreach (var equipmentId in SelectedEquipments)
+                {
+                    GFMS_RoomEquipment roomEquipment = new GFMS_RoomEquipment()
+                    {
+                        RoomId = _room.RoomId,
+                        EquipmentId = equipmentId
+                    };
+                    _context.RoomEquipments.Add(roomEquipment);
+                }
+                _context.SaveChanges();
+            }
 
             return RedirectToAction("FunctionRoom", "Room");
         }
         [HttpPost]
-        public IActionResult newDMRoom(string _name, string _status, int _facility, int _capacity, bool _isActive)
+        public IActionResult newDMRoom(string _name, string _status, int _facility, int _capacity, bool _isActive, int _costPerDay, int _costPerWeek, int _costPerMonth)
         {
             GFMS_Rooms _room = new GFMS_Rooms()
             {
-                RoomName = _name,
+                RoomName = _name.ToUpper(),
                 RoomStatus= _status,    
                 Capacity = _capacity,
                 FacilityId = _facility,
                 isActive = _isActive,
+                CostPerDay = _costPerDay,
+                CostPerWeek = _costPerWeek,
+                CostPerMonth = _costPerMonth,
                 RoomType = 2
             };
 
@@ -232,37 +277,59 @@ namespace PropertyManagementSystem.Controllers
         /*Update*/
 
         [HttpPost]
-        public IActionResult EditGHRoom(GFMS_Rooms room, int _roomId, string _roomName, int _facility, string _roomStatus, int _capacity, bool _isActive, double _costPerDay)
+        public IActionResult EditGHRoom(GFMS_Rooms room, int _roomId, string _roomName, int _facility, string _roomStatus, int _capacity, bool _isActive, double _costPerDay, double _costPerWeek, double _costPerMonth, List<int> selectedEquipmentIds)
         {
             var ghRoom = _context.Rooms.FirstOrDefault(gh => gh.RoomId == _roomId);
             if (ghRoom == null)
             {
-                return NotFound("Reservation detail not found.");
+                return NotFound("Room not found.");
             }
-            ghRoom.RoomName = _roomName;
+
+            // Update room details
+            ghRoom.RoomName = _roomName.ToUpper();
             ghRoom.FacilityId = _facility;
             ghRoom.RoomStatus = _roomStatus;
             ghRoom.Capacity = _capacity;
             ghRoom.isActive = _isActive;
             ghRoom.CostPerDay = _costPerDay;
+            ghRoom.CostPerWeek = _costPerWeek;
+            ghRoom.CostPerMonth = _costPerMonth;
 
             try
             {
+                // Remove existing room equipment mappings
+                var existingEquipment = _context.RoomEquipments.Where(re => re.RoomId == _roomId).ToList();
+                _context.RoomEquipments.RemoveRange(existingEquipment);
+
+                // Add new equipment selections
+                if (selectedEquipmentIds != null && selectedEquipmentIds.Any())
+                {
+                    var newEquipmentMappings = selectedEquipmentIds.Select(eqId => new GFMS_RoomEquipment
+                    {
+                        RoomId = _roomId,
+                        EquipmentId = eqId
+                    }).ToList();
+
+                    _context.RoomEquipments.AddRange(newEquipmentMappings);
+                }
+
                 _context.Rooms.Update(ghRoom);
                 _context.SaveChanges();
             }
             catch (DbUpdateException ex)
             {
-                Console.WriteLine($"An error occurred while updating changes: {ex.Message}");
+                Console.WriteLine($"An error occurred while updating: {ex.Message}");
                 if (ex.InnerException != null)
                 {
                     Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
                 }
                 throw;
             }
+
             string redirectUrl = Url.Action("ViewGuestRoom", "Room", new { RoomId = _roomId });
             return Redirect(redirectUrl);
         }
+
 
         /*Delete*/
         [HttpPost]

@@ -2,6 +2,7 @@
 @inject PropertyManagementSystem.Services.IRoleService RoleService
 @{
     var employee = await RoleService.GetUserName(User);
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
 }
 @*NEW RESERVATION MODAL *@
 <div class="modal modal-blur fade" id="modal-newReservation" tabindex="-1" role="dialog" aria-hidden="true">
@@ -19,6 +20,12 @@
                             <input class="form-control" name="_requestor" type="text" value="@employee.Fullname" readonly>
                         </div>
                         <div class="col-lg-6">
+                            <label class="form-label required">Employee Id</label>
+                            <input class="form-control"  value="@employee.EmployeeID" readonly>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-lg-12">
                             <label class="form-label required">Requestor Email</label>
                             <input class="form-control" name="_requestorEmail" type="email" value="@employee.Email" readonly>
                         </div>
@@ -59,6 +66,19 @@
                             .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;"})
                             )
                     </div>
+                    @if(activeRole == "GFMS.Requestor" && User.IsInRole("GFMS.Admin Approver"))
+                    {
+                        <div class="mb-3 d-flex justify-content-between align-items-center">
+                            <label class="form-label mb-0 required">Free of Charge?</label>
+                            <div class="d-flex align-items-center">
+                                <span class="me-2 form-label">No</span>
+                                <span class="form-check form-check-single form-switch me-5">
+                                    <input required class="form-check-input" name="_isFreeOfCharge" type="checkbox" value="true" required/>
+                                </span>
+                                <span class="ms-2 form-label">Yes</span>
+                            </div>
+                        </div>
+                    }
                 </div>
                 <div class="modal-footer">
                     <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>

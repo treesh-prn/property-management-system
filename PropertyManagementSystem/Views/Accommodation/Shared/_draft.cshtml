@@ -1,6 +1,11 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+
+@{
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+}
 <div class="card">
-    <form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post">
+    <form asp-action="CreateReservationDetails" id="reservationForm" asp-controller="Accommodation" method="post">
         <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
         <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
         <input type="hidden" class="form-control" name="_requestorEmail" asp-for="@Model.ReservationHeader.RequestorEmail">
@@ -20,7 +25,11 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label"> Company (N/A if not applicable)</label>
-                                        <input type="text" class="form-control" name="_company[]" placeholder="Company (N/A if not applicable)">
+                                        <div class="dropdown">
+                                            <input type="text" name="_company[]" class="form-control companySearch" placeholder="Search or select a company..." autocomplete="off">
+                                            <div class="dropdown-menu w-100 companyDropdown"></div>
+                                        </div>
+
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">Relationship (N/A if not applicable)</label>
@@ -44,6 +53,7 @@
                                         .Name("_startDate")
                                         .Value(DateTime.Today)
                                         .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                        .Max(DateTime.Today.AddMonths(1))
                                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         .HtmlAttributes(new { onkeydown = "return false;" })
                                         )
@@ -53,12 +63,23 @@
                                     @(Html.Kendo().DateTimePicker()
                                         .Name("_endDate")
                                         .Value(DateTime.Today)
+                                        .Max(DateTime.Today.AddMonths(1))
                                         .Format("yyyy/MM/dd HH:mm:ss.fff")
                                         .HtmlAttributes(new { onkeydown = "return false;" })
                                         .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         )
                                 </div>
                             </div>
+                            @if (activeRole == "GFMS.Requestor" && User.IsInRole("GFMS.Admin Approver"))
+                            {
+                                <div class="col-lg-12">
+                                    <label class="form-label">Recurrence</label>
+                                    @(Html.Kendo().RecurrenceEditor()
+                                        .Name("RecurrenceEditor")
+                                        )
+                                </div>
+                                <input type="hidden" name="RecurrenceRule" id="RecurrenceRule">
+                            }
                             <div class="col-lg-12">
                                 <div>
                                     <label class="form-label">
@@ -117,20 +138,24 @@
                                             <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 @Model.ReservationHeader.Requestor
                                             </dd>
+                                            <dt class="col-4 text-primary">Employee Id:</dt>
+                                            <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                @Model.Employees.EmployeeID
+                                            </dd>
                                             <dt class="col-4 text-primary">Email:</dt>
                                             <dd class="col-8 text-truncate" style="font-size: white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 @Model.ReservationHeader.RequestorEmail
                                             </dd>
-                                            @if(Model.ReservationHeader.isPersonal == false)
+                                            @if(Model.ReservationHeader.isPersonal == true)
                                             {
-                                                <dt class="col-4 text-primary">Chrge To Dept:</dt>
+                                                <dt class="col-4 text-primary">Charge:</dt>
                                                 <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                    @Model.Department.DepartmentCode
+                                                    Personal Charge
                                                 </dd>
                                             }else{
-                                                <dt class="col-4 text-primary">Chrge To:</dt>
+                                                <dt class="col-4 text-primary">Department:</dt>
                                                 <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                    Personal
+                                                    @Model.Department.DepartmentCode
                                                 </dd>
                                             }
                                         </dl>
@@ -147,11 +172,46 @@
                 Go Back
             </a>
             <div class="ms-auto">
-                <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
+                <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-confirmation">
                     <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                     <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
                     Submit
                 </button>
+            </div>
+        </div>
+        <!-- Confirmation Modal -->
+        <div class="modal modal-blur fade" id="modal-confirmation" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <div class="modal-status bg-warning"></div>
+                    <div class="modal-body text-center py-4">
+                        <!-- Warning Icon -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon mb-2 text-yellow icon-lg">
+                            <path d="M12 2L2 22h20L12 2z"></path>
+                            <path d="M12 16h.01"></path>
+                            <path d="M12 10h.01"></path>
+                        </svg>
+                        <h3>Cancellation Policy Notice</h3>
+                        <p class="text-secondary">
+                            Non-cancelled reservations within an hour before the reservation date and time
+                            will be <strong>charged to the department.</strong>
+                            Do you want to proceed?
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="w-100">
+                            <div class="row">
+                                <div class="col">
+                                    <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">Cancel</button>
+                                </div>
+                                <div class="col">
+                                    <button type="submit" class="btn btn-primary w-100" id="confirmSubmit">Confirm & Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </form>

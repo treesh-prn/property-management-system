@@ -4,6 +4,17 @@
     var employee = await RoleService.GetUserName(User);
 }
 <div class="card">
+    @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
+    {
+        if (User.IsInRole("GFMS.Admin Approver"))
+        {
+            <div class="card-header">
+                <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-update">
+                    Update Reservation
+                </button>
+            </div>
+        }
+    }
     <div class="card-body">
         <div class="row align-items-start">
             <div class="col-2">
@@ -50,6 +61,12 @@
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Requestor</div>
                             <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Employee Id</div>
+                            <div class="datagrid-content">@Model.Employees.EmployeeID</div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-4">
@@ -188,4 +205,5 @@
         </div>
     </form>
     <partial name="Shared/_cancel" />
+    <partial name="Shared/_edit" />
 </div>

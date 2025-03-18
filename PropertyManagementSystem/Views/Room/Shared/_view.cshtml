@@ -1,0 +1,126 @@
+﻿@model RoomViewModel
+<div class="card-body">
+    <div id="details" class="tab-pane fade show active">
+        <div class="card-title">@Model.RoomName DETAILS</div>
+        <div class="datagrid">
+            <div class="datagrid-item">
+                <div class="datagrid-title">Room Name</div>
+                <div class="datagrid-content">@Model.RoomName</div>
+            </div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Capacity</div>
+                <div class="datagrid-content">@Model.Capacity</div>
+            </div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Location</div>
+                @if (Model.FacilityLocation.Equals("MILL"))
+                {
+                    <div class="datagrid-content">
+                        @Model.FacilityLocation
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-building-factory-2"></i>
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <div class="datagrid-content">
+                        @Model.FacilityLocation
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-building-skyscraper"></i>
+                        </span>
+                    </div>
+                }
+            </div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Room Type</div>
+                @if (@Model.RoomType.Equals(0))
+                {
+                    <div class="datagrid-content">
+                        Guest Room
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-door icon"></i>
+                        </span>
+                    </div>
+                }
+                else if (Model.RoomType.Equals(1))
+                {
+                    <div class="datagrid-content">
+                        Function Room
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-briefcase icon"></i>
+                        </span>
+                    </div>
+                }
+                else if (Model.RoomType.Equals(2))
+                {
+                    <div class="datagrid-content">
+                        Dorm Room
+                        <span class="nav-link-icon d-md-none d-lg-inline-block">
+                            <i class="ti ti-bed icon"></i>
+                        </span>
+                    </div>
+                }
+            </div>
+            @if (Model.RoomType.Equals(1))
+            {
+                <div class="datagrid-item">
+                    <div class="datagrid-title">Equipment</div>
+                    <div class="datagrid-content">
+                        @if (Model.EquipmentNames != null && Model.EquipmentNames.Any())
+                        {
+                            <ul>
+                                @foreach (var equipment in Model.EquipmentNames)
+                                {
+                                    <li>@equipment</li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <span>No equipment assigned to this room.</span>
+                        }
+                    </div>
+                </div>
+            }
+            <div class="datagrid-item">
+                <div class="datagrid-title">Status</div>
+                @if (@Model.RoomStatus.Equals("Open"))
+                {
+                    <div class="datagrid-content">
+                        <span class='status status-teal'><span class='status-dot status-dot-animated'></span>Open</span>
+                    </div>
+                }
+                else if (@Model.RoomStatus.Equals("Occupied"))
+                {
+                    <div class="datagrid-content">
+                        <span class='status status-red'><span class='status-dot status-dot-animated'></span>Occupied</span>
+                    </div>
+                }
+                else if (@Model.RoomStatus.Equals("Under Maintenance"))
+                {
+                    <div class="datagrid-content">
+                        <span class='status status-yellow'><span class='status-dot status-dot-animated'></span>Under Maintenance</span>
+                    </div>
+                }
+            </div>
+            <div class="datagrid-item">
+                <div class="datagrid-title">Active Status</div>
+                <div class="datagrid-content">
+                    @if (Model.isActive.Equals(false))
+                    {
+                        <span class="status status-red">
+                            Inactive
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="status status-green">
+                            Active
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

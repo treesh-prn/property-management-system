@@ -26,6 +26,21 @@ namespace PropertyManagementSystem.Controllers
             return View();
         }
 
+        public IActionResult GetEquipmentList()
+        {
+            var linkedEquipmentIds = _context.RoomEquipments // Assuming this is the linking table
+                .Select(re => re.EquipmentId)
+                .Distinct()
+                .ToList();
+
+            var equipments = _context.Equipments
+                .Where(e => e.isActive == true && e.isFacilityEquipment == true && !linkedEquipmentIds.Contains(e.Id))
+                .Select(e => new { e.EquipmentName, e.Id })
+                .ToList();
+
+            return Json(equipments);
+        }
+
         public ActionResult getEquipments([DataSourceRequest] DataSourceRequest request)
         {
             List <GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();
@@ -46,12 +61,12 @@ namespace PropertyManagementSystem.Controllers
         {
             GFMS_Equipments equipments = new GFMS_Equipments()
             {
-                EquipmentName = _name,
+                EquipmentName = _name.ToUpper(),
                 EquipmentQty = _quantity,
                 PurchaseCost = _purCost,
                 HalfDayCost = _halfCost,
                 WholeDayCost = _wholeCost,
-                Remarks = _remarks,
+                Remarks = _remarks?.ToUpper(),
                 isActive = _isActive,
                 FacilityId = _facilityId,
                 RoomId = _roomId,
@@ -104,12 +119,12 @@ namespace PropertyManagementSystem.Controllers
                 return NotFound("Equipment not found");
             }
 
-            equipment.EquipmentName = _name;
+            equipment.EquipmentName = _name.ToUpper();
             equipment.EquipmentQty = _quantity;
             equipment.PurchaseCost = _purCost;
             equipment.HalfDayCost = _halfCost;
             equipment.WholeDayCost = _wholeCost;
-            equipment.Remarks = _remarks;
+            equipment.Remarks = _remarks?.ToUpper();
             equipment.isActive = _isActive;
             equipment.isFacilityEquipment = _isFacilityEquipment;
             try

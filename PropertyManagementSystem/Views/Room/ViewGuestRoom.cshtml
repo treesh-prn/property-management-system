@@ -1,9 +1,4 @@
-﻿@model PropertyManagementSystem.Models.RoomViewModel;
-
-@{
-    ViewData["Title"] = "Home Page";
-}
-<div class="page-wrapper">
+﻿<div class="page-wrapper">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -34,34 +29,13 @@
                 </div>
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        @if (Model.RoomType.Equals(0))
-                        {
-                            <a href="@Url.Action("GuestRoom", "Room")" class="btn btn-primary bg-green">
-                                <i class="ti ti-arrow-left icon"></i>
-                                Go Back
-                            </a>
-                        }
-                        else if (Model.RoomType.Equals(1))
-                        {
-                            <a href="@Url.Action("FunctionRoom", "Room")" class="btn btn-primary bg-green">
-                                <i class="ti ti-arrow-left icon"></i>
-                                Go Back
-                            </a>
-                        }
-                        else if (Model.RoomType.Equals(2))
-                        {
-                            <a href="@Url.Action("DormRoom", "Room")" class="btn btn-primary bg-green">
-                                <i class="ti ti-arrow-left icon"></i>
-                                Go Back
-                            </a>
-                        }
-                    </div>
+                    <a id="editRoomButton" href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
+                        Edit Room
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards">
@@ -86,149 +60,72 @@
                 </div>
                 <div class="col-lg-9">
                     <div class="card">
-                        <div class="card-header">
-                            <ul class="nav nav-tabs card-header-tabs">
-                                <li class="nav-item">
-                                    <a class="nav-link active" data-bs-toggle="tab" href="#details">
-                                        Details
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" data-bs-toggle="tab" href="#occupants">
-                                        Occupants
-                                    </a>
-                                </li>
-                                <li class="nav-item ms-auto mb-1">
-                                    <a id="editRoomButton" href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
-                                        Edit Room
-                                    </a>
-                                </li>
-                            </ul>
+                        @(Html.Kendo().TabStrip()
+                                .Name("tabstrip")
+                                .Animation(animation =>
+                                animation.Open(effect =>
+                                effect.Fade(FadeDirection.In)))
+                                .Items(tabstrip =>
+                                {
+                                    tabstrip.Add().Text("Details")
+                                .Encoded(false)
+                                .Selected(true)
+                                .Content(@<text>
+                            <div id="details">
+                                <partial name="Shared/_view" model="Model" />
+                            </div>
+                        </text>);
+                                    @*tabstrip.Add().Text("Occupants")
+                        .Encoded(false)
+                        .Content(@<text>
+                        <div id="occupants">
+                        <partial name="Shared/_occupants" />
                         </div>
-                        <div class="card-body tab-content">
-                            <div id="details" class="tab-pane fade show active">
-                                <div class="card-title">@Model.RoomName DETAILS</div>
-                                <div class="datagrid">
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Room Name</div>
-                                        <div class="datagrid-content">@Model.RoomName</div>
-                                    </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Capacity</div>
-                                        <div class="datagrid-content">@Model.Capacity</div>
-                                    </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Location</div>
-                                        @if (Model.FacilityLocation.Equals("MILL"))
-                                        {
-                                            <div class="datagrid-content">
-                                                @Model.FacilityLocation
-                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                                    <i class="ti ti-building-factory-2"></i>
-                                                </span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <div class="datagrid-content">
-                                                @Model.FacilityLocation
-                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                                    <i class="ti ti-building-skyscraper"></i>
-                                                </span>
-                                            </div>
-                                        }
-                                    </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Room Type</div>
-                                        @if (@Model.RoomType.Equals(0))
-                                        {
-                                            <div class="datagrid-content">
-                                                Guest Room
-                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                                    <i class="ti ti-door icon"></i>
-                                                </span>
-                                            </div>
-                                        }
-                                        else if (Model.RoomType.Equals(1))
-                                        {
-                                            <div class="datagrid-content">
-                                                Function Room
-                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                                    <i class="ti ti-briefcase icon"></i>
-                                                </span>
-                                            </div>
-                                        }
-                                        else if (Model.RoomType.Equals(2))
-                                        {
-                                            <div class="datagrid-content">
-                                                Dorm Room
-                                                <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                                    <i class="ti ti-bed icon"></i>
-                                                </span>
-                                            </div>
-                                        }
-                                    </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Status</div>
-                                        @if (@Model.RoomStatus.Equals("Open"))
-                                        {
-                                            <div class="datagrid-content">
-                                                <span class='status status-teal'><span class='status-dot status-dot-animated'></span>Open</span>
-                                            </div>
-                                        }
-                                        else if (@Model.RoomStatus.Equals("Occupied"))
-                                        {
-                                            <div class="datagrid-content">
-                                                <span class='status status-red'><span class='status-dot status-dot-animated'></span>Occupied</span>
-                                            </div>
-                                        }
-                                        else if (@Model.RoomStatus.Equals("Under Maintenance"))
-                                        {
-                                            <div class="datagrid-content">
-                                                <span class='status status-yellow'><span class='status-dot status-dot-animated'></span>Under Maintenance</span>
-                                            </div>
-                                        }
-                                    </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Active Status</div>
-                                        <div class="datagrid-content">
-                                            @if (Model.isActive.Equals(false))
-                                            {
-                                                <span class="status status-red">
-                                                    Inactive
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class="status status-green">
-                                                    Active
-                                                </span>
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="occupants" class="tab-pane fade">
-                                <div class="card-title">Content of tab #2</div>
-                                <p class="text-secondary">
-                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci, alias aliquid distinctio dolorem expedita, fugiat hic magni molestiae molestias odit.
-                                </p>
-                            </div>
+                        </text>); *@
+                                })
+                            )
+                        <div class="card-footer">
+                            @if (Model.RoomType.Equals(0))
+                            {
+                                <a href="@Url.Action("GuestRoom", "Room")" class="btn btn-link link-secondary">
+                                    Go Back
+                                </a>
+                            }
+                            else if (Model.RoomType.Equals(1))
+                            {
+                                <a href="@Url.Action("FunctionRoom", "Room")" class="btn btn-link link-secondary">
+                                    Go Back
+                                </a>
+                            }
+                            else if (Model.RoomType.Equals(2))
+                            {
+                                <a href="@Url.Action("DormRoom", "Room")" class="btn btn-link link-secondary">
+                                    Go Back
+                                </a>
+                            }
                         </div>
                     </div>
                 </div>
             </div>
             @*<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>*@
             @*off canvas edit form*@
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
-                <div class="offcanvas-header">
-                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
-                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <form asp-action="EditGHRoom" asp-controller="Room" method="post">
+                <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+                    <div class="offcanvas-header">
+                        <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body">
+                        <partial name="Shared/_update" />
+                    </div>
+                    <div class="offcanvas-footer border-top p-3">
+                        <div class="mt-2 text-end">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="offcanvas-body">
-                    <partial name="Shared/_update" />
-                </div>
-            </div>
+            </form>
+            @*end of off canvas edit form*@
         </div>
     </div>
 </div>

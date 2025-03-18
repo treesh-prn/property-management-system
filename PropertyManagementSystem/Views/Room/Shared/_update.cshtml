@@ -1,5 +1,5 @@
 ﻿@model PropertyManagementSystem.Models.RoomViewModel;
-<form asp-action="EditGHRoom" asp-controller="Room" method="post">
+
     <input type="hidden" name="_roomId" asp-for="RoomId" />
     <input type="hidden" name="_roomType" asp-for="RoomType" />
 
@@ -51,15 +51,36 @@
         <label class="form-label required">Cost Per Month</label>
         <input class="form-control" name="_costPerMonth" type="number" asp-for="CostPerMonth">
     </div>
-    <label class="row">
-        <span class="col form-label">Is Active</span>
-        <span class="col-auto">
-            <label class="form-check form-check-single form-switch">
-                <input class="form-check-input" name="_isActive" type="checkbox" value="true" @(Model.isActive == true ? "checked" : "") />
-            </label>
-        </span>
-    </label>
-    <div class="mb-3 text-end">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+   
+@if (Model.RoomType.Equals(1))
+{
+    <div class="mb-3">
+        <label for="equipmentMultiSelect" class="form-label">Select Equipments</label>
+        @(Html.Kendo().MultiSelect()
+            .Name("SelectedEquipmentIds")
+            .Placeholder("Select Equipments...")
+            .DataTextField("EquipmentName")
+            .DataValueField("Id")
+            .Value(Model.SelectedEquipmentIds)
+            .AutoBind(true)
+            .DataSource(source =>
+            {
+                source.Read(read =>
+                {
+                    read.Action("GetEquipmentList", "Equipment");
+                });
+            })
+            .AutoClose(false)
+            .TagMode(MultiSelectTagMode.Multiple)
+            )
     </div>
-</form>
+}
+<label class="row">
+    <span class="col form-label">Is Active</span>
+    <span class="col-auto">
+        <label class="form-check form-check-single form-switch">
+            <input class="form-check-input" name="_isActive" type="checkbox" value="true" @(Model.isActive == true ? "checked" : "") />
+        </label>
+    </span>
+</label>
+

@@ -46,6 +46,7 @@ namespace PropertyManagementSystem.Models
         public bool? isOnCall { get; set; }
         public string? DeptHeadRemarks { get; set; }
         public string? OtherInfo { get; set; }
+        public string? RecurrenceRule { get; set; }
 
         public GFMS_ReservationHeader ReservationHeader { get; set; }
         public virtual GFMS_Rooms Room { get; set; }

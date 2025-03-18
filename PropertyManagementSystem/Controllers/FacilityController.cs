@@ -73,6 +73,15 @@ namespace PropertyManagementSystem.Controllers
 
         }
 
+        public JsonResult GetOccupants()
+        {
+            var occupants = _context.RoomOccupants.FromSqlRaw("EXEC GFMS_GetRoomOccupantsHierarchy").ToList();
+
+            return Json(occupants);
+        }
+
+
+
         public ActionResult getGHList()
         {
             List<GFMS_Facility> _Facilities = _context.Facilities
@@ -98,10 +107,10 @@ namespace PropertyManagementSystem.Controllers
             List<GFMS_Facility> _Facilities = _context.Facilities
                 .AsQueryable()
                 .Where(x => x.FacilityClassification == "DORM")
-                .ToList() ;
+                .ToList();
 
             List<facilityList> _dmList = new List<facilityList>();
-            foreach(var item in _Facilities)
+            foreach (var item in _Facilities)
             {
                 _dmList.Add(new facilityList
                 {
@@ -119,7 +128,7 @@ namespace PropertyManagementSystem.Controllers
                 .ToList();
 
             List<facilityList> _fnList = new List<facilityList>();
-            foreach(var item in _Facilities)
+            foreach (var item in _Facilities)
             {
                 _fnList.Add(new facilityList
                 {
@@ -131,7 +140,7 @@ namespace PropertyManagementSystem.Controllers
         }
 
         /*Create*/
-        public IActionResult newFacility(string _name, string _classification, string _location, bool _isActive ) 
+        public IActionResult newFacility(string _name, string _classification, string _location, bool _isActive)
         {
             GFMS_Facility facility = new GFMS_Facility()
             {
@@ -142,18 +151,18 @@ namespace PropertyManagementSystem.Controllers
             };
 
 
-            _context.Facilities.Add( facility );
+            _context.Facilities.Add(facility);
             _context.SaveChanges();
 
             return RedirectToAction("Index", "Facility");
         }
         /*Update*/
-        
+
         [HttpPost]
         public IActionResult EditFacility(int _facilityId, string _facilityName, string _facilityLocation, string _facilityClassification, bool _isActive)
         {
             var facility = _context.Facilities.FirstOrDefault(f => f.FacilityId == _facilityId);
-            if(facility == null)
+            if (facility == null)
             {
                 return NotFound("Reservation detail not found.");
             }
@@ -176,7 +185,7 @@ namespace PropertyManagementSystem.Controllers
                 }
                 throw;
             }
-            string redirectUrl = Url.Action("ViewFacility", "Facility", new { FacilityId = _facilityId});
+            string redirectUrl = Url.Action("ViewFacility", "Facility", new { FacilityId = _facilityId });
             return Redirect(redirectUrl);
         }
 
@@ -186,14 +195,13 @@ namespace PropertyManagementSystem.Controllers
         public IActionResult DeleteFacility(int FacilityId)
         {
             GFMS_Facility facility = _context.Facilities.Find(FacilityId);
-            if(facility == null)
+            if (facility == null)
             {
                 return NotFound();
             }
-            _context.Facilities.Remove( facility );
+            _context.Facilities.Remove(facility);
             _context.SaveChanges();
             return RedirectToAction("Index", "Facility");
         }
-
     }
 }

@@ -14,7 +14,7 @@ using static Kendo.Mvc.UI.UIPrimitives;
 
 namespace PropertyManagementSystem.Controllers
 {
-[Authorize]
+    [Authorize]
     public class FunctionRoomController : Controller
     {
         private readonly DAL _context;
@@ -85,7 +85,7 @@ namespace PropertyManagementSystem.Controllers
             var currUser = User.Identity.Name;
             Console.WriteLine("Current User: " + currUser);
 
-            string currentRole = await _roleService.GetActiveRoleAsync(User); 
+            string currentRole = await _roleService.GetActiveRoleAsync(User);
 
             bool isRequestor = currentRole == "GFMS.Requestor";
             bool isDeptHead = currentRole == "GFMS.Department Head";
@@ -105,6 +105,7 @@ namespace PropertyManagementSystem.Controllers
                                         resHeader.ReservationType,
                                         StartDate = resDetails.StartDate,
                                         EndDate = resDetails.EndDate,
+                                        resDetails.RecurrenceRule,
                                         resDetails.Purpose,
                                         resDetails.RoomId,
                                         resDetails.FacilityId,
@@ -116,7 +117,7 @@ namespace PropertyManagementSystem.Controllers
             {
                 reservationsQuery = reservationsQuery.Where(r => r.RequestorEmail == currUser && r.ReservationType == "FN");
             }
-            reservationsQuery = reservationsQuery.Where(r => r.ReservationType == "FN");
+            reservationsQuery = reservationsQuery.Where(r => r.ReservationType == "FN" && r.Status != "DISAPPROVED");
             var reservations = reservationsQuery.AsEnumerable()
                                                 .Select(r => new ReservationViewModel
                                                 {
@@ -133,7 +134,8 @@ namespace PropertyManagementSystem.Controllers
                                                           : DateTime.MinValue,
                                                     Title = r.Purpose,
                                                     Purpose = r.Purpose,
-                                                    StartDate = r.StartDate.HasValue ? r.StartDate.Value.ToShortTimeString() : "",
+                                                    StartDate = r.StartDate,
+                                                    RecurrenceRule = r.RecurrenceRule,
                                                     RoomId = r.RoomId,
                                                     FacilityId = r.FacilityId,
                                                     RoomName = r.RoomName,
@@ -145,7 +147,7 @@ namespace PropertyManagementSystem.Controllers
 
         public IActionResult GetFacility()
         {
-           
+
             var facilities = _context.Facilities.AsQueryable().ToList();
             return Json(facilities
                 .Select(c => new { FacilityId = c.FacilityId, FacilityName = c.FacilityName, FacilityClass = c.FacilityClassification })
@@ -255,7 +257,7 @@ namespace PropertyManagementSystem.Controllers
 
             if (lastReservation != null)
             {
-                string[] codeParts = lastReservation.ReservationCode?.Split('-'); 
+                string[] codeParts = lastReservation.ReservationCode?.Split('-');
                 if (codeParts?.Length == 4 &&
                     int.TryParse(codeParts[2], out int lastYear) &&
                     int.TryParse(codeParts[3], out int lastSequenceNumber))
@@ -273,7 +275,7 @@ namespace PropertyManagementSystem.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
+        public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department, bool _isFreeOfCharge)
         {
             string currentRole = await _roleService.GetActiveRoleAsync(User);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -307,7 +309,8 @@ namespace PropertyManagementSystem.Controllers
                 Status = "DRAFT",
                 Department = _department,
                 ReservationCode = reservationCode,
-                ReservationType = "FN"
+                ReservationType = "FN",
+                isFreeOfCharge = _isFreeOfCharge
             };
 
             _context.ReservationHeaders.Add(_reservation);
@@ -347,10 +350,12 @@ namespace PropertyManagementSystem.Controllers
                     var firstDetail = reservationDetails.FirstOrDefault();
                     facility = _context.Facilities.FirstOrDefault(f => f.FacilityId == firstDetail.FacilityId);
                     rooms = _context.Rooms.FirstOrDefault(r => r.RoomId == firstDetail.RoomId);
-                    var equipmentIds = firstDetail.EquipmentNeeded
-                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(int.Parse)
-                    .ToList();
+                    var equipmentIds = string.IsNullOrEmpty(firstDetail.EquipmentNeeded)
+                        ? new List<int>() // Return an empty list if null
+                        : firstDetail.EquipmentNeeded
+                            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(int.Parse)
+                            .ToList();
 
                     equipmentNames = _context.Equipments
                         .Where(e => equipmentIds.Contains(e.Id))
@@ -359,11 +364,12 @@ namespace PropertyManagementSystem.Controllers
                 }
 
                 department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
-
+                var employee = _context.Employees.FirstOrDefault(e => e.Email == reservationHeader.RequestorEmail);
                 var reservation = new ReservationViewModel
                 {
                     ReservationHeader = reservationHeader,
                     ReservationDetails = reservationDetails,
+                    Employees = employee,
                     Department = department,
                     Facility = facility,
                     Room = rooms,
@@ -387,7 +393,7 @@ namespace PropertyManagementSystem.Controllers
                 return RedirectToAction("Error", "Error");
             }
         }
-        public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, List<string> _equipment, string _contactNumber, string _requestorEmail)
+        public async Task<IActionResult> CreateReservationDetailsAsync(int _reservationId, int _numOfGuests, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, List<string> _equipment, string _contactNumber, string RecurrenceRule, string _requestorEmail)
         {
             string currentRole = await _roleService.GetActiveRoleAsync(User);
 
@@ -411,16 +417,27 @@ namespace PropertyManagementSystem.Controllers
                 TempData["AlertType"] = "Warning";
 
 
-                return RedirectToAction("ViewReservationDetails", new { id = guid});
-            }else if (_startDate.Date == now.Date && _startDate < now)
-            {
-                TempData["AlertMessage"] = "You cannot file a reservation for the same day if the start time has already passed.";
-                TempData["AlertSubMessage"] = "Please select a future start time.";
-                TempData["AlertType"] = "Warning";
-
                 return RedirectToAction("ViewReservationDetails", new { id = guid });
             }
+            else if (_startDate.Date == now.Date)
+            {
+                if (currentRole == ("GFMS.Requestor") && !User.IsInRole("GFMS.Admin Approver"))
+                {
+                    TempData["AlertMessage"] = "Requestors cannot file a reservation for the same day.";
+                    TempData["AlertSubMessage"] = "Please select a future date.";
+                    TempData["AlertType"] = "Warning";
 
+                    return RedirectToAction("ViewReservationDetails", new { id = guid });
+                }
+                else if (_startDate <= now && !User.IsInRole("GFMS.Admin Approver"))
+                {
+                    TempData["AlertMessage"] = "You cannot file a reservation for the same day if the start time has already passed.";
+                    TempData["AlertSubMessage"] = "Please select a future start time.";
+                    TempData["AlertType"] = "Warning";
+
+                    return RedirectToAction("ViewReservationDetails", new { id = guid });
+                }
+            }
             try
             {
                 var equipmentNeeded = _equipment?.Select(e => e.Trim()).ToList();
@@ -432,6 +449,7 @@ namespace PropertyManagementSystem.Controllers
                     FacilityId = _facilityId,
                     RoomId = _roomId,
                     StartDate = _startDate,
+                    RecurrenceRule = RecurrenceRule,
                     EndDate = _endDate,
                     Purpose = _purpose,
                     DateAdded = DateTime.UtcNow,
@@ -448,7 +466,7 @@ namespace PropertyManagementSystem.Controllers
                 {
                     if (User.IsInRole("GFMS.Admin Approver") && currentRole == "GFMS.Requestor")
                     {
-                        reservationHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
+                        reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
                         /*if (reservationHeader != null)
                         {
                             await _emailService.SendReservationApprovalEmail(
@@ -466,7 +484,7 @@ namespace PropertyManagementSystem.Controllers
                     }
                     else if (User.IsInRole("GFMS.Admin Manager") && currentRole == "GFMS.Requestor")
                     {
-                        reservationHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
+                        reservationHeader.Status = "APPROVED";
 
                     }
                     else if (User.IsInRole("GFMS.Department Head") && currentRole == "GFMS.Requestor")
@@ -532,7 +550,7 @@ namespace PropertyManagementSystem.Controllers
 
         /*EditReservation*/
         [HttpPost]
-        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, string[] EquipmentNeeded, string _contactNumber)
+        public IActionResult EditReservationDetails(int ReservationDetailId, int ReservationId, int NumberOfGuest, int _facilityId, int _roomId, DateTime _startDate, DateTime _endDate, string _purpose, string[] EquipmentNeeded, string _contactNumber, string RecurrenceRule)
         {
             if (_startDate < new DateTime(1753, 1, 1) || _startDate > new DateTime(9999, 12, 31) ||
                 _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
@@ -559,11 +577,14 @@ namespace PropertyManagementSystem.Controllers
             }
             else if (_startDate.Date == now.Date && _startDate < now)
             {
-                TempData["AlertMessage"] = "You cannot file a reservation for the same day if the start time has already passed.";
-                TempData["AlertSubMessage"] = "Please select a future start time.";
-                TempData["AlertType"] = "Warning";
+               if(!User.IsInRole("GFMS.Admin Approver"))
+                {
+                    TempData["AlertMessage"] = "You cannot file a reservation for the same day if the start time has already passed.";
+                    TempData["AlertSubMessage"] = "Please select a future start time.";
+                    TempData["AlertType"] = "Warning";
 
-                return RedirectToAction("ViewReservationDetails", new { id = guid });
+                    return RedirectToAction("ViewReservationDetails", new { id = guid });
+                }
             }
 
             reservationDetail.NumberOfGuest = NumberOfGuest;
@@ -573,6 +594,7 @@ namespace PropertyManagementSystem.Controllers
             reservationDetail.EndDate = _endDate;
             reservationDetail.ContactNumber = _contactNumber;
             reservationDetail.Purpose = _purpose;
+            reservationDetail.RecurrenceRule = RecurrenceRule;
 
             if (EquipmentNeeded != null && EquipmentNeeded.Any())
             {
@@ -620,7 +642,7 @@ namespace PropertyManagementSystem.Controllers
 
                 if (reservationHeader != null)
                 {
-                    reservationHeader.Status = "DELETED"; 
+                    reservationHeader.Status = "DELETED";
                 }
 
                 _context.SaveChanges();
@@ -709,7 +731,7 @@ namespace PropertyManagementSystem.Controllers
             }
             else if (action == "Approve" && reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
             {
-                if ((_facilityId == 0 || _roomId == 0) ||(_facilityId == null || _roomId == null))
+                if ((reservationDetails.FacilityId == 0 || reservationDetails.RoomId == 0) || (reservationDetails.FacilityId == null || reservationDetails.RoomId == null))
                 {
                     TempData["AlertMessage"] = "No Rooms and Facility Assigned";
                     TempData["AlertSubMessage"] = "Select a room and facility for this reservation.";
@@ -747,7 +769,7 @@ namespace PropertyManagementSystem.Controllers
                 reservation.Status = "CANCELLED";
                 reservation.Remarks = Remarks;
                 reservation.ApprovedBy = empName.Fullname;
-                
+
             }
             else
             {

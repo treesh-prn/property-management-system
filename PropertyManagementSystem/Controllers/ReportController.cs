@@ -30,32 +30,42 @@ namespace PropertyManagementSystem.Controllers
         }
 
         // Action to trigger report generation
-        public async Task<ActionResult> GenerateReport(string _startDate, string _endDate, string _preparedBy)
+
+        public async Task<ActionResult> GenerateReport(string _startDate, string _endDate, string _company, string _preparedBy, string _classification, string reportType)
         {
             var parameters = new Dictionary<string, string>
             {
                 { "StartDate", _startDate },
                 { "EndDate", _endDate },
+                { "CompanyId", _company }, // Ensure _company contains a valid ID
+                { "FacilityClassification", _classification }, // New parameter
                 { "PreparedBy", _preparedBy }
             };
 
             try
             {
-                var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GenerateCompanyBilling", parameters);
-
-                // Validate the PDF file format
-                if (reportBytes.Length > 4 && reportBytes[0] == '%' && reportBytes[1] == 'P' && reportBytes[2] == 'D' && reportBytes[3] == 'F')
+                if (reportType == "excel")
                 {
+                    var reportBytes = await _ssrsService.GetReportAsExcelAsync("/PMS/GFMS_GenerateCompanyBilling", parameters);
+                    return File(reportBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "CompanyBillingReport.xlsx");
+                }
+                else if (reportType == "pdf")
+                {
+                    var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GenerateCompanyBilling", parameters);
                     return File(reportBytes, "application/pdf", "CompanyBillingReport.pdf");
                 }
-
-                throw new Exception("The response is not a valid PDF file.");
+                else
+                {
+                    return BadRequest("Invalid report type requested.");
+                }
             }
             catch (Exception ex)
             {
                 return BadRequest($"Error generating report: {ex.Message}");
             }
         }
+
+
 
         public async Task<ActionResult> GenerateWeelyOccupancy(string _startDate, string _endDate, string _preparedBy, string _facility)
         {
@@ -65,7 +75,7 @@ namespace PropertyManagementSystem.Controllers
                 { "EndDate", _endDate },
                 { "ReservationType", _facility }
             };
-           
+
             try
             {
                 var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GetReservationOccupancy", parameters);

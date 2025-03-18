@@ -1,5 +1,10 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
 <div class="card">
+    <div class="card-header d-flex justify-content-end">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-assign-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+            <i class="ti ti-plus m-1"></i> Assign Facility
+        </button>
+    </div>
     <div class="card-body">
         <div class="row align-items-start">
             <div class="col-2">
@@ -46,6 +51,12 @@
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Requestor</div>
                             <div class="datagrid-content">@Model.ReservationHeader.Requestor</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Employee Id</div>
+                            <div class="datagrid-content">@Model.Employees.EmployeeID</div>
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6 mb-4">
@@ -170,12 +181,13 @@
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
                     <i class="ti ti-ban m-1"></i> Disapprove
                 </button>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-assign-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-                    <i class="ti ti-plus m-1"></i> Assign Facility
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-approve-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                    <i class="ti ti-check m-1"></i> Approve
                 </button>
             </div>
         </div>
     </form>
     <partial name="Shared/_assign" />
     <partial name="Shared/_disapprove" />
+    <partial name="Shared/_approve" />
 </div>

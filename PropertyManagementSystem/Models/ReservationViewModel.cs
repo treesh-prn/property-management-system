@@ -9,6 +9,7 @@ namespace PropertyManagementSystem.Models
         public GFMS_Rooms? Room { get; set; }
         public Gen_Department? Department { get; set; }
         public Gen_Company? Companies { get; set; }
+        public Gen_Employee? Employees { get; set; }
         public Gen_Position? Position { get; set; }
         public List<string> Equipments { get; set; }
         public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
@@ -47,6 +48,7 @@ namespace PropertyManagementSystem.Models
         public string? Relationship { get; set; }
         public string? Company { get; set; }
         public bool? isPersonal { get; set; }
+        public bool? isFreeOfCharge { get; set; }
         public bool? CanDelete { get; set; }
         public DateTime? DateSubmitted { get; set; }
         public string? ReservationCode { get; set; }
@@ -61,7 +63,7 @@ namespace PropertyManagementSystem.Models
 
         public int? ScheduleType {  get; set; }
 
-        public string? StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime DateFiled { get; set; }
 

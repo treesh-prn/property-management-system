@@ -26,10 +26,6 @@
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
-                        <a href="@Url.Action("Index", "Equipment")" class="btn btn-primary bg-green">
-                            <i class="ti ti-arrow-left icon"></i>
-                            Go Back
-                        </a>
                         @*   <span class="d-none d-sm-inline">
                         <a href="#" class="btn">
                         New view
@@ -148,7 +144,7 @@
                                             }
                                         </div>
                                     </div>
-                                    <div class="datagrid-item">
+                                    @* <div class="datagrid-item">
                                         <div class="datagrid-title">Facility Equipment?</div>
                                         <div class="datagrid-content">
                                             @if (Model.isFacilityEquipment.Equals(false))
@@ -165,29 +161,40 @@
                                             }
                                         </div>
                                     </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Facility</div>
-                                        @if (Model.FacilityId == null)
-                                        {
-                                            <div class="datagrid-content">-</div>
-                                        }
-                                        else
-                                        {
-                                            <div class="datagrid-content">@Model.FacilityName</div>
-                                        }
-                                    </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Room</div>
-                                        @if (Model.RoomId == null)
-                                        {
-                                            <div class="datagrid-content">-</div>
-                                        }
-                                        else
-                                        {
-                                            <div class="datagrid-content">@Model.RoomName</div>
-                                        }
-                                    </div>
+                                     @if (Model.isFacilityEquipment.Equals(true))
+                                    {
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Function Room</div>
+                                            @if (Model.FacilityId == null)
+                                            {
+                                                <div class="datagrid-content">-</div>
+                                            }
+                                            else
+                                            {
+                                                <div class="datagrid-content">@Model.FacilityName</div>
+                                            }
+                                        </div>
+                                    }
+                                    @if (Model.isFacilityEquipment.Equals(true))
+                                    {
+                                        <div class="datagrid-item">
+                                            <div class="datagrid-title">Room</div>
+                                            @if (Model.RoomId == null)
+                                            {
+                                                <div class="datagrid-content">-</div>
+                                            }
+                                            else
+                                            {
+                                                <div class="datagrid-content">@Model.RoomName</div>
+                                            }
+                                        </div>
+                                    } *@
                                 </div>
+                            </div>
+                            <div class="card-footer">
+                                <a href="@Url.Action("Index", "Equipment")" class="btn btn-link link-secondary">
+                                    Go Back
+                                </a>
                             </div>
                         </div>
                         <div class="card-body p-0">
@@ -197,15 +204,23 @@
             </div>
             @*<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>*@
             @*off canvas edit form*@
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
-                <div class="offcanvas-header">
-                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
-                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <form asp-action="EditEquipment" asp-controller="Equipment" method="post">
+                <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+                    <div class="offcanvas-header">
+                        <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Equipment</h2>
+                        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body">
+                        <partial name="Shared/_update" />
+                    </div>
+                    <div class="offcanvas-footer border-top p-3">
+                        <div class="mt-2 text-end">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="offcanvas-body">
-                    <partial name="Shared/_update"/>
-                </div>
-            </div>
+            </form>
+            @*end of off canvas edit form*@
         </div>
     </div>
 </div>

@@ -99,17 +99,21 @@
                 <div class="col-lg-12">
                         @if (activeRole == "GFMS.Requestor")
                         {
-                            @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" && Model.ReservationDetails.FirstOrDefault().FacilityId == 0))
+                            @if(User.IsInRole("GFMS.Admin Approver") && Model.ReservationHeader.Status != "DRAFT")
                             {
-                                <partial name="Shared/_update" />
+                                <partial name="Shared/_view"/>
+                            }
+                            else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" && Model.ReservationDetails.FirstOrDefault().FacilityId == 0))
+                            {
+                                <partial name="Shared/_update"/>
                             }
                             else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED" || Model.ReservationHeader.Status == "CANCELLED")
                             {
-                                <partial name="Shared/_view" />
+                                <partial name="Shared/_view"/>
                             }
                             else
                             {
-                                <partial name="Shared/_draft" />
+                                <partial name="Shared/_draft"/>
                             }
                         }
                         else if (activeRole == "GFMS.Admin Approver")

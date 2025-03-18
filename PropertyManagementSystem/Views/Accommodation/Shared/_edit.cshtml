@@ -1,0 +1,133 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+
+@{
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+}
+@*ASSIGN FACILITY MODAL*@
+<div class="modal modal-blur fade" id="modal-update" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Reservation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="UpdateReservationDetails" asp-controller="Accommodation" method="post">
+
+                <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId">
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-lg-5">
+                            <label class="form-label">Guest Name</label>
+                        </div>
+                        <div class="col-lg-3">
+                            <label class="form-label">Company</label>
+                        </div>
+                        <div class="col-lg-3">
+                            <label class="form-label">Relationship</label>
+                        </div>
+                        <div class="col-sm-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-success" id="add-row">
+                                <i class="ti ti-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="dynamic-rows">
+                        @foreach (var detail in Model.ReservationDetails)
+                        {
+                            <div class="row mb-3">
+                                <input type="hidden" class="form-control" name="@detail.ReservationDetailId" placeholder="Guest Name" value="@detail.ReservationDetailId">
+                                <div class="col-lg-5">
+                                    @* <label class="form-label">Guest Name</label> *@
+                                    <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" value="@detail.GuestName">
+                                </div>
+                                <div class="col-lg-3">
+                                    @* <label class="form-label">Company</label> *@
+                                    <div class="dropdown">
+                                        <input type="text" name="_company[]" class="form-control companySearch" placeholder="Search or select a company..." autocomplete="off" value="@detail.Company">
+                                        <div class="dropdown-menu w-100 companyDropdown"></div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    @* <label class="form-label">Relationship</label> *@
+                                    <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable" value="@detail.Relationship">
+                                </div>
+                                <div class="col-sm-1 d-flex align-items-end">
+                                    <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
+                                        <i class="ti ti-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="row mb-3">
+                        <label class="form-label">Duration of Stay</label>
+                        <div class="col-lg-6">
+                            <label class="form-label required">Arrival Date and Time</label>
+                            @(
+                                Html.Kendo().DateTimePicker()
+                                .Name("_startDate")
+                                .Value(Model.ReservationDetails.FirstOrDefault()?.StartDate)
+                                .Min(DateTime.Today)
+                                .Max(DateTime.Today.AddMonths(1))
+                                .DateInput(true)
+                                .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                .Events(e => e.Open("onDateTimePickerOpen"))
+                                .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_startDate", onkeydown = "return false;" })
+                                )
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="form-label required">Departure Date and Time</label>
+                            @(
+                                Html.Kendo().DateTimePicker()
+                                .Name("_endDate")
+                                .Value(Model.ReservationDetails.FirstOrDefault()?.EndDate)
+                                .Min(DateTime.Today)
+                                .Max(DateTime.Today.AddMonths(1))
+                                .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                .Events(e => e.Open("onDateTimePickerOpen"))
+                                .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                .HtmlAttributes(new { style = "width: 100%; font-family: var(--tblr-font-sans-serif); font-size: 15px; font-weight: 500; background-color: var(--tblr-bg-forms); opacity: .8;", id = "_endDate", onkeydown = "return false;" })
+                                )
+                        </div>
+                    </div>
+                    @if (activeRole == "GFMS.Requestor" && User.IsInRole("GFMS.Admin Approver"))
+                            {
+                                <div class="col-lg-12">
+                                    <label class="form-label">Recurrence</label>
+                                    @(Html.Kendo().RecurrenceEditor()
+                                        .Name("RecurrenceEditor")
+                                        )
+                                </div>
+                                <input type="hidden" name="RecurrenceRule" id="RecurrenceRule">
+                            }
+                    <div class="col-lg-12">
+                        <div>
+                            <label class="form-label">
+                                Purpose
+                                <span id="charCount" class="form-label-description">0/50</span>
+                            </label>
+                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50">@Model.ReservationDetails.FirstOrDefault()?.Purpose</textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a data-bs-dismiss="modal" class="btn btn-link link-secondary">
+                        Go Back
+                    </a>
+                    <div class="ms-auto">
+                        @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
+                        {
+                            <button type="submit" class="btn btn-primary ms-auto">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                                Update
+                            </button>
+                        }
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@*END OF MODAL*@

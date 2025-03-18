@@ -11,6 +11,51 @@
                             <h3 class="card-title">Applicant Details</h3>
                         </div>
                         <div class="card-body">
+                            <label class="form-label">Civil Status</label>
+                            <div class="form-selectgroup-boxes row mb-3">
+                                <div class="col-lg-4">
+                                    <label class="form-selectgroup-item">
+                                        <input type="radio" name="_civilStat" value="SINGLE" class="form-selectgroup-input" checked>
+                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                            <span class="me-3">
+                                                <span class="form-selectgroup-check"></span>
+                                            </span>
+                                            <span class="form-selectgroup-label-content">
+                                                <span class="form-selectgroup-title strong mb-1">Single</span>
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="col-lg-4">
+                                    <label class="form-selectgroup-item">
+                                        <input type="radio" name="_civilStat" value="MARRIED" class="form-selectgroup-input">
+                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                            <span class="me-3">
+                                                <span class="form-selectgroup-check"></span>
+                                            </span>
+                                            <span class="form-selectgroup-label-content">
+                                                <span class="form-selectgroup-title strong mb-1">Married</span>
+
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                                <div class="col-lg-4">
+                                    <label class="form-selectgroup-item">
+                                        <input type="radio" name="_civilStat" value="WIDOWED" class="form-selectgroup-input">
+                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                            <span class="me-3">
+                                                <span class="form-selectgroup-check"></span>
+                                            </span>
+                                            <span class="form-selectgroup-label-content">
+                                                <span class="form-selectgroup-title strong mb-1">Widowed</span>
+
+                                            </span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="form-label">Application Type</label>
                             <div class="form-selectgroup-boxes row mb-3">
                                 <div class="col-lg-6">
                                     <label class="form-selectgroup-item">
@@ -25,6 +70,7 @@
                                         </span>
                                     </label>
                                 </div>
+                                
                                 <div class="col-lg-6">
                                     <label class="form-selectgroup-item">
                                         <input type="radio" name="_unitApplied" value="1" class="form-selectgroup-input">
@@ -43,7 +89,7 @@
                                 <div class="col-lg-6">
                                     <label class="form-label">Schedule Type</label>
                                     <div class="form-selectgroup-boxes row mb-3">
-                                        <div class="col-lg-4">
+                                        <div class="col-lg-6">
                                             <label class="form-selectgroup-item">
                                                 <input type="radio" name="_schedType" id="regularRadio" value="0" class="form-selectgroup-input">
                                                 <span class="form-selectgroup-label d-flex align-items-center p-2">
@@ -56,7 +102,7 @@
                                                 </span>
                                             </label>
                                         </div>
-                                        <div class="col-lg-3">
+                                        <div class="col-lg-6">
                                             <label class="form-selectgroup-item">
                                                 <input type="radio" name="_schedType" value="1" id="swingRadio" class="form-selectgroup-input">
                                                 <span class="form-selectgroup-label d-flex align-items-center p-2">
@@ -64,24 +110,12 @@
                                                         <span class="form-selectgroup-check"></span>
                                                     </span>
                                                     <span class="form-selectgroup-label-content">
-                                                        <span class="form-selectgroup-title strong mb-1">Swing</span>
+                                                        <span class="form-selectgroup-title strong mb-1">Shifting</span>
                                                     </span>
                                                 </span>
                                             </label>
                                         </div>
-                                        <div class="col-lg-5">
-                                            <label class="form-selectgroup-item">
-                                                <input type="radio" name="_schedType" value="2" id="gyRadio" class="form-selectgroup-input">
-                                                <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                                    <span class="me-3">
-                                                        <span class="form-selectgroup-check"></span>
-                                                    </span>
-                                                    <span class="form-selectgroup-label-content">
-                                                        <span class="form-selectgroup-title strong mb-1">Graveyard</span>
-                                                    </span>
-                                                </span>
-                                            </label>
-                                        </div>
+                                        
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
@@ -147,7 +181,7 @@
                                                         <span class="form-selectgroup-check"></span>
                                                     </span>
                                                     <span class="form-selectgroup-label-content">
-                                                        <span class="form-selectgroup-title strong mb-1">Rented</span>
+                                                        <span class="form-selectgroup-title strong mb-1">Rent</span>
                                                     </span>
                                                 </span>
                                             </label>
@@ -160,7 +194,7 @@
                                                         <span class="form-selectgroup-check"></span>
                                                     </span>
                                                     <span class="form-selectgroup-label-content">
-                                                        <span class="form-selectgroup-title strong mb-1">Living with Family</span>
+                                                        <span class="form-selectgroup-title strong mb-1">Living w/ Family</span>
                                                     </span>
                                                 </span>
                                             </label>
@@ -238,8 +272,8 @@
                                     <div>
                                         <div class="row mb-4">
                                             <div class="col">
-                                                <label class="form-label mb-2">Type of Vehicle</label>
-                                                <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Type of Vehicle">
+                                                <label class="form-label mb-2">Plate Number</label>
+                                                <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Plate Number">
                                             </div>
                                         </div>
                                     </div>
@@ -264,138 +298,90 @@
                             <h3 class="card-title">Dependents</h3>
                         </div>
                         <div class="card-body">
-                            <label class="form-label">Civil Status</label>
-                            <div class="form-selectgroup-boxes row mb-3">
-                                <div class="col-lg-4">
-                                    <label class="form-selectgroup-item">
-                                        <input type="radio" name="_civilStat" value="SINGLE" class="form-selectgroup-input" checked>
-                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="form-selectgroup-title strong mb-1">Single</span>
-                                            </span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="col-lg-4">
-                                    <label class="form-selectgroup-item">
-                                        <input type="radio" name="_civilStat" value="MARRIED" class="form-selectgroup-input">
-                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="form-selectgroup-title strong mb-1">Married</span>
-
-                                            </span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="col-lg-4">
-                                    <label class="form-selectgroup-item">
-                                        <input type="radio" name="_civilStat" value="WIDOWED" class="form-selectgroup-input">
-                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="form-selectgroup-title strong mb-1">Widowed</span>
-
-                                            </span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
+                            <!-- Labels Row -->
                             <div id="dynamic-rows-dependent-label">
-                                <label class="form-label">Dependents</label>
                                 <div class="row mb-3">
-                                    <div class="col-lg-2">
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
                                         <label class="form-label">Name</label>
                                     </div>
-                                    <div class="col-lg-1">
-                                        <label class="form-label">Age</label>
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                        <label class="form-label">Birthdate</label>
                                     </div>
-                                    <div class="col-lg-4">
+                                    <div class="col-lg-4 col-md-4 col-sm-6">
                                         <label class="form-label">Other Information</label>
-                                    </div>
+                                    </div>  
                                 </div>
                             </div>
+
+                            <!-- Dynamic Rows Container -->
                             <div id="dynamic-rows-dependent">
-                                <div class="row mb-3 original-row">
-                                    <div class="col-lg-2">
+                                <div class="row mb-3 original-row g-2 align-items-center">
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
                                         <input type="text" class="form-control" name="_dependents[]" placeholder="Name">
                                     </div>
-                                    <div class="col-lg-1">
-                                        <input type="text" class="form-control" name="_age[]" placeholder="Age">
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
+                                        <input type="date" class="form-control" name="_age[]">
                                     </div>
-                                    <div class="col-lg-2">
-                                        <label class="form-selectgroup-item">
-                                            <input type="radio" name="_dependent_status[0]" value="studying" class="form-selectgroup-input">
-                                            <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                                <span class="me-3">
-                                                    <span class="form-selectgroup-check"></span>
-                                                </span>
-                                                <span class="form-selectgroup-label-content">
-                                                    <span class="form-selectgroup-title strong mb-1">Studying</span>
-                                                </span>
-                                            </span>
-                                        </label>
+
+                                    <!-- Styled Radio Buttons -->
+                                    <div class="col-lg-2 col-md-4 col-sm-6 justify-content-center">
+                                         <div class="d-flex">
+                                            <label class="form-selectgroup-item me-3">
+                                                <input type="radio" name="_dependent_status[0]" value="studying" class="form-selectgroup-input">
+                                                <span class="form-selectgroup-label" style="font-weight:bold">Studying</span>
+                                            </label>
+                                            <label class="form-selectgroup-item">
+                                                <input type="radio" name="_dependent_status[0]" value="working" class="form-selectgroup-input">
+                                                <span class="form-selectgroup-label" style="font-weight:bold">Working</span>
+                                            </label>
+                                        </div>
+                                        
                                     </div>
-                                    <div class="col-lg-2">
-                                        <label class="form-selectgroup-item">
-                                            <input type="radio" name="_dependent_status[0]" value="working" class="form-selectgroup-input">
-                                            <span class="form-selectgroup-label d-flex align-items-center p-2">
-                                                <span class="me-3">
-                                                    <span class="form-selectgroup-check"></span>
-                                                </span>
-                                                <span class="form-selectgroup-label-content">
-                                                    <span class="form-selectgroup-title strong mb-1">Working</span>
-                                                </span>
-                                            </span>
-                                        </label>
-                                    </div>
-                                    <div class="col-lg-2">
+
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
                                         <input type="text" class="form-control" name="_position[]" placeholder="Position">
                                     </div>
-                                    <div class="col-lg-2">
+                                    <div class="col-lg-2 col-md-4 col-sm-6">
                                         <input type="text" class="form-control" name="_location[]" placeholder="Location">
                                     </div>
-                                    <div class="col-sm-1 d-flex align-items-end">
-                                        <button type="button" id="add-dependent" class="btn btn-primary ml-2 custom-padding">
+
+                                    <!-- Delete Button (inside same row) -->
+                                    <div class="col-lg-2 col-md-4 col-sm-6 d-flex justify-content-center">
+                                        <button type="button" id="add-dependent" class="btn btn-primary">
                                             <i class="ti ti-plus"></i>
                                         </button>
-                                        <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
+                                        <button type="button" class="btn btn-danger remove-row">
                                             <i class="ti ti-trash"></i>
                                         </button>
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="col-lg-12">
-                                <div>
-                                    <label class="form-label">
-                                        Attach Letter of Intent
-                                    </label>
-                                    @(Html.Kendo().Upload()
-                                        .Name("files")
-                                        .Multiple(true)
-                                        .Async(a => a
-                                        .Save("Upload", "Dorm")
-                                        .Remove("Remove", "Dorm")
-                                        .AutoUpload(true)
-                                        )
-                                        .DropZone(".dropZoneElement")
-                                        .Events(e => e
-                                        .Success("onSuccess")
-                                        .Error("onError")
-                                        )
-                                        )
-                                </div>
+                        </div>
+                    </div>
+                    <div class="card mt-3 mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Letter of Intent</h3>
+                        </div>
+                        <div class="card-body">
+                            <!-- Upload Section -->
+                            <div class="mt-4">
+                                <label class="form-label">Attach Letter of Intent</label>
+                                @(Html.Kendo().Upload()
+                                    .Name("files")
+                                    .Multiple(true)
+                                    .Async(a => a
+                                    .Save("Upload", "Dorm")
+                                    .Remove("Remove", "Dorm")
+                                    .AutoUpload(true)
+                                    )
+                                    .DropZone(".dropZoneElement")
+                                    .Events(e => e
+                                    .Success("onSuccess")
+                                    .Error("onError")
+                                    )
+                                    )
                             </div>
                             <input type="hidden" name="filePath" id="filePath" />
-
                             <div id="uploadedFilesLinks" style="display: none;">
                                 <ul id="fileLinksList"></ul>
                             </div>
@@ -447,6 +433,10 @@
                                             <dt class="col-4 text-primary">Requestor:</dt>
                                             <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 @Model.ReservationHeader.Requestor
+                                            </dd>
+                                            <dt class="col-4 text-primary">Employee Id:</dt>
+                                            <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                @Model.Employees.EmployeeID
                                             </dd>
                                             <dt class="col-4 text-primary">Email:</dt>
                                             <dd class="col-8 text-truncate" style="font-size: white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">

@@ -42,6 +42,19 @@
                                class="card card-sm text-decoration-none"
                                onclick="goToReservationApproval(event, this)">
                                 <div class="card card-sm">
+                                    @if(Model.NewFNReservationsCount != 0)
+                                    {
+                                        <span class="badge bg-blue text-blue-fg badge-notification badge-pill">
+                                            @if (activeRole != "GFMS.Requestor")
+                                            {
+                                                @Model.NewFNReservationsCount
+                                            }
+                                            else
+                                            {
+                                                @Model.NewFNReservationsCount
+                                            }
+                                        </span>
+                                    }
                                     <div class="card-body">
                                         <div class="row align-items-center">
                                             <div class="col-auto">
@@ -53,7 +66,7 @@
                                                 <div class="font-weight-medium" style="font-weight:600">
                                                     Function Room
                                                 </div>
-                                                @if(activeRole != "GFMS.Requestor")
+                                                @if (activeRole != "GFMS.Requestor")
                                                 {
                                                     <div class="text-secondary">
                                                         @Model.NewFNReservationsCount waiting for approval
@@ -75,6 +88,19 @@
                         <div class="col-sm-6 col-lg-3">
                             <a href="@Url.Action("ReservationList", "Accommodation")" class="card card-sm text-decoration-none">
                                 <div class="card card-sm">
+                                    @if (Model.NewGHReservationsCount != 0)
+                                    {
+                                        <span class="badge bg-blue text-blue-fg badge-notification badge-pill">
+                                            @if (activeRole != "GFMS.Requestor")
+                                            {
+                                                @Model.NewGHReservationsCount
+                                            }
+                                            else
+                                            {
+                                                @Model.NewGHReservationsCount
+                                            }
+                                        </span>
+                                    }
                                     <div class="card-body">
                                         <div class="row align-items-center">
                                             <div class="col-auto">
@@ -107,6 +133,19 @@
                         <div class="col-sm-6 col-lg-3">
                             <a href="@Url.Action("ReservationList", "Dorm")" class="card card-sm text-decoration-none">
                                 <div class="card card-sm">
+                                    @if (Model.NewDRMReservationsCount != 0)
+                                    {
+                                        <span class="badge bg-blue text-blue-fg badge-notification badge-pill">
+                                            @if (activeRole != "GFMS.Requestor")
+                                            {
+                                                @Model.NewDRMReservationsCount
+                                            }
+                                            else
+                                            {
+                                                @Model.NewDRMReservationsCount
+                                            }
+                                        </span>
+                                    }
                                     <div class="card-body">
                                         <div class="row align-items-center">
                                             <div class="col-auto">

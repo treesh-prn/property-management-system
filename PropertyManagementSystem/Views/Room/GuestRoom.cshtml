@@ -98,6 +98,7 @@
                                     .Exportable(false);
                                 })
                                 .Scrollable()
+                                .Pageable()
                                 .ToolBar(toolbar =>
                                 {
                                     toolbar.Search();
@@ -122,12 +123,12 @@
 </div>
 @*off canvas edit form*@
 <form id="fcFRM1" asp-controller="Room" asp-action="newGHRoom" enctype="multipart/form-data" method="post">
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
-    <div class="offcanvas-header">
-        <h2 class="offcanvas-title" id="offcanvasEndLabel">New Guest Room</h2>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+        <div class="offcanvas-header">
+            <h2 class="offcanvas-title" id="offcanvasEndLabel">New Guest Room</h2>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
             <div class="mb-3">
                 <label class="form-label required">Room Name </label>
                 <input class="form-control" name="_name" type="text" required="required">
@@ -174,19 +175,32 @@
                 <label class="form-label required">Capacity</label>
                 <input class="form-control" name="_capacity" type="number" required="required">
             </div>
+            <div class="mb-3">
+                <label class="form-label required">Cost Per Day</label>
+                <input class="form-control" name="_costPerDay" type="number" step="0.01">
+            </div>
+            <div class="mb-3">
+                <label class="form-label required">Cost Per Week</label>
+                <input class="form-control" name="_costPerWeek" type="number">
+            </div>
+            <div class="mb-3">
+                <label class="form-label required">Cost Per Month</label>
+                <input class="form-control" name="_costPerMonth" type="number">
+            </div>
             <div class="mb-3 d-flex align-items-center">
                 <label for="isActiveCheckbox" class="form-label me-auto">Is Active</label>
                 <div class="form-check form-switch">
                     <input class="form-check-input" id="switch" name="_isActive" type="checkbox" value="true" checked>
                 </div>
             </div>
+        </div>
+        <div class="offcanvas-footer border-top p-3">
+            <div class="mt-2 text-end">
+                <button type="submit" class="btn btn-primary" form="fcFRM1">Add Room</button>
+            </div>
+        </div>
     </div>
-    <div class="offcanvas-footer">
-            <button type="submit" class="btn btn-primary" form="fcFRM1">Add Room</button>
-    </div>
-</div>
 </form>
-
 @*DELETE MODAL*@
 <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">

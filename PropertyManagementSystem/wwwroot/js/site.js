@@ -100,6 +100,24 @@ $(document).ready(function () {
     }
 });
 
+
+
+$(document).ready(function () {
+    var recurrenceEditor = $("#RecurrenceEditor").data("kendoRecurrenceEditor");
+
+    if (recurrenceEditor) {
+        recurrenceEditor.bind("change", function () {
+            $("#RecurrenceRule").val(recurrenceEditor.value()); // Set hidden input value
+        });
+    }
+
+    // Ensure it submits properly on form submit
+    $("form").submit(function () {
+        $("#RecurrenceRule").val(recurrenceEditor.value());
+    });
+});
+
+
 // Automatically validate on page load (before form submission)
 window.onload = function () {
     const form = document.querySelector('form');
@@ -136,6 +154,8 @@ $(document).ready(function () {
     // Initial visibility based on checkbox state when the page loads
     toggleFacilityRoom();
 });
+
+
 
 document.addEventListener('DOMContentLoaded', function () {
     const textarea = document.getElementById('purposeTextarea');
@@ -587,47 +607,126 @@ $(document).ready(function () {
 });
 
 //guesthouse accommodation - guests
-document.getElementById('add-row').addEventListener('click', function () {
-    var rowToClone = document.querySelector('#dynamic-rows .row');
-    var newRow = rowToClone.cloneNode(true);
-    newRow.classList.add('mt-3');
+function loadCompanyList() {
+        $.ajax({
+            url: "/Global/getCompanies",
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                var dataList = $("#company-list");
+                dataList.empty(); // Clear previous entries
 
-    var textInput = newRow.querySelectorAll('input[type="text"]');
-    textInput.forEach(function (input) {
-        input.value = '';
-    });
+                $.each(data, function (index, company) {
+                    dataList.append(`<option value="${company.Company}">`);
+                });
+            },
+            error: function () {
+                console.error("Failed to load company list.");
+            }
+        });
+}
 
-    var labelsToRemove = newRow.querySelectorAll('label');
-    labelsToRemove.forEach(function (label) {
-        label.remove();
-    });
+$(document).ready(function () {
+    var companies = [];
 
-    var buttonsToRemove = newRow.querySelectorAll('button');
-    buttonsToRemove.forEach(function (button) {
-        button.remove();
-    });
-
-    var removeButton = document.createElement('button');
-    removeButton.type = 'button';
-    removeButton.classList.add('btn', 'btn-danger', 'remove-row', 'ml-2', 'custom-padding');
-    removeButton.innerHTML = '<i class="ti ti-trash"></i>';
-    newRow.querySelector('.d-flex').appendChild(removeButton);
-
-    document.getElementById('dynamic-rows').appendChild(newRow);
-
-
-});
-
-document.getElementById('dynamic-rows').addEventListener('click', function (e) {
-    if (e.target.classList.contains('remove-row')) {
-        var rows = document.querySelectorAll('#dynamic-rows .row');
-        if (rows.length > 1) {
-            e.target.closest('.row').remove();
+    // Fetch companies from the server
+    $.ajax({
+        url: '/Global/getCompanies',
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            companies = data; // Store the fetched data
+        },
+        error: function () {
+            alert("Error loading companies.");
         }
+    });
+
+    // Function to populate dropdown
+    function populateDropdown(data, dropdown) {
+        dropdown.empty(); // Clear previous options
+
+        $.each(data, function (index, company) {
+            dropdown.append(`<button type="button" class="dropdown-item" data-value="${company.Id}">${company.Company}</button>`);
+        });
+
+        dropdown.addClass("show"); // Show dropdown after filtering
     }
+
+    // Event delegation for dynamically created rows
+    $(document).on("keyup", ".companySearch", function () {
+        var searchTerm = $(this).val().toLowerCase();
+        var dropdown = $(this).closest(".dropdown").find(".companyDropdown");
+
+        if (companies.length === 0) {
+            dropdown.removeClass("show");
+            return;
+        }
+
+        var filteredData = companies.filter(c => c.Company.toLowerCase().includes(searchTerm));
+        populateDropdown(filteredData, dropdown);
+    });
+
+    // Ensure dropdown items are clickable and update the input field
+    $(document).on("click", ".dropdown-item", function () {
+        var inputField = $(this).closest(".dropdown").find(".companySearch");
+        inputField.val($(this).text()); // Set input value
+        $(this).closest(".companyDropdown").removeClass("show"); // Hide dropdown after selection
+    });
+
+    // Clone row event (Removes Labels)
+    $("#add-row").click(function () {
+        var rowToClone = $("#dynamic-rows .row").first();
+        var newRow = rowToClone.clone();
+
+        // Reset input fields in the cloned row
+        newRow.find("input[type='text']").val("");
+        newRow.find(".companyDropdown").removeClass("show").empty(); // Clear cloned dropdown
+
+        // Remove labels in the cloned row
+        newRow.find("label").remove();
+
+        // Remove 'Add' button from cloned row
+        newRow.find("#add-row").remove();
+
+
+        // Ensure unique IDs to avoid conflicts
+        newRow.find("input, select").each(function () {
+            var id = $(this).attr("id");
+            if (id) {
+                $(this).attr("id", id + "_" + $(".row").length);
+            }
+        });
+
+        // Append remove button if not present
+        if (newRow.find(".remove-row").length === 0) {
+            var removeButton = $("<button>", {
+                type: "button",
+                class: "btn btn-danger remove-row ml-2 custom-padding",
+                html: '<i class="ti ti-trash"></i>'
+            });
+
+            newRow.find(".d-flex").append(removeButton);
+        }
+
+        $("#dynamic-rows").append(newRow);
+    });
+
+
+    // Remove row event
+    $("#dynamic-rows").on("click", ".remove-row", function () {
+        if ($("#dynamic-rows .row").length > 1) {
+            $(this).closest(".row").remove();
+        }
+    });
+
+    // Hide dropdown when clicking outside
+    $(document).click(function (e) {
+        if (!$(e.target).closest('.dropdown').length) {
+            $(".companyDropdown").removeClass("show");
+        }
+    });
 });
-
-
 
 
 //dorm - civil status
@@ -652,6 +751,13 @@ $(document).ready(function () {
             $('#dynamic-rows-dependent').slideDown();
             $('#dynamic-rows-dependent-label').slideDown();
 
+            // If Dorm was selected, switch to Housing
+            if (dormOption.is(':checked')) {
+                housingOption.prop('checked', true);
+            }
+
+            // Disable Housing
+            dormOption.prop('disabled', true);
             // Enable Housing
             housingOption.prop('disabled', false);
         } else {
@@ -659,7 +765,8 @@ $(document).ready(function () {
             $('#dynamic-rows-dependent-label').slideUp();
 
             // Enable Housing
-            housingOption.prop('disabled', false);
+            housingOption.prop('disabled', true);
+            dormOption.prop('disabled', false);
         }
     }
 
@@ -673,25 +780,48 @@ $(document).ready(function () {
 
 //dorm - dependents
 
-$('#add-dependent').on('click', function () {
-    // Clone the first row
-    var originalRow = $('.original-row:first').clone();
+$(document).ready(function () {
+    // Add button functionality
+    $('#add-dependent').on('click', function () {
+        var originalRow = $('.original-row:first').clone();
 
-    // Reset the values in the cloned row
-    originalRow.find('input[type="text"]').val(''); // Reset text inputs
-    originalRow.find('input[type="radio"]').prop('checked', false); // Uncheck radio buttons
+        // Reset input values
+        originalRow.find('input[type="text"]').val('');
+        originalRow.find('input[type="date"]').val('');
+        originalRow.find('input[type="radio"]').prop('checked', false);
 
-    // Update the name attributes for the cloned row
-    var rowIndex = $('.original-row').length; // Get the new index for the row
+        // Update name attributes to ensure uniqueness
+        var rowIndex = $('.original-row').length;
+        originalRow.find('input[name^="_dependent_status"]').each(function () {
+            var newName = $(this).attr('name').replace(/\d+/, rowIndex);
+            $(this).attr('name', newName);
+        });
 
-    // Update the names for dependent status radio buttons
-    originalRow.find('input[name="_dependent_status[0]"]').attr('name', `_dependent_status[${rowIndex}]`);
-    originalRow.find('input[name="_dependent_status[1]"]').attr('name', `_dependent_status[${rowIndex}]`);
+        // Remove any existing remove button from cloned rows
+        originalRow.find('.remove-row').remove();
 
-    originalRow.find("#add-dependent").remove();
-    // Append the cloned row
-    $('#dynamic-rows-dependent').append(originalRow);
+        // Append a remove button to the newly cloned row
+        var removeButton = $('<button/>', {
+            type: 'button',
+            class: 'btn btn-danger remove-row ms-2',
+            html: '<i class="ti ti-trash"></i>'
+        });
+
+        originalRow.find('.col-lg-2.d-flex').append(removeButton);
+
+        // Append the cloned row
+        $('#dynamic-rows-dependent').append(originalRow);
+    });
+
+    // Delete button functionality
+    $(document).on('click', '.remove-row', function () {
+        var clonedRows = $('#dynamic-rows-dependent .original-row');
+        if (clonedRows.length > 1) {
+            $(this).closest('.original-row').remove();
+        }
+    });
 });
+
 
 $(document).ready(function () {
     // Function to update placeholders based on selected dependent status
@@ -702,7 +832,7 @@ $(document).ready(function () {
             row.find('input[name="_position[]"]').attr("placeholder", "School");
             row.find('input[name="_location[]"]').attr("placeholder", "School Location");
         } else if (selectedStatus === "working") {
-            row.find('input[name="_position[]"]').attr("placeholder", "Position");
+            row.find('input[name="_position[]"]').attr("placeholder", "Company");
             row.find('input[name="_location[]"]').attr("placeholder", "Work Location");
         }
     }
@@ -936,38 +1066,45 @@ function fetchEquipment() {
     const facilityId = $("#_facilityId").val();
     const roomId = $("#_roomId").val();
 
+    console.log("Facility ID:", facilityId);
+    console.log("Room ID:", roomId);
+
     if (facilityId && roomId) {
         $.ajax({
             url: '/Global/GetEquipmentFNAssign',
             type: 'GET',
             data: { facilityId, roomId },
             success: function (data) {
-                let newEquipmentList = data.map(equipment => equipment.Id).join(',');
-                let currentEquipmentList = $('#EquipmentNeeded').val();
+                console.log("Received Equipment Data:", data);
 
-                if (currentEquipmentList) {
-                    // Append the new equipment list to the existing value
-                    currentEquipmentList = currentEquipmentList.split(',');
-                    let combinedList = [...new Set([...currentEquipmentList, ...newEquipmentList.split(',')])];
-                    $('#EquipmentNeeded').val(combinedList.join(','));
-                } else {
-                    // No initial value, set the new equipment list directly
-                    $('#EquipmentNeeded').val(newEquipmentList);
-                }
+                let currentEquipment = $('#EquipmentNeeded').val().split(',').filter(e => e); // Existing equipment list
+                let newRoomEquipment = data.map(equipment => equipment.Id); // Newly fetched room equipment
 
-                // Display the updated equipment list
-                $('#equipmentList').text($('#EquipmentNeeded').val());
+                console.log("Current Equipment:", currentEquipment);
+                console.log("New Room Equipment:", newRoomEquipment);
+
+                // Remove previous room equipment but retain original facility-linked equipment
+                let updatedEquipmentList = [...new Set([...currentEquipment, ...newRoomEquipment])];
+
+                $('#EquipmentNeeded').val(updatedEquipmentList.join(','));
+                $('#equipmentList').text(updatedEquipmentList.join(','));
+
+                console.log("Updated Equipment List:", updatedEquipmentList);
             },
             error: function () {
-                alert('Failed to fetch equipment data.' + facilityId + roomId);
+                alert('Failed to fetch equipment data. Facility ID: ' + facilityId + ', Room ID: ' + roomId);
             }
         });
     }
-
 }
 
-$(document).ready(function () {
-    $('#_roomId').change(fetchEquipment);
-});
 
+function onTabActivate(e) {
+    var tabText = $(e.item).text().trim(); // Get tab name
 
+    if (tabText === "Details") {
+        $("#detailsButton").show(); // Show button if "Details" tab is active
+    } else {
+        $("#detailsButton").hide(); // Hide button otherwise
+    }
+}

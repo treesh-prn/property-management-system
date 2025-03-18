@@ -30,6 +30,8 @@ namespace PropertyManagementSystem.Data
         public virtual DbSet<GFMS_ReservationHeader> ReservationHeaders { get; set; }
         public virtual DbSet<GFMS_ReservationDetails> ReservationDetails { get; set; }
         public virtual DbSet<HRIS_EmploymentLevel> EmploymentLevels { get; set; }
+        public virtual DbSet<GFMS_RoomEquipment> RoomEquipments { get; set; }
+        public DbSet<RoomOccupantViewModel> RoomOccupants { get; set; }
         public DbSet<ReservationReport> ReservationReports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,6 +57,12 @@ namespace PropertyManagementSystem.Data
             .HasColumnType("datetime");
 
             modelBuilder.Entity<ReservationReport>().HasNoKey();
+
+            modelBuilder.Entity<RoomOccupantViewModel>().HasNoKey();
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<GFMS_RoomEquipment>().ToTable("GFMS_RoomEquipment");
+
         }
     }
 

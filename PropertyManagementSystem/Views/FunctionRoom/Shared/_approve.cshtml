@@ -31,6 +31,8 @@
                 </div>
                 <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
                 <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId" />
+                <input type="hidden" name="_facilityId" value="@Model.ReservationDetails.FirstOrDefault().FacilityId">
+                <input type="hidden" name="_roomId" value="@Model.ReservationDetails.FirstOrDefault().RoomId" />
             </form>
         </div>
     </div>

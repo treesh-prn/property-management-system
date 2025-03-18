@@ -1,4 +1,6 @@
-﻿namespace PropertyManagementSystem.Models
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace PropertyManagementSystem.Models
 {
     public class RoomViewModel
     {
@@ -15,5 +17,9 @@
         public double? CostPerWeek { get; set; }
         public double? CostPerMonth { get; set; }
         public bool? isPerHead { get; set; }
+
+        public List<string> EquipmentNames { get; set; } = new List<string>();
+        public List<int> SelectedEquipmentIds { get; set; } = new List<int>();
+
     }
 }

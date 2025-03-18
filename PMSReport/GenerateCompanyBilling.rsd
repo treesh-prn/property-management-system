@@ -2,7 +2,7 @@
 <SharedDataSet xmlns="http://schemas.microsoft.com/sqlserver/reporting/2010/01/shareddatasetdefinition" xmlns:rd="http://schemas.microsoft.com/SQLServer/reporting/reportdesigner">
   <DataSet Name="DataSet1">
     <Query>
-      <DataSourceReference>DataSource1</DataSourceReference>
+      <DataSourceReference>TGI_Source</DataSourceReference>
       <DataSetParameters>
         <DataSetParameter Name="@StartDate">
           <ReadOnly>false</ReadOnly>
@@ -16,7 +16,19 @@
           <OmitFromQuery>false</OmitFromQuery>
           <rd:DbType>DateTime</rd:DbType>
         </DataSetParameter>
+        <DataSetParameter Name="@CompanyId">
+          <ReadOnly>false</ReadOnly>
+          <Nullable>false</Nullable>
+          <OmitFromQuery>false</OmitFromQuery>
+          <rd:DbType>Double</rd:DbType>
+        </DataSetParameter>
         <DataSetParameter Name="@PreparedBy">
+          <ReadOnly>false</ReadOnly>
+          <Nullable>false</Nullable>
+          <OmitFromQuery>false</OmitFromQuery>
+          <rd:DbType>String</rd:DbType>
+        </DataSetParameter>
+        <DataSetParameter Name="@FacilityClassification">
           <ReadOnly>false</ReadOnly>
           <Nullable>false</Nullable>
           <OmitFromQuery>false</OmitFromQuery>
@@ -24,15 +36,19 @@
         </DataSetParameter>
       </DataSetParameters>
       <CommandType>StoredProcedure</CommandType>
-      <CommandText>GenerateCompanyChargesReport</CommandText>
+      <CommandText>GFMS_GenerateCompanyChargesReport</CommandText>
     </Query>
     <Fields>
-      <Field Name="Company">
-        <DataField>Company</DataField>
+      <Field Name="CompanyCode">
+        <DataField>CompanyCode</DataField>
         <rd:TypeName>System.String</rd:TypeName>
       </Field>
       <Field Name="Department">
         <DataField>Department</DataField>
+        <rd:TypeName>System.String</rd:TypeName>
+      </Field>
+      <Field Name="FacilityName">
+        <DataField>FacilityName</DataField>
         <rd:TypeName>System.String</rd:TypeName>
       </Field>
       <Field Name="RoomUsed">

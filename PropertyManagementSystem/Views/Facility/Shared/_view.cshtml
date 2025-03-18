@@ -1,0 +1,50 @@
+﻿<div class="card-body">
+    <div class="datagrid">
+        <div class="datagrid-item">
+            <div class="datagrid-title">Facility Name</div>
+            <div class="datagrid-content">@Model.FacilityName</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Facility Classification</div>
+            <div class="datagrid-content">@Model.FacilityClassification</div>
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Location</div>
+            @if (Model.FacilityLocation.Equals("MILL"))
+            {
+                <div class="datagrid-content">
+                    @Model.FacilityLocation
+                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                        <i class="ti ti-building-factory-2"></i>
+                    </span>
+                </div>
+            }
+            else
+            {
+                <div class="datagrid-content">
+                    @Model.FacilityLocation
+                    <span class="nav-link-icon d-md-none d-lg-inline-block">
+                        <i class="ti ti-building-skyscraper"></i>
+                    </span>
+                </div>
+            }
+        </div>
+        <div class="datagrid-item">
+            <div class="datagrid-title">Active Status</div>
+            <div class="datagrid-content">
+                @if (Model.isActive.Equals(false))
+                {
+                    <span class="status status-red">
+                        Inactive
+                    </span>
+                }
+                else
+                {
+                    <span class="status status-green">
+                        Active
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+</div>

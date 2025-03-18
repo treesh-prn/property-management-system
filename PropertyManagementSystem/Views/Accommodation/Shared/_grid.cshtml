@@ -8,7 +8,7 @@
             columns.Bound(c => c.GuestName);
             columns.Bound(c => c.Company).Width(350);
             columns.Bound(c => c.Relationship);
-            columns.Bound(c => c.StartDate).Title("Arrival Date and Time");
+            columns.Bound(c => c.StartDate).Title("Arrival Date and Time").Format("{0:yyyy-MM-dd HH:mm:ss}");
             columns.Bound(c => c.EndDate).Title("Departure Date and Time").Format("{0:yyyy-MM-dd HH:mm:ss}");
             columns.Bound(c => c.FacilityName).Title("Facility Name");
             columns.Bound(c => c.RoomName).Title("Room Name");

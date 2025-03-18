@@ -128,6 +128,9 @@
                                             </span>
                                         </a>
                                         <div class="dropdown-menu" id="maintenance">
+                                            <a class="dropdown-item" href="@Url.Action("Index", "Equipment")">
+                                                <strong>Equipment</strong>
+                                            </a>
                                             <a class="dropdown-item" href="@Url.Action("Index", "Facility")">
                                                 <strong>Facilities</strong>
                                             </a>
@@ -136,20 +139,17 @@
                                                     <strong>Rooms</strong>
                                                 </a>
                                                 <div class="dropdown-menu">
-                                                    <a class="dropdown-item" href="@Url.Action("GuestRoom", "Room")">
-                                                        <strong>Guest Room</strong>
-                                                    </a>
                                                     <a class="dropdown-item" href="@Url.Action("FunctionRoom", "Room")">
                                                         <strong>Function Room</strong>
+                                                    </a>
+                                                    <a class="dropdown-item" href="@Url.Action("GuestRoom", "Room")">
+                                                        <strong>Guest Room</strong>
                                                     </a>
                                                     <a class="dropdown-item" href="@Url.Action("DormRoom", "Room")">
                                                         <strong>Dorm Room</strong>
                                                     </a>
                                                 </div>
                                             </div>
-                                            <a class="dropdown-item" href="@Url.Action("Index", "Equipment")">
-                                                <strong>Equipment</strong>
-                                            </a>
                                         </div>
                                     </li>
                                     <li class="nav-item dropdown">
@@ -168,9 +168,9 @@
                                             <a class="dropdown-item" href="@Url.Action("Index", "Report")">
                                                 <strong>Weekly Occupancy</strong>
                                             </a>
-                                            <a class="dropdown-item" href="@Url.Action("Index", "Report")">
+                                           @*  <a class="dropdown-item" href="@Url.Action("Index", "Report")">
                                                 <strong>Reservation Details</strong>
-                                            </a>
+                                            </a> *@
                                         </div>
                                     </li>
                                 }

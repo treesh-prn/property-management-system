@@ -1,0 +1,15 @@
+﻿@(Html.Kendo().OrgChart<RoomOccupantViewModel>()
+    .Name("orgChart")
+    .DataSource(ds => ds
+        .Read(r => r.Url("/Facility/GetOccupants").Type(HttpVerbs.Get))
+        .Model(m =>
+        {
+            m.Id("ID"); // Unique identifier for nodes
+            m.Field("ParentID", typeof(int?)); // Parent-child relationship
+            m.Field("Name", typeof(string)); // Display name
+            m.Field("Title", typeof(string)); // Title field for role
+            m.Field("Expanded", typeof(bool)); // Whether to expand the node
+        })
+    )
+    .Editable(false)
+)
