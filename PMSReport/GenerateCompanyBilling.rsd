@@ -8,13 +8,13 @@
           <ReadOnly>false</ReadOnly>
           <Nullable>false</Nullable>
           <OmitFromQuery>false</OmitFromQuery>
-          <rd:DbType>DateTime</rd:DbType>
+          <rd:DbType>Int32</rd:DbType>
         </DataSetParameter>
         <DataSetParameter Name="@EndDate">
           <ReadOnly>false</ReadOnly>
           <Nullable>false</Nullable>
           <OmitFromQuery>false</OmitFromQuery>
-          <rd:DbType>DateTime</rd:DbType>
+          <rd:DbType>Int32</rd:DbType>
         </DataSetParameter>
         <DataSetParameter Name="@CompanyId">
           <ReadOnly>false</ReadOnly>

@@ -36,7 +36,7 @@
                         @foreach (var detail in Model.ReservationDetails)
                         {
                             <div class="row mb-3">
-                                <input type="hidden" class="form-control" name="@detail.ReservationDetailId" placeholder="Guest Name" value="@detail.ReservationDetailId">
+                                <input type="hidden" class="form-control" name="@detail.ReservationDetailId" placeholder="Guest Name" value="@detail.ReservationDetailId" oninput="this.value = this.value.toUpperCase()">
                                 <div class="col-lg-5">
                                     @* <label class="form-label">Guest Name</label> *@
                                     <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" value="@detail.GuestName">
@@ -44,13 +44,13 @@
                                 <div class="col-lg-3">
                                     @* <label class="form-label">Company</label> *@
                                     <div class="dropdown">
-                                        <input type="text" name="_company[]" class="form-control companySearch" placeholder="Search or select a company..." autocomplete="off" value="@detail.Company">
+                                        <input type="text" name="_company[]" class="form-control companySearch" placeholder="Search or select a company..." autocomplete="off" value="@detail.Company" oninput="this.value = this.value.toUpperCase()">
                                         <div class="dropdown-menu w-100 companyDropdown"></div>
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
                                     @* <label class="form-label">Relationship</label> *@
-                                    <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable" value="@detail.Relationship">
+                                    <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable" value="@detail.Relationship" oninput="this.value = this.value.toUpperCase()">
                                 </div>
                                 <div class="col-sm-1 d-flex align-items-end">
                                     <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
@@ -108,7 +108,7 @@
                                 Purpose
                                 <span id="charCount" class="form-label-description">0/50</span>
                             </label>
-                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50">@Model.ReservationDetails.FirstOrDefault()?.Purpose</textarea>
+                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" oninput="this.value = this.value.toUpperCase()">@Model.ReservationDetails.FirstOrDefault()?.Purpose</textarea>
                         </div>
                     </div>
                 </div>

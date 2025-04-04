@@ -14,6 +14,7 @@ namespace PropertyManagementSystem.Models
         [Column(TypeName = "DateTime")]
         public DateTime? DateFiled { get; set; }
         public string? Requestor { get; set; }
+        public string? RequestorID { get; set; }
         public string? RequestorEmail { get; set; }
         public string? GUID { get; set; }
         public string? Status { get; set; }

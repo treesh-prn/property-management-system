@@ -96,7 +96,8 @@
                             r.Requestor == employee.Fullname &&
                             r.Status != "DRAFT" &&
                             r.Status != "CANCELLED" &&
-                            r.Status != "DISAPPROVED");
+                            r.Status != "DISAPPROVED" &&
+                            r.Status != "APPROVED");
                     }
                 }
                 // Assign the results to the respective variables

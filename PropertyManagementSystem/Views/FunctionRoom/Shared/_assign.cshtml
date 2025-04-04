@@ -1,4 +1,9 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel;
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
+    var employee = await RoleService.GetUserName(User);
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+}
 @*ASSIGN FACILITY MODAL*@
 <div class="modal modal-blur fade" id="modal-assign-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered" role="document">
@@ -52,7 +57,12 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn me-auto" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" name="action" id="showAlertButton" value="Approve" class="btn btn-primary" data-bs-dismiss="modal">Assign and Approve</button>
+                    @if(activeRole == "GFMS.Admin Approver"){
+                        <button type="submit" name="action" id="showAlertButton" value="Approve" class="btn btn-primary" data-bs-dismiss="modal">Assign and Approve</button>
+                    }else{
+                        <button type="submit" name="action" id="showAlertButton" value="Reassign" class="btn btn-primary" data-bs-dismiss="modal">Re-assign</button>
+                    }
+                   
                 </div>
             </form>
         </div>

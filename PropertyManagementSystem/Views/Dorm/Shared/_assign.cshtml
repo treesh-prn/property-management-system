@@ -1,0 +1,84 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@*ASSIGN FACILITY MODAL*@
+<div class="modal modal-blur fade" id="modal-assign-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Facility Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="UpdateReservationStatus" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="ReservationId" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId">
+                    <input type="hidden" id="reservationDetailId" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                    @if (Model.ReservationDetails.FirstOrDefault().AppliedUnit == 1)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label required">Facility</label>
+                            @(
+                                Html.Kendo().DropDownList()
+                                .Name("_facilityId")
+                                .DataTextField("FacilityName")
+                                .DataValueField("FacilityId")
+                                .DataSource(source =>
+                                {
+                                    source.Read(read =>
+                                    {
+                                        read.Action("GetHousing", "Global").Data("filterFacilities");
+                                    });
+                                })
+                                .HtmlAttributes(new { style = "width: 100%" })
+                                .OptionLabel("Select Facility")
+                                )
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mb-3">
+                            <label class="form-label required">Facility</label>
+                            @(
+                                Html.Kendo().DropDownList()
+                                .Name("_facilityId")
+                                .DataTextField("FacilityName")
+                                .DataValueField("FacilityId")
+                                .DataSource(source =>
+                                {
+                                    source.Read(read =>
+                                    {
+                                        read.Action("GetDRM", "Global").Data("filterFacilities");
+                                    });
+                                })
+                                .HtmlAttributes(new { style = "width: 100%" })
+                                .OptionLabel("Select Facility")
+                                )
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label required">Room</label>
+                            @(Html.Kendo().DropDownList()
+                                .Name("_roomId")
+                                .DataTextField("RoomName")
+                                .DataValueField("RoomId")
+                                .CascadeFrom("_facilityId")
+                                .DataSource(source =>
+                                {
+                                    source.Read(read =>
+                                    {
+                                        read.Action("GetDRMRoom", "Global").Data("filterRooms");
+                                    }).ServerFiltering(true);
+                                })
+                                .HtmlAttributes(new { style = "width: 100%" })
+                                .OptionLabel("Select Room")
+                                )
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn me-auto" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" name="action" id="showAlertButton" value="Approve" class="btn btn-primary" data-bs-dismiss="modal">Assign and Approve</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@*END OF MODAL*@

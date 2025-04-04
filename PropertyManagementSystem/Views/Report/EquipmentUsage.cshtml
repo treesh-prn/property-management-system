@@ -1,0 +1,104 @@
+﻿@using System.Globalization
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@model IEnumerable<PropertyManagementSystem.Models.ReservationReport>
+
+@{
+    var employee = await RoleService.GetUserName(User);
+}
+
+<div class="page-wrapper">
+    <!-- Page Header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <div class="page-pretitle">REPORTS</div>
+                    <h2 class="page-title">Equipment Usage</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <div class="container-xl mt-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form id="filterForm" class="row row-cols-lg-auto row-cols-1 g-2 align-items-end justify-content-center" method="get" asp-action="GenerateEquipmentOccupancy">
+                    <!-- Start Date -->
+                    <div class="col">
+                        <label for="_startDate" class="form-label">Start Date</label>
+                        @(Html.Kendo().DatePicker()
+                            .Name("_startDate")
+                            .Value(DateTime.Today)
+                            .Format("yyyy/MM/dd")
+                            .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                            .HtmlAttributes(new { id = "_startDate", style = "width: 100%;" })
+                            )
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="col">
+                        <label for="_endDate" class="form-label">End Date</label>
+                        @(Html.Kendo().DatePicker()
+                            .Name("_endDate")
+                            .Value(DateTime.Today)
+                            .Format("yyyy/MM/dd")
+                            .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                            .HtmlAttributes(new { id = "_endDate", style = "width: 100%;" })
+                            )
+                    </div>
+
+                    <!-- Company Dropdown -->
+                    <div class="col">
+                        <label class="form-label fw-bold required">Company</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_company")
+                            .DataTextField("Company")
+                            .DataValueField("Id")
+                            .Value(employee.CompanyId.ToString())
+                            .DataSource(source =>
+                            {
+                                source.Read(read => { read.Action("getCompanies", "Global"); });
+                            })
+                            .HtmlAttributes(new { style = "width: 250px; font-size: 14px;" })
+                            .OptionLabel("All Companies")
+                            )
+                    </div>
+
+                    <div class="col">
+                        <label class="form-label required">Facility Classification</label>
+                        @(
+                            Html.Kendo().DropDownList()
+                            .Name("_classification")
+                            .BindTo(new List<SelectListItem>
+                        {
+                        new SelectListItem() {
+                        Text = "FUNCTION ROOM",
+                        Value = "FUNCTION ROOM"
+                        },
+                        new SelectListItem() {
+                        Text = "GUESTHOUSE",
+                        Value = "GUESTHOUSE"
+                        } })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
+                    </div>
+
+                    <!-- Prepared By -->
+                    <div class="col">
+                        <label for="_preparedBy" class="form-label fw-bold">Prepared By</label>
+                        <input type="text" id="_preparedBy" name="_preparedBy" class="form-control" placeholder="Enter Name" style="width: 180px; font-size: 14px;" />
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="col">
+                        <button type="submit" name="reportType" value="excel" class="btn btn-green">Excel</button>
+                    </div>
+                    <div class="col">
+                        <button type="submit" name="reportType" value="pdf" class="btn btn-red">PDF</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

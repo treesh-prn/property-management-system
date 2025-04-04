@@ -1,0 +1,21 @@
+﻿<input type="hidden" id="reservationId" value="@Model.ReservationId" />
+@(Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
+        .Name("grid")
+        .Columns(columns =>
+        {
+            columns.Bound(c => c.ReservationDetailId).Visible(false);
+            columns.Bound(c => c.GuestName);
+            columns.Bound(c => c.Company).Width(350);
+            columns.Bound(c => c.Relationship);
+            columns.Bound(c => c.StartDate).Title("Arrival Date and Time").Format("{0:yyyy-MM-dd HH:mm:ss}");
+            columns.Bound(c => c.EndDate).Title("Departure Date and Time").Format("{0:yyyy-MM-dd HH:mm:ss}");
+            columns.Bound(c => c.FacilityName);
+            columns.Bound(c => c.RoomName);
+        })
+        .Scrollable()
+        .DataSource(dataSource => dataSource
+        .Ajax()
+        .Read(read => read.Action("getGHApprovals", "Accommodation").Data("function() { return { reservationId: $('#reservationId').val() }; }"))
+
+        )
+)

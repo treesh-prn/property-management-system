@@ -206,7 +206,7 @@ namespace PropertyManagementSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department, bool _isPersonal)
+        public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department, bool _isPersonal, string _employeeId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             Console.WriteLine("User Id: " + userId);
@@ -228,6 +228,7 @@ namespace PropertyManagementSystem.Controllers
                 GUID = unique,
                 ChargeToCompany = _company,
                 Requestor = _requestor,
+                RequestorID = _employeeId,
                 RequestorEmail = _requestorEmail,
                 Approver = managerFullName,
                 ApproverEmail = managerEmail,
@@ -288,7 +289,7 @@ namespace PropertyManagementSystem.Controllers
                 }
 
                 department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
-                var employee = _context.Employees.FirstOrDefault(e => e.Email == reservationHeader.RequestorEmail);
+                var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservationHeader.RequestorID);
 
                 var reservation = new ReservationViewModel
                 {
@@ -388,12 +389,18 @@ namespace PropertyManagementSystem.Controllers
 
                         _context.ReservationDetails.Add(reservationDetails);
                         var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
+                        var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservationHeader.RequestorID);
                         if (reservationHeader != null)
                         {
                             if (User.IsInRole("GFMS.Admin Approver") && currentRole == "GFMS.Requestor")
                             {
                                 reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
 
+                            }
+                            else if (currentRole == "GFMS.Requestor" && employee.DepartmentId == 33)
+                            {
+                                reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
+                                
                             }
                             else if (User.IsInRole("GFMS.Admin Manager") && currentRole == "GFMS.Requestor")
                             {

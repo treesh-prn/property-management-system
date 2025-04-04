@@ -4,232 +4,152 @@
 @{
     var activeRole = await RoleService.GetActiveRoleAsync(User);
 }
-<div class="card">
-    <form asp-action="CreateReservationDetails" asp-controller="FunctionRoom" method="post">
-
-        <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
-        <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
-        <input type="hidden" class="form-control" name="_requestorEmail" asp-for="@Model.ReservationHeader.RequestorEmail">
-        <div class="container container-lg mt-3">
-            <div id="dynamic-rows">
-                <div class="row">
-                    <div class="col-lg-8 mb-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Facilities Reservation Form</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="row mb-3">
-                                    <div class="col-lg-6">
-                                        <label class="form-label required">Number of Attendees</label>
-                                        <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees" required>
+<div class="row">
+    <div class="col-md-9">
+         <form asp-action="CreateReservationDetails" asp-controller="FunctionRoom" method="post">
+             <div class="card">
+                <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
+                <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
+                <input type="hidden" class="form-control" name="_requestorEmail" asp-for="@Model.ReservationHeader.RequestorEmail">
+                <div class="container container-lg mt-3">
+                    <div id="dynamic-rows">
+                        <div class="row">
+                            <div class="col-lg-12 mb-3">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Facilities Reservation Form</h3>
                                     </div>
-                                    <div class="col-lg-6">
-                                        <div>
-                                            <label class="form-label required">
-                                                Contact Number
-                                            </label>
-                                            <div class="input-group mb-2">
-                                                <span class="input-group-text">
-                                                    +63
-                                                </span>
-                                                <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" required>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-lg-6">
+                                                <label class="form-label required">Number of Attendees</label>
+                                                <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees" required>
                                             </div>
+                                            <div class="col-lg-6">
+                                                <div>
+                                                    <label class="form-label required">
+                                                        Contact Number
+                                                    </label>
+                                                    <div class="input-group mb-2">
+                                                        <span class="input-group-text">
+                                                            +63
+                                                        </span>
+                                                        <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" required>
+                                                    </div>
 
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                <label class="form-label">Duration of Stay</label>
-                                <div class="row mb-3">
-                                    <div class="col-lg-6">
-                                        <label class="form-label required">Start Date </label>
-                                        @(Html.Kendo().DateTimePicker()
-                                            .Name("_startDate")
-                                            .Value(DateTime.Today.AddHours(7))
-                                            .Min(DateTime.Today)
-                                            .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                            .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                            .Events(e => e.Open("onDateTimePickerOpen"))
-                                            .HtmlAttributes(new { id = "_startDate", onkeydown = "return false;" })
-                                            )
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <label class="form-label required">End Date </label>
-                                        @(Html.Kendo().DateTimePicker()
-                                            .Name("_endDate")
-                                            .Value(DateTime.Today.AddHours(18))
-                                            .Min(DateTime.Today)
-                                            .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                            .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                            .Events(e => e.Open("onDateTimePickerOpen"))
-                                            .HtmlAttributes(new { id = "_endDate", onkeydown = "return false;" })
-                                            )
-                                    </div>
-                                </div>
-                                @if (activeRole == "GFMS.Requestor" && User.IsInRole("GFMS.Admin Approver"))
-                                {
-                                    <div class="col-lg-12">
-                                        <label class="form-label">Recurrence</label>
-                                        @(Html.Kendo().RecurrenceEditor()
-                                            .Name("RecurrenceEditor")
-                                            )
-                                    </div>
-                                    <input type="hidden" name="RecurrenceRule" id="RecurrenceRule">
-                                }
-                                @if (activeRole == ("GFMS.Requestor") && User.IsInRole("GFMS.Admin Manager"))
-                                {
-                                    <div class="row mb-3">
-                                        <div class="col-lg-6">
-                                            <label class="form-label required">Facility</label>
-                                            @(
-                                                Html.Kendo().DropDownList()
-                                                .Name("_facilityId")
-                                                .DataTextField("FacilityName")
-                                                .DataValueField("FacilityId")
-                                                .DataSource(source =>
-                                                {
-                                                    source.Read(read =>
+                                        <label class="form-label">Duration of Stay</label>
+                                        <div class="row mb-3">
+                                            <div class="col-lg-6">
+                                                <label class="form-label required">Start Date </label>
+                                                @(Html.Kendo().DateTimePicker()
+                                                    .Name("_startDate")
+                                                    .Value(DateTime.Today.AddHours(7))
+                                                    .Min(DateTime.Today)
+                                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                    .Events(e => e.Open("onDateTimePickerOpen"))
+                                                    .HtmlAttributes(new { id = "_startDate", onkeydown = "return false;" })
+                                                    )
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <label class="form-label required">End Date </label>
+                                                @(Html.Kendo().DateTimePicker()
+                                                    .Name("_endDate")
+                                                    .Value(DateTime.Today.AddHours(18))
+                                                    .Min(DateTime.Today)
+                                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
+                                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                    .Events(e => e.Open("onDateTimePickerOpen"))
+                                                    .HtmlAttributes(new { id = "_endDate", onkeydown = "return false;" })
+                                                    )
+                                            </div>
+                                        </div>
+                                        @if (activeRole == "GFMS.Requestor" && User.IsInRole("GFMS.Admin Approver"))
+                                        {
+                                            <div class="col-lg-12">
+                                                <label class="form-label">Recurrence</label>
+                                                @(Html.Kendo().RecurrenceEditor()
+                                                    .Name("RecurrenceEditor")
+                                                    )
+                                            </div>
+                                            <input type="hidden" name="RecurrenceRule" id="RecurrenceRule">
+                                        }
+                                        @if (activeRole == ("GFMS.Requestor") && User.IsInRole("GFMS.Admin Manager"))
+                                        {
+                                            <div class="row mb-3">
+                                                <div class="col-lg-6">
+                                                    <label class="form-label required">Facility</label>
+                                                    @(
+                                                        Html.Kendo().DropDownList()
+                                                        .Name("_facilityId")
+                                                        .DataTextField("FacilityName")
+                                                        .DataValueField("FacilityId")
+                                                        .DataSource(source =>
+                                                        {
+                                                            source.Read(read =>
+                                                            {
+                                                                read.Action("GetAllFacility", "Global").Data("filterFacilities");
+                                                            });
+                                                        })
+                                                        .HtmlAttributes(new { style = "width: 100%" })
+                                                        .OptionLabel("Select Facility")
+                                                        )
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <label class="form-label required">Room</label>
+                                                    @(Html.Kendo().DropDownList()
+                                                        .Name("_roomId")
+                                                        .DataTextField("RoomName")
+                                                        .DataValueField("RoomId")
+                                                        .CascadeFrom("_facilityId")
+                                                        .DataSource(source =>
+                                                        {
+                                                            source.Read(read =>
+                                                            {
+                                                                read.Action("GetAllRooms", "Global").Data("filterRooms");
+                                                            }).ServerFiltering(true);
+                                                        })
+                                                        .HtmlAttributes(new { style = "width: 100%" })
+                                                        .OptionLabel("Select Room")
+                                                        )
+                                                </div>
+                                            </div>
+                                        }
+                                        <div class="row mb-3">
+                                            <div class="col-lg-12">
+                                                <label class="form-label required">Equipment Needed</label>
+                                                @(Html.Kendo().MultiSelect()
+                                                    .Name("_equipment")
+                                                    .Placeholder("Please select needed equipment/s")
+                                                    .DownArrow(true)
+                                                    .NoDataTemplateId("noDataTemplate")
+                                                    .DataTextField("EquipmentName")
+                                                    .DataValueField("Id")
+                                                    .Filter("contains")
+                                                    .AutoBind(true)
+                                                    .DataSource(source =>
                                                     {
-                                                        read.Action("GetAllFacility", "Global").Data("filterFacilities");
-                                                    });
-                                                })
-                                                .HtmlAttributes(new { style = "width: 100%" })
-                                                .OptionLabel("Select Facility")
-                                                )
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <label class="form-label required">Room</label>
-                                            @(Html.Kendo().DropDownList()
-                                                .Name("_roomId")
-                                                .DataTextField("RoomName")
-                                                .DataValueField("RoomId")
-                                                .CascadeFrom("_facilityId")
-                                                .DataSource(source =>
-                                                {
-                                                    source.Read(read =>
-                                                    {
-                                                        read.Action("GetAllRooms", "Global").Data("filterRooms");
-                                                    }).ServerFiltering(true);
-                                                })
-                                                .HtmlAttributes(new { style = "width: 100%" })
-                                                .OptionLabel("Select Room")
-                                                )
-                                        </div>
-                                    </div>
-                                }
-                                <div class="row mb-3">
-                                    <div class="col-lg-12">
-                                        <label class="form-label required">Equipment Needed</label>
-                                        @(Html.Kendo().MultiSelect()
-                                            .Name("_equipment")
-                                            .Placeholder("Please select needed equipment/s")
-                                            .DownArrow(true)
-                                            .NoDataTemplateId("noDataTemplate")
-                                            .DataTextField("EquipmentName")
-                                            .DataValueField("Id")
-                                            .Filter("contains")
-                                            .AutoBind(true)
-                                            .DataSource(source =>
-                                            {
-                                                source.Read(read =>
-                                                {
-                                                    read.Action("GetEquipments", "Global");
-                                                });
-                                            })
-                                            )
+                                                        source.Read(read =>
+                                                        {
+                                                            read.Action("GetEquipments", "Global");
+                                                        });
+                                                    })
+                                                    )
 
-                                        @* <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded"> *@
-                                    </div>
-                                </div>
-                                <div class="col-lg-12">
-                                    <div>
-                                        <label class="form-label required">
-                                            Purpose
-                                            <span id="charCount" class="form-label-description">0/50</span>
-                                        </label>
-                                        <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-4">
-                        <div class="card booking-summary">
-                            <div class="card-header">
-                                <h3 class="card-title">Reservation Summary</h3>
-                            </div>
-                            <div class="card-body">
-                                <div class="row align-items-start">
-                                    <div class="col-3">
-                                        <img src="@Url.Content("~/img/facility-room.jpg")" alt="Dorm Reservation" class="rounded">
-                                    </div>
-                                    <div class="col-9">
-                                        <div class="text-primary h4 d-flex align-items-center">
-                                            <span>@Model.ReservationHeader.ReservationCode</span>
-                                            <span class="ms-3">
-                                                @if (Model.ReservationHeader.Status == "APPROVED")
-                                                {
-                                                    <span class='status status-teal'>
-                                                        <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                    </span>
-                                                }
-                                                else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                                                {
-                                                    <span class='status status-teal'>
-                                                        <span class='status-dot status-dot-animated'></span>FOR APPROVAL
-                                                    </span>
-                                                }
-                                                else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
-                                                {
-                                                    <span class='status status-red'>
-                                                        <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class='status status-blue'>
-                                                        <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                    </span>
-                                                }
-                                            </span>
+                                                @* <input type="text" class="form-control" name="EquipmentNeeded" placeholder="EquipmentNeeded" value="@detail.EquipmentNeeded"> *@
+                                            </div>
                                         </div>
-                                        <div class="row mt-3">
-                                            <dl class="row">
-                                                <dt class="col-4 text-primary">Requestor:</dt>
-                                                <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                    @Model.ReservationHeader.Requestor
-                                                </dd>
-                                                <dt class="col-4 text-primary">Employee Id:</dt>
-                                                <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                    @Model.Employees.EmployeeID
-                                                </dd>
-                                                <dt class="col-4 text-primary">Email:</dt>
-                                                <dd class="col-8 text-truncate" style="font-size: white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                    @Model.ReservationHeader.RequestorEmail
-                                                </dd>
-                                                <dt class="col-4 text-primary">Department:</dt>
-                                                <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                    @Model.Department.DepartmentCode
-                                                </dd>
-                                                @if(User.IsInRole("GFMS.Admin Approver"))
-                                                {
-                                                    <dt class="col-4 text-primary">Free Charge:</dt>
-                                                    <dd class="col-8 text-truncate" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                        @if (@Model.ReservationHeader.isPersonal == true)
-                                                        {
-                                                            <span class="status status-green">
-                                                                Yes
-                                                            </span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="status status-green">
-                                                                Yes
-                                                            </span>
-                                                        }
-                                                    </dd>
-                                                }
-                                            </dl>
+                                        <div class="col-lg-12">
+                                            <div>
+                                                <label class="form-label required">
+                                                    Purpose
+                                                    <span id="charCount" class="form-label-description">0/50</span>
+                                                </label>
+                                                <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" oninput="this.value = this.value.toUpperCase()"></textarea>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -237,54 +157,119 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="card-footer d-flex justify-content-between align-items-center">
-            <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-link link-secondary">
-                Go Back
-            </a>
-            <div class="ms-auto">
-                <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-confirmation">
-                    <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                    Submit
-                </button>
-            </div>
-        </div>
-        <!-- Confirmation Modal -->
-        <div class="modal modal-blur fade" id="modal-confirmation" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    <div class="modal-status bg-warning"></div>
-                    <div class="modal-body text-center py-4">
-                        <!-- Warning Icon -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon mb-2 text-yellow icon-lg">
-                            <path d="M12 2L2 22h20L12 2z"></path>
-                            <path d="M12 16h.01"></path>
-                            <path d="M12 10h.01"></path>
-                        </svg>
-                        <h3>Cancellation Policy Notice</h3>
-                        <p class="text-secondary">
-                            Non-cancelled reservations within an hour before the reservation date and time
-                            will be <strong>charged to the department.</strong>
-                            Do you want to proceed?
-                        </p>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-link link-secondary">
+                        Go Back
+                    </a>
+                    <div class="ms-auto">
+                        <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-confirmation">
+                            <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                            Submit
+                        </button>
                     </div>
-                    <div class="modal-footer">
-                        <div class="w-100">
-                            <div class="row">
-                                <div class="col">
-                                    <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">Cancel</button>
-                                </div>
-                                <div class="col">
-                                    <button type="submit" class="btn btn-primary w-100" id="confirmSubmit">Confirm & Submit</button>
+                </div>
+             </div>
+            <div class="modal modal-blur fade" id="modal-confirmation" tabindex="-1" role="dialog" aria-hidden="true">
+                <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+                    <div class="modal-content">
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="modal-status bg-warning"></div>
+                        <div class="modal-body text-center py-4">
+                            <!-- Warning Icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon mb-2 text-yellow icon-lg">
+                                <path d="M12 2L2 22h20L12 2z"></path>
+                                <path d="M12 16h.01"></path>
+                                <path d="M12 10h.01"></path>
+                            </svg>
+                            <h3>Cancellation Policy Notice</h3>
+                            <p class="text-secondary">
+                                Non-cancelled reservations within an hour before the reservation date and time
+                                will be <strong>charged to the department.</strong>
+                                Do you want to proceed?
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="w-100">
+                                <div class="row">
+                                    <div class="col">
+                                        <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">Cancel</button>
+                                    </div>
+                                    <div class="col">
+                                        <button type="submit" class="btn btn-primary w-100" id="confirmSubmit">Confirm & Submit</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+         </form>
+    </div>
+    <div class="card booking-summary col-lg-3 align-self-start">
+        <div class="card-header">
+            <h3 class="card-title mb-0">Reservation Summary</h3>
         </div>
-    </form>
+
+        <div class="card-body p-3 text-center">
+            <!-- Profile Image & Reservation Code -->
+            <div class="d-flex flex-column align-items-center">
+                <div class="profile-img mb-2">
+                    <img src="@Url.Content("~/img/facility-room.jpg")" alt="Function Room Reservation" class="rounded img-fluid border shadow-sm"
+                         style="width: 90px; height: 90px; object-fit: cover;">
+                </div>
+                <span class="text-primary fw-bold">@Model.ReservationHeader.ReservationCode</span>
+
+                <!-- Status Indicator -->
+                @if (Model.ReservationHeader.Status == "APPROVED")
+                {
+                    <span class='status status-teal'>
+                        <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                    </span>
+                }
+                else if (Model.ReservationHeader.Status.Contains("FOR") && Model.ReservationHeader.Status.Contains("APPROVAL"))
+                {
+                    <span class='status status-teal'>
+                        <span class='status-dot status-dot-animated'></span>FOR APPROVAL
+                    </span>
+                }
+                else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
+                {
+                    <span class='status status-red'>
+                        <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                    </span>
+                }
+                else
+                {
+                    <span class='status status-blue'>
+                        <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                    </span>
+                }
+            </div>
+            <!-- User Details Section -->
+            <div class="mt-3 d-flex justify-content-center">
+                <table class="table table-borderless w-100 text-start" style="line-height: .5;">
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold text-primary">Requestor:</td>
+                            <td>@Model.ReservationHeader.Requestor</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-primary">Employee ID:</td>
+                            <td>@Model.Employees.EmployeeID</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-primary">Email:</td>
+                            <td>@Model.ReservationHeader.RequestorEmail</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-primary">Department:</td>
+                            <td>@Model.Department.DepartmentCode</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
+<!-- Confirmation Modal -->

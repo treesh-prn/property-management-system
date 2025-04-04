@@ -275,7 +275,7 @@ namespace PropertyManagementSystem.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department, bool _isFreeOfCharge)
+        public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department, bool _isFreeOfCharge, string _employeeId)
         {
             string currentRole = await _roleService.GetActiveRoleAsync(User);
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -301,6 +301,7 @@ namespace PropertyManagementSystem.Controllers
                 GUID = unique,
                 ChargeToCompany = _company,
                 Requestor = _requestor,
+                RequestorID = _employeeId,
                 RequestorEmail = _requestorEmail,
                 Approver = managerFullName,
                 ApproverEmail = managerEmail,
@@ -364,7 +365,7 @@ namespace PropertyManagementSystem.Controllers
                 }
 
                 department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
-                var employee = _context.Employees.FirstOrDefault(e => e.Email == reservationHeader.RequestorEmail);
+                var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservationHeader.RequestorID);
                 var reservation = new ReservationViewModel
                 {
                     ReservationHeader = reservationHeader,
@@ -462,6 +463,9 @@ namespace PropertyManagementSystem.Controllers
                 var roomName = _context.Rooms.Where(r => r.RoomId == _roomId).Select(r => r.RoomName).FirstOrDefault();
                 var facilityName = _context.Facilities.Where(f => f.FacilityId == _facilityId).Select(f => f.FacilityName).FirstOrDefault();
                 var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
+                var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservationHeader.RequestorID);
+                var department = _context.Departments.FirstOrDefault(e => e.Id == employee.DepartmentId);
+                var company = _context.Companies.FirstOrDefault(e => e.Id == employee.DepartmentId);
                 if (reservationHeader != null)
                 {
                     if (User.IsInRole("GFMS.Admin Approver") && currentRole == "GFMS.Requestor")
@@ -481,6 +485,25 @@ namespace PropertyManagementSystem.Controllers
                             );
                         }*/
 
+                    }
+                    else if (currentRole == "GFMS.Requestor" && department.DepartmentCode == "ADMIN" && company.CompanyCode == "FDPPC")
+                    {
+                        reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
+                        /*
+                         if (reservationHeader != null)
+                        {
+                            await _emailService.SendReservationApprovalEmail(
+                               reservationHeader,
+                               reservationHeader.RequestorEmail,
+                               _startDate.ToString(),
+                               _endDate.ToString(),
+                               _numOfGuests,
+                               facilityName,
+                               roomName,
+                               _purpose
+                           );
+                        }
+                         */
                     }
                     else if (User.IsInRole("GFMS.Admin Manager") && currentRole == "GFMS.Requestor")
                     {
@@ -729,6 +752,37 @@ namespace PropertyManagementSystem.Controllers
                       reservationDetails.Purpose
                   );*/
             }
+            else if (action == "Reassign")
+            {
+                int oldRoomId = reservationDetails.RoomId;
+
+                var oldRoomEquipmentIds = _context.RoomEquipments
+                                                  .Where(re => re.RoomId == oldRoomId)
+                                                  .Select(re => re.EquipmentId.ToString())
+                                                  .ToList();
+
+                List<string> currentEquipmentList = string.IsNullOrEmpty(reservationDetails.EquipmentNeeded)
+                    ? new List<string>()
+                    : reservationDetails.EquipmentNeeded.Split(',').ToList();
+
+                currentEquipmentList.RemoveAll(e => oldRoomEquipmentIds.Contains(e));
+
+                var newRoomEquipmentIds = _context.RoomEquipments
+                                                  .Where(re => re.RoomId == _roomId)
+                                                  .Select(re => re.EquipmentId.ToString())
+                                                  .ToList();
+
+                currentEquipmentList.AddRange(newRoomEquipmentIds.Where(e => !currentEquipmentList.Contains(e)));
+
+                reservationDetails.EquipmentNeeded = currentEquipmentList.Any() ? string.Join(",", currentEquipmentList) : null;
+                reservationDetails.FacilityId = _facilityId;
+                reservationDetails.RoomId = _roomId;
+
+                _context.SaveChanges();
+
+                return RedirectToAction("ViewReservationDetails", new { id = guid });
+            }
+
             else if (action == "Approve" && reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
             {
                 if ((reservationDetails.FacilityId == 0 || reservationDetails.RoomId == 0) || (reservationDetails.FacilityId == null || reservationDetails.RoomId == null))

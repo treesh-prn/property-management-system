@@ -31,6 +31,7 @@ namespace PropertyManagementSystem.Data
         public virtual DbSet<GFMS_ReservationDetails> ReservationDetails { get; set; }
         public virtual DbSet<HRIS_EmploymentLevel> EmploymentLevels { get; set; }
         public virtual DbSet<GFMS_RoomEquipment> RoomEquipments { get; set; }
+        public virtual DbSet<GFMS_DormerRoomHistory> DormerRoomHistories { get; set; }
         public DbSet<RoomOccupantViewModel> RoomOccupants { get; set; }
         public DbSet<ReservationReport> ReservationReports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -62,6 +63,7 @@ namespace PropertyManagementSystem.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Entity<GFMS_RoomEquipment>().ToTable("GFMS_RoomEquipment");
+            modelBuilder.Entity<GFMS_DormerRoomHistory>().ToTable("GFMS_DormerRoomHistory");
 
         }
     }

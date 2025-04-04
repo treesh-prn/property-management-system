@@ -14,7 +14,7 @@ namespace PropertyManagementSystem.Models
         public List<string> Equipments { get; set; }
         public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
-        
+        public List<DormerHistoryViewModel>? DormerHistoryDetails { get; set; }
 
 
 
@@ -41,6 +41,7 @@ namespace PropertyManagementSystem.Models
 
         // Additional properties for the header model
         public string? Requestor { get; set; }
+        public string? RequestorID { get; set; }
         public string? RequestorEmail { get; set; }
         public string? GUID { get; set; }
         public string? GuestName { get; set; }
@@ -57,6 +58,7 @@ namespace PropertyManagementSystem.Models
         public string? ApproverEmail { get; set; }
         public int ChargeToCompany { get; set; }
         public int NumberOfGuest { get; set; }
+        public int OccupantCount { get; set; }
         public string? Purpose { get; set; }
         public string? EquipmentNeeded {  get; set; }
         public List<string>? EquipmentNames {  get; set; }

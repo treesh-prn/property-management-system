@@ -1,0 +1,74 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+<div class="card-body">
+    <div class="row align-items-start">
+        <div class="col-2">
+        </div>
+        <div class="col-9">
+            <div class="row mt-3">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Date</div>
+                        <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().StartDate?.ToString("dddd, MMMM dd, yyyy")</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Time In</div>
+                        <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().StartDate?.ToString("hh:mm tt")</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Time Out</div>
+                        <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().EndDate?.ToString("hh:mm tt")</div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Number of Attendee/s</div>
+                        <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().NumberOfGuest</div>
+                    </div>
+                </div>
+                @if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
+                {
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Facility</div>
+
+                            <div class="datagrid-content">ADMIN @Model.Room.RoomName</div>
+                        </div>
+                    </div>
+                }
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Equipments Needed</div>
+                        <div class="datagrid-content">
+                            @if (Model.EquipmentNames != null && Model.EquipmentNames.Any())
+                            {
+                                <ul>
+                                    @foreach (var equipment in Model.EquipmentNames)
+                                    {
+                                        <li>@equipment</li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span>No Equipment Needed</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="datagrid-item">
+                        <div class="datagrid-title text-primary">Purpose</div>
+                        <div class="datagrid-content">
+                            @Model.ReservationDetails.FirstOrDefault().Purpose
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,184 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+
+@{
+    ViewData["Title"] = "Home Page";
+    var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms>;
+    var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
+
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+}
+<div class="page-wrapper">
+    <!-- Page header -->
+    <div class="page-header d-print-none">
+        <div class="container-xl">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <!-- Page pre-title -->
+                    <div class="page-pretitle">
+                        DORM and HOUSING
+                    </div>
+                    <h2 class="page-title">
+                        HOUSING
+                    </h2>
+                </div>
+                <!-- Page title actions -->
+                <div class="col-auto ms-auto d-print-none">
+                    <div class="btn-list">
+                        <span class="d-none d-sm-inline">
+                            <a href="@Url.Action("ReservationList","Dorm")" class="btn">
+                                Reservation List
+                            </a>
+                        </span>
+                        @if (activeRole == "GFMS.Requestor")
+                        {
+                            <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
+                                <i class="ti ti-plus"></i>
+                                Create New Application
+                            </a>
+                        }
+                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create New Reservation">
+                            <i class="ti ti-plus"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Page body -->
+    <div class="page-body">
+        <div class="container-xl">
+            <div class="row row-deck row-cards">
+                <div class="row row-deck row-cards">
+                    <div class="col-12">
+                        <div class="row row-cards">
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-primary text-white avatar">
+                                                    <i class="ti ti-user-star" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                </div>
+                                                <div class="text-secondary">
+                                                    New Reservations
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-success text-white avatar">
+                                                    <i class="ti ti-friends" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                    10
+                                                </div>
+                                                <div class="text-secondary">
+                                                    Active Guest Count
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-danger text-white avatar">
+                                                    <i class="ti ti-bed" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                    @Model.OccupiedRoomsCount
+                                                </div>
+                                                <div class="text-secondary">
+                                                    Occupied Rooms
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-6 col-lg-3">
+                                <div class="card card-sm">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-auto">
+                                                <span class="bg-warning text-white avatar">
+                                                    <i class="ti ti-home" style="font-size: 30px;"></i>
+                                                </span>
+                                            </div>
+                                            <div class="col">
+                                                <div class="font-weight-heavy">
+                                                    @Model.AvailableRoomsCount
+                                                </div>
+                                                <div class="text-secondary">
+                                                    Available Room
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @(
+                                Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
+                                .Name("grid")
+                                .ToolBar(tools => tools.Excel())
+                                .Excel(excel => excel.FileName("HousingList.xlsx").AllPages(true))
+                                .Columns(columns =>
+                                {
+                                    columns.Bound(c => c.FacilityId).Visible(false).Exportable(false);
+                                    columns.Bound(c => c.FacilityName).Title("Housing Name");
+                                    columns.Bound(c => c.FacilityLocation).Title("Location");
+                                })
+                                .ClientDetailTemplateId("occupant-template") // Template for occupants
+                                .NoRecords()
+                                .Groupable()
+                                .Filterable()
+                                .Scrollable()
+                                .ToolBar(toolbar => { toolbar.Search(); })
+                                .DataSource(dataSource => dataSource
+                                .Ajax()
+                                .Read(read => read.Action("getHousingList", "Global")) // Ensure this returns housing with occupants
+                                .PageSize(50)
+                                )
+                                .Events(events => events.DetailInit("loadRequestor")) // Event to load occupants
+                                )
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*NEW APPLICATION FORM *@
+<partial name="Shared/_newReservation" />
+@*END - NEW Room MODAL *@
+
+<script id="occupant-template" type="text/x-kendo-template">
+    <div class="requestor-grid" data-id="#= FacilityId #"></div>
+</script>

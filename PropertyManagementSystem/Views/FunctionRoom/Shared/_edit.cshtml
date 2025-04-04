@@ -114,14 +114,14 @@
                                                 Purpose
                                                 <span id="charCount" class="form-label-description">0/50</span>
                                             </label>
-                                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50">@detail.Purpose</textarea>
+                                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" oninput="this.value = this.value.toUpperCase()">@detail.Purpose</textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer d-flex justify-content-between align-items-center">
+                    <div class="modal-footer d-flex justify-content-between align-items-center">
                         <a data-bs-dismiss="modal" class="btn btn-link link-secondary">
                             Go Back
                         </a>

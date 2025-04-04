@@ -67,7 +67,7 @@
             model.Field(p => p.ReservationDetailId);
         })
         .Read(read => read.Action("getFunctionRoomReservation", "FunctionRoom", new { gridType = "myReservation" }))
-        .PageSize(50)
+        .PageSize(10)
         )
         .Events(events => events.DataBound("onGridDataBound"))
         )

@@ -5,9 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
-using System.IO;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Ical.Net;
+using Ical.Net.DataTypes;
+using System.IO;
+using Ical.Net.CalendarComponents;
+using Ical.Net.Serialization.DataTypes;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -27,7 +31,44 @@ namespace PropertyManagementSystem.Controllers
             return View();
         }
 
-        public JsonResult getCompanies()
+        public IActionResult GetRoomsByFacility(int facilityId)
+        {
+            var rooms = _context.Rooms
+                .Where(r => r.FacilityId == facilityId)
+                .Select(r => new
+                {
+                    r.RoomId,
+                    r.RoomName,
+                    r.RoomStatus
+                })
+                .ToList();
+
+            return Json(rooms);
+        }
+
+        public IActionResult GetDormersByRoom(int roomId)
+        {
+            var dormers = _context.ReservationDetails
+                .Where(rd => rd.RoomId == roomId) // Filter by RoomId
+                .Join(_context.ReservationHeaders,
+                      rd => rd.ReservationId, // Join on ReservationId
+                      rh => rh.ReservationId,
+                      (rd, rh) => new
+                      {
+                          DormerName = rh.Requestor, // Fetch the Requestor from ReservationHeader
+                          ContactNumber = rd.ContactNumber,
+                          rd.ReservationDetailId,
+                          rh.GUID,
+                          rh.ReservationType
+                      })
+                .ToList();
+
+            return Json(dormers);
+        }
+
+
+
+    public JsonResult getCompanies()
         {
             var _companyList = _context.Companies.Select(c => new { c.Id, Company = c.Company.ToUpper(), CompanyCode = c.CompanyCode }).AsQueryable().ToList();
 
@@ -74,6 +115,76 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(rooms);
         }
+
+        private List<DateTime> GetRecurrenceDates(GFMS_ReservationDetails reservation)
+        {
+            var recurrenceDates = new List<DateTime>();
+
+            if (!reservation.StartDate.HasValue || string.IsNullOrEmpty(reservation.RecurrenceRule))
+            {
+                return recurrenceDates; // No recurrence if no start date or rule
+            }
+
+            DateTime startDate = reservation.StartDate.Value.Date;
+            string rule = reservation.RecurrenceRule.ToUpper();
+            string frequency = "";
+            int count = 0;
+            DateTime? until = null;
+
+            var parts = rule.Split(';');
+            foreach (var part in parts)
+            {
+                if (part.StartsWith("FREQ="))
+                {
+                    frequency = part.Replace("FREQ=", "");
+                }
+                else if (part.StartsWith("COUNT="))
+                {
+                    int.TryParse(part.Replace("COUNT=", ""), out count);
+                }
+                else if (part.StartsWith("UNTIL="))
+                {
+                    if (DateTime.TryParse(part.Replace("UNTIL=", ""), out DateTime dt))
+                    {
+                        until = dt.Date;
+                    }
+                }
+            }
+
+            int maxIterations = count > 0 ? count : 500; // Limit iterations if no COUNT
+            DateTime current = startDate;
+            DateTime today = DateTime.Today;
+
+            // Generate recurrence dates, starting from past reservations that still occur in the future
+            for (int i = 0; i < maxIterations; i++)
+            {
+                if (until.HasValue && current > until.Value)
+                    break;
+
+                if (current >= today) // Only add future and present occurrences
+                {
+                    recurrenceDates.Add(current);
+                }
+
+                switch (frequency)
+                {
+                    case "DAILY":
+                        current = current.AddDays(1);
+                        break;
+                    case "WEEKLY":
+                        current = current.AddDays(7);
+                        break;
+                    case "MONTHLY":
+                        current = current.AddMonths(1);
+                        break;
+                    default:
+                        return new List<DateTime> { startDate }; // If invalid frequency, return the single start date
+                }
+            }
+
+            return recurrenceDates;
+        }
+
 
         public IActionResult GetFacility(int ReservationDetailId)
         {
@@ -123,45 +234,55 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(facilities);
         }
-        public IActionResult GetRoom(int? facilityId, int reservationDetailId)
+        private List<int> GetBookedRoomsForFacility(int facilityId, int currentReservationDetailId)
         {
-            Console.WriteLine("FacilityId: " + facilityId);
-            Console.WriteLine("Reservation Id: " + reservationDetailId);
-            var reservation = _context.ReservationDetails
-                .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
+            var bookedRooms = new HashSet<int>();
 
-            if (reservation == null)
+            // Get all reservations with this facility (excluding the current reservation)
+            var otherReservations = _context.ReservationDetails
+                .Where(r => r.FacilityId == facilityId && r.ReservationDetailId != currentReservationDetailId)
+                .ToList();
+
+            foreach (var reservation in otherReservations)
             {
-                return NotFound();
+                // Get recurrence dates for each reservation
+                var recurrenceDates = GetRecurrenceDates(reservation);
+
+                // If any recurrence date overlaps, mark the room as booked
+                if (recurrenceDates.Any())
+                    bookedRooms.Add(reservation.RoomId);
             }
 
-            var startDate = reservation.StartDate;
-            var endDate = reservation.EndDate;
-
-            var rooms = _context.Rooms
-         .Where(room => room.FacilityId == facilityId &&
-                   !_context.ReservationDetails.Any(rd =>
-                       rd.RoomId == room.RoomId &&
-                       rd.ReservationDetailId != reservationDetailId && 
-                       ((rd.StartDate <= startDate && rd.EndDate > startDate) ||
-                        (rd.StartDate <= endDate && rd.EndDate >= endDate) ||
-                        (rd.StartDate >= startDate && rd.EndDate <= endDate))))
-         .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
-         .ToList();
-
-            var selectedRoom = _context.Rooms
-                .Where(room => room.RoomId == reservation.RoomId)
-                .Select(room => new { RoomId = room.RoomId, RoomName = room.RoomName })
-                .FirstOrDefault();
-
-            if (selectedRoom != null && !rooms.Any(r => r.RoomId == selectedRoom.RoomId))
-            {
-                rooms.Insert(0, selectedRoom);
-            }
-
-
-            return Json(rooms);
+            return bookedRooms.ToList();
         }
+
+        [HttpGet]
+        public IActionResult GetRoom(int? facilityId, int reservationDetailId, [FromQuery] List<string> recurrenceDates)
+        {
+            if (facilityId == null)
+                return BadRequest("FacilityId is required.");
+
+            // Parse recurrenceDates
+            var parsedDates = new List<DateTime>();
+            foreach (var str in recurrenceDates ?? new List<string>())
+            {
+                if (DateTime.TryParse(str, out DateTime parsed))
+                    parsedDates.Add(parsed.Date);
+            }
+
+            // Get booked rooms for the facility
+            var bookedRooms = GetBookedRoomsForFacility(facilityId.Value, reservationDetailId);
+
+            // Fetch available rooms
+            var availableRooms = _context.Rooms
+                .Where(r => r.FacilityId == facilityId && !bookedRooms.Contains(r.RoomId))
+                .Select(room => new { room.RoomId, room.RoomName })
+                .ToList();
+
+            return Json(availableRooms);
+        }
+
+
 
         public IActionResult GetGH(int ReservationDetailId)
         {
@@ -285,6 +406,24 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(rooms);
         }
+        public IActionResult GetHousing()
+        {
+            var facilities = _context.Facilities
+                .Where(f => f.FacilityClassification == "HOUSING") // Filter only HOUSING
+                .Where(f => !_context.ReservationDetails
+                    .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                    .Any(joined => joined.rd.FacilityId == f.FacilityId && joined.rh.Status != "CANCELLED" && joined.rh.Status != "DISAPPROVED")) // Check if assigned to a reservation
+                .Select(f => new
+                {
+                    FacilityId = f.FacilityId,
+                    FacilityName = f.FacilityName,
+                    FacilityClass = f.FacilityClassification
+                })
+                .OrderBy(f => f.FacilityName)
+                .ToList();
+
+            return Json(facilities);
+        }
 
         public IActionResult GetDRM()
         {
@@ -376,10 +515,10 @@ namespace PropertyManagementSystem.Controllers
             Console.WriteLine("Available Rooms:");
             foreach (var room in rooms)
             {
-                Console.WriteLine($"✅ Room: {room.RoomName}, Assigned: {room.AssignedGuests}/{room.RoomCapacity}");
+                Console.WriteLine($"Room: {room.RoomName}, Assigned: {room.AssignedGuests}/{room.RoomCapacity}");
             }
 
-            // ✅ Ensure the initially selected room is included if it's not overbooked
+            // Ensure the initially selected room is included if it's not overbooked
             var selectedRoomEntity = _context.Rooms.FirstOrDefault(room => room.RoomId == reservation.RoomId);
 
             if (selectedRoomEntity != null)
@@ -415,11 +554,33 @@ namespace PropertyManagementSystem.Controllers
                 }
             }
 
-            Console.WriteLine($"🎯 Final Room Count: {rooms.Count}");
+            Console.WriteLine($"Final Room Count: {rooms.Count}");
 
             return Json(rooms);
         }
 
+        public IActionResult GetAvailableRooms(int? facilityId, int reservationDetailId)
+        {
+            var rooms = _context.Rooms
+                .Where(room => room.FacilityId == facilityId && room.isActive)
+                .Select(room => new
+                {
+                    RoomId = room.RoomId,
+                    RoomName = room.RoomName,
+                    RoomCapacity = room.Capacity,
+                    AssignedGuests = _context.ReservationDetails
+                        .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                        .Where(joined =>
+                            joined.rd.RoomId == room.RoomId &&
+                            joined.rh.Status != "CANCELLED" &&
+                            joined.rh.Status != "DISAPPROVED")
+                        .Count()
+                })
+                .Where(room => room.AssignedGuests < room.RoomCapacity) // Only available rooms
+                .ToList();
+
+            return Json(rooms);
+        }
 
 
         [HttpGet]
@@ -523,6 +684,49 @@ namespace PropertyManagementSystem.Controllers
             });
             return Json(result);
 
+        }
+
+        public IActionResult getHousingList([DataSourceRequest] DataSourceRequest request)
+        {
+            List<GFMS_Facility> _Facilities = _context.Facilities.Where(f => f.FacilityClassification == "HOUSING").ToList();
+            DataSourceResult result = _Facilities.ToDataSourceResult(request, _Facility => new
+            {
+                FacilityId = _Facility.FacilityId,
+                FacilityName = _Facility.FacilityName,
+                FacilityClassification = _Facility.FacilityClassification,
+                FacilityLocation = _Facility.FacilityLocation,
+                isActive = _Facility.isActive
+            });
+            return Json(result);
+        }
+
+        public IActionResult getRequestor(int facilityId)
+        {
+            var requestors = _context.ReservationDetails
+                .Where(rd => rd.FacilityId == facilityId)
+                .Join(
+                    _context.ReservationHeaders,
+                    rd => rd.ReservationId,
+                    rh => rh.ReservationId,
+                    (rd, rh) => new
+                    {
+                        RequestorName = rh.Requestor,
+                        ContactNumber = rd.ContactNumber,
+                        Company = rh.ChargeToCompany,
+                        ReservationType = rh.ReservationType,
+                        GUID = rh.GUID
+                    }
+                )
+                .Distinct()
+                .ToList();
+
+            // Check if GUID is null
+            foreach (var req in requestors)
+            {
+                Console.WriteLine($"Requestor: {req.RequestorName}, GUID: {req.GUID}");
+            }
+
+            return Json(requestors);
         }
     }
 }

@@ -1,4 +1,8 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
+    var employee = await RoleService.GetUserName(User);
+}
 <div class="card">
     <div class="card-body">
         <div class="row align-items-start">
@@ -64,7 +68,7 @@
                     {
                         <div class="col-lg-3 col-md-6 mb-4">
                             <div class="datagrid-item">
-                                <div class="datagrid-title text-primary">Chrg To Dept</div>
+                                <div class="datagrid-title text-primary">Chrge To</div>
                                 <div class="datagrid-content">@Model.Department.DepartmentCode</div>
                             </div>
                         </div>
@@ -74,115 +78,67 @@
                         <div class="col-lg-3 col-md-6 mb-4">
                             <div class="datagrid-item">
                                 <div class="datagrid-title text-primary">Chrge To</div>
-                                <div class="datagrid-content">Personal</div>
+                                <div class="datagrid-content">Personal </div>
                             </div>
                         </div>
                     }
-
                     <div class="col-lg-3 col-md-6 mb-4">
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Date Filed</div>
                             <div class="datagrid-content">@Model.ReservationHeader.DateFiled</div>
                         </div>
                     </div>
+                    @if (Model.ReservationDetails.FirstOrDefault().ReservationId != 0)
+                    {
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Purpose</div>
+                                <div class="datagrid-content">
+                                    @Model.ReservationDetails.FirstOrDefault().Purpose
+                                </div>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
-    @if (Model.ReservationDetails.FirstOrDefault().ReservationId != 0)
-    {
-        <div class="accordion" id="accordion-example">
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="heading-1">
-                    <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true">
-                        RESERVATION DETAILS
-                    </button>
-                </h2>
-                <div id="collapse-1" class="accordion-collapse collapse show" data-bs-parent="#accordion-example">
-                    <div class="accordion-body pt-0">
-                        <div class="card-body">
-                            <div class="row align-items-start">
-                                <div class="col-2">
-                                </div>
-                                <div class="col-9">
-                                    <div class="row mt-3">
-                                        <div class="col-lg-3 col-md-6 mb-4">
-                                            <div class="datagrid-item">
-                                                <div class="datagrid-title text-primary">Guest Name</div>
-                                                @foreach (var guest in Model.ReservationDetails)
-                                                {
-                                                    <div class="datagrid-content">@guest.GuestName</div>
-                                                }
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-3 col-md-6 mb-4">
-                                            <div class="datagrid-item">
-                                                <div class="datagrid-title text-primary">Company</div>
-                                                @foreach (var comp in Model.ReservationDetails)
-                                                {
-                                                    <div class="datagrid-content">@comp.Company</div>
-                                                }
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-3 col-md-6 mb-4">
-                                            <div class="datagrid-item">
-                                                <div class="datagrid-title text-primary">Arrival Date and Time</div>
-                                                <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().StartDate</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-3 col-md-6 mb-4">
-                                            <div class="datagrid-item">
-                                                <div class="datagrid-title text-primary">Departure Date and Time</div>
-                                                <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().EndDate</div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-lg-3 col-md-6 mb-4">
-                                            <div class="datagrid-item">
-                                                <div class="datagrid-title text-primary">Purpose</div>
-                                                <div class="datagrid-content">
-                                                    @Model.ReservationDetails.FirstOrDefault().Purpose
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
-                                        {
-                                            <div class="col-lg-3 col-md-6 mb-4">
-                                                <div class="datagrid-item">
-                                                    <div class="datagrid-title text-primary">Facility Name</div>
-                                                    <div class="datagrid-content">@Model.Facility.FacilityName </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-3 col-md-6 mb-4">
-                                                <div class="datagrid-item">
-                                                    <div class="datagrid-title text-primary">Room Name</div>
-
-                                                    <div class="datagrid-content">@Model.Room.RoomName</div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card-footer d-flex justify-content-between align-items-center">
-            <a href="@Url.Action("ReservationList", "Accommodation")" class="btn btn-link link-secondary">
-                Go Back
-            </a>
-            <div class="ms-auto">
-                <button type="button" class="btn btn-red" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-                    <i class="ti ti-ban m-1"></i> Disapprove
-                </button>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-approve-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-                    <i class="ti ti-check m-1"></i> Approve
-                </button>
-            </div>
-        </div>
-    }
-    <partial name="Shared/_approve" />
-    <partial name="Shared/_disapprove" />
 </div>
+@if (Model.ReservationDetails.FirstOrDefault().ReservationId != 0)
+{
+    <div class="card mt-3">
+        @(
+                Html.Kendo().TabStrip()
+                .Name("tabstrip")
+                .Animation(animation =>
+                animation.Open(effect =>
+                effect.Fade(FadeDirection.In)))
+                .Items(tabstrip =>
+                {
+                    tabstrip.Add().Text("Reservation Details")
+                .Encoded(false)
+                .Selected(true)
+                .Content(@<text>
+        <partial name="Shared/_reservationDetails" />
+    </text>);
+                })
+            )
+    </div>
+}
+<div class="card">
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <a href="@Url.Action("ReservationList", "Accommodation")" class="btn btn-link link-secondary">
+            Go Back
+        </a>
+        <div class="ms-auto">
+            <button type="button" class="btn btn-red" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                <i class="ti ti-ban m-1"></i> Disapprove
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-approve-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                <i class="ti ti-check m-1"></i> Approve
+            </button>
+        </div>
+    </div>
+</div>
+<partial name="Shared/_approve" />
+<partial name="Shared/_disapprove" />

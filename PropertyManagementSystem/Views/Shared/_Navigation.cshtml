@@ -106,15 +106,23 @@
                                         </span>
                                     </a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link" href="@Url.Action("Index", "Dorm")">
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#navbar-third" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button" aria-expanded="false">
                                         <span class="nav-link-icon d-md-none d-lg-inline-block">
                                             <i class="ti ti-bed icon"></i>
                                         </span>
                                         <span class="nav-link-title">
-                                            <strong>Dorm Room</strong>
+                                            <strong>Dorm and Housing</strong>
                                         </span>
                                     </a>
+                                    <div class="dropdown-menu" id="maintenance">
+                                        <a class="dropdown-item" href="@Url.Action("Index", "Dorm")">
+                                            <strong>Dorm</strong>
+                                        </a>
+                                        <a class="dropdown-item" href="@Url.Action("Housing", "Dorm")">
+                                            <strong>Housing</strong>
+                                        </a>
+                                    </div>
                                 </li>
                                 @if (currentRole == "GFMS.System Admin" || currentRole == "GFMS.Admin Approver" || currentRole == "GFMS.Admin Manager")
                                 {
@@ -168,9 +176,9 @@
                                             <a class="dropdown-item" href="@Url.Action("Index", "Report")">
                                                 <strong>Weekly Occupancy</strong>
                                             </a>
-                                           @*  <a class="dropdown-item" href="@Url.Action("Index", "Report")">
-                                                <strong>Reservation Details</strong>
-                                            </a> *@
+                                           <a class="dropdown-item" href="@Url.Action("EquipmentUsage", "Report")">
+                                                <strong>Equipment Usage</strong>
+                                            </a>
                                         </div>
                                     </li>
                                 }

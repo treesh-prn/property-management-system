@@ -70,6 +70,46 @@ namespace PropertyManagementSystem.Controllers
             return View(viewModel);
         }
 
+        public IActionResult Housing()
+        {
+            var rooms = _context.Rooms
+           .Include(r => r.Facility)
+           .Where(x => x.RoomType == 2)
+           .Select(room => new GFMS_Rooms
+           {
+               RoomId = room.RoomId,
+               RoomName = room.RoomName,
+               RoomType = room.RoomType,
+               FacilityId = room.FacilityId
+           })
+           .ToList();
+
+            var facilities = _context.Facilities
+           .Where(facility => facility.Rooms.Any(room => room.RoomType == 2))
+           .Select(facility => new GFMS_Facility
+           {
+               FacilityId = facility.FacilityId,
+               FacilityName = facility.FacilityName,
+           })
+            .ToList();
+
+            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING" || r.Status == "DRAFT");
+            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "APPROVED");
+            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING");
+
+
+            var viewModel = new ReservationViewModel
+            {
+                Requestor = _context.ReservationHeaders.FirstOrDefault()?.Requestor,
+                //NewReservationsCount = newReservationCount,
+            };
+
+            ViewData["Rooms"] = rooms;
+            ViewData["Facilities"] = facilities;
+
+            return View(viewModel);
+        }
+
         public IActionResult ReservationList()
         {
 
@@ -149,6 +189,8 @@ namespace PropertyManagementSystem.Controllers
             var query = _context.ReservationHeaders.AsQueryable()
                 .Where(x => x.ReservationType == "DRM")
                 .Where(x => x.Status != "DELETED");
+
+            
 
             if (gridType == "myReservation")
             {
@@ -341,26 +383,59 @@ namespace PropertyManagementSystem.Controllers
                     .Where(x => x.ReservationId == reservationId)
                     .ToList();
 
-
                 Gen_Department department = null;
                 GFMS_Facility facility = null;
                 GFMS_Rooms rooms = null;
+                Gen_Employee employee = _context.Employees.FirstOrDefault(e => e.Email == requestorEmail);
 
-                var employee = _context.Employees.FirstOrDefault(e => e.Email == requestorEmail);
-                Console.WriteLine("Employee:" + employee.Email);
+                if (employee != null)
+                {
+                    Console.WriteLine("Employee: " + employee.Email);
+                }
+                else
+                {
+                    Console.WriteLine("Employee not found.");
+                }
 
                 if (reservationDetails.Any())
                 {
-                    var firstDetail = reservationDetails.FirstOrDefault();
+                    var firstDetail = reservationDetails.First();
                     facility = _context.Facilities.FirstOrDefault(f => f.FacilityId == firstDetail.FacilityId);
                     rooms = _context.Rooms.FirstOrDefault(r => r.RoomId == firstDetail.RoomId);
                 }
 
                 department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
-                var position = _context.Positions.FirstOrDefault(p => p.Id == employee.PositionId);
-                var level = _context.EmploymentLevels.FirstOrDefault(l => l.Id == employee.EmploymentLevelId);
-                
+                var position = _context.Positions.FirstOrDefault(p => employee != null && p.Id == employee.PositionId);
+                var level = _context.EmploymentLevels.FirstOrDefault(l => employee != null && l.Id == employee.EmploymentLevelId);
 
+                // Fetch Room History for the Dormer (Requestor)
+                int dormerId = reservationDetails.FirstOrDefault()?.ReservationDetailId ?? 0;
+                var roomHistory = _context.DormerRoomHistories
+                    .Where(h => h.DormerId == dormerId)
+                    .OrderByDescending(h => h.TransferDate)
+                    .Select(h => new DormerHistoryViewModel
+                    {
+                        DormerId = h.DormerId,
+                        PreviousRoom = _context.Rooms.Where(r => r.RoomId == h.PreviousRoomId).Select(r => r.RoomName).FirstOrDefault(),
+                        NewRoom = _context.Rooms.Where(r => r.RoomId == h.NewRoomId).Select(r => r.RoomName).FirstOrDefault(),
+                        PreviousFacility = _context.Facilities
+                        .Where(f => f.FacilityId == _context.Rooms
+                            .Where(r => r.RoomId == h.PreviousRoomId)
+                            .Select(r => r.FacilityId)
+                            .FirstOrDefault())
+                        .Select(f => f.FacilityName)
+                        .FirstOrDefault(),
+                        NewFacility = _context.Facilities
+                        .Where(f => f.FacilityId == _context.Rooms
+                            .Where(r => r.RoomId == h.NewRoomId)
+                            .Select(r => r.FacilityId)
+                            .FirstOrDefault())
+                        .Select(f => f.FacilityName)
+                        .FirstOrDefault(),
+                        TransferDate = h.TransferDate,
+                        TransferredBy = h.TransferredBy,
+                        Status = h.Status,
+                    }).ToList();
 
                 var reservation = new ReservationViewModel
                 {
@@ -372,14 +447,14 @@ namespace PropertyManagementSystem.Controllers
                     Position = position,
                     ReservationHeader = reservationHeader,
                     ReservationDetails = reservationDetails,
-                    NumberOfGuest = reservationDetails.Sum(rd => rd.NumberOfGuest)
+                    NumberOfGuest = reservationDetails.Sum(rd => rd.NumberOfGuest),
+                    DormerHistoryDetails = roomHistory // Add room history to the view model
                 };
 
                 return View(reservation);
             }
             catch (InvalidCastException ex)
             {
-
                 Console.WriteLine($"InvalidCastException: {ex.Message}");
                 if (ex.InnerException != null)
                 {
@@ -389,11 +464,11 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (Exception ex)
             {
-
                 Console.WriteLine($"Exception: {ex.Message}");
                 return RedirectToAction("Error", "Error");
             }
         }
+
 
         public IActionResult ReservationDetails(string Id)
         {
@@ -446,13 +521,14 @@ namespace PropertyManagementSystem.Controllers
             }
         }
         /*Create*/
-        public IActionResult CreateReservationDetails(
+        public async Task<IActionResult> CreateReservationDetailsAsync(
     int _reservationId, int _unitApplied, int _schedType, string _contactNumber,
     string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation,
     string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime,
     string _fare, string _civilStat, string[] _dependents, string[] _age, string[] _location,
     string[] _position, string filepath, string[] _dependent_status)
         {
+            string currentRole = await _roleService .GetActiveRoleAsync(User);
             try
             {
                 bool hasDependents = (_dependents != null && _dependents.Length > 0 &&
@@ -523,10 +599,74 @@ namespace PropertyManagementSystem.Controllers
                 var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
                 if (reservationHeader != null)
                 {
-                    reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
-                }
+                    if (User.IsInRole("GFMS.Admin Approver") && currentRole == "GFMS.Requestor")
+                    {
+                        reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
+                        /*if (reservationHeader != null)
+                        {
+                            await _emailService.SendReservationApprovalEmail(
+                                reservationHeader,
+                                reservationHeader.RequestorEmail,
+                                _startDate.ToString(),
+                                _endDate.ToString(),
+                                _numOfGuests,
+                                facilityName,
+                                roomName,
+                                _purpose
+                            );
+                        }*/
 
+                    }
+                    else if (User.IsInRole("GFMS.Admin Manager") && currentRole == "GFMS.Requestor")
+                    {
+                        reservationHeader.Status = "APPROVED";
+
+                    }
+                    else if (User.IsInRole("GFMS.Department Head") && currentRole == "GFMS.Requestor")
+                    {
+                        reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
+                        /*
+                         if (reservationHeader != null)
+                        {
+                            await _emailService.SendReservationApprovalEmail(
+                               reservationHeader,
+                               reservationHeader.RequestorEmail,
+                               _startDate.ToString(),
+                               _endDate.ToString(),
+                               _numOfGuests,
+                               facilityName,
+                               roomName,
+                               _purpose
+                           );
+                        }
+                         */
+
+                    }
+                    else
+                    {
+                        reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
+                        /*
+                         if (reservationHeader != null)
+                        {
+                            await _emailService.SendReservationApprovalEmail(
+                                reservationHeader,
+                                reservationHeader.RequestorEmail,
+                                _startDate.ToString(),
+                                _endDate.ToString(),
+                                _numOfGuests,
+                                facilityName,
+                                roomName,
+                                _purpose
+                            );
+                        }
+                         */
+
+                    }
+                }
                 _context.SaveChanges();
+                TempData["AlertMessage"] = "Reservation details created successfully!";
+                TempData["AlertSubMessage"] = "Your reservation has been saved";
+                TempData["AlertType"] = "success";
             }
             catch (Exception ex)
             {
@@ -635,6 +775,48 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("ViewReservationDetails", new { id = guid });
         }
 
+        [HttpPost]
+        public IActionResult TransferDormerRoom(int ReservationId, int ReservationDetailId, int _facilityId, int _roomId)
+        {
+            //Fetch existing reservation header
+            var existingResHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == ReservationId);
+            // Fetch existing reservation details
+            var existingReservation = _context.ReservationDetails
+                .FirstOrDefault(r => r.ReservationDetailId == ReservationDetailId);
+
+            if (existingReservation != null)
+            {
+                // Store previous room and facility before updating
+                int previousRoomId = existingReservation.RoomId;
+                int previousFacilityId = existingReservation.FacilityId;
+
+                // Save history of room & facility transfer
+                var history = new GFMS_DormerRoomHistory
+                {
+                    DormerId = existingReservation.ReservationDetailId,
+                    PreviousRoomId = previousRoomId,
+                    NewRoomId = _roomId,
+                    PreviousFacilityId = previousFacilityId, 
+                    NewFacilityId = _facilityId,
+                    TransferDate = DateTime.Now,
+                    TransferredBy = User.Identity.Name,
+                    Status = "PENDING"
+                };
+                _context.DormerRoomHistories.Add(history);
+
+                // Update the dormer's room and facility
+                existingReservation.RoomId = _roomId;
+                existingReservation.FacilityId = _facilityId;
+                existingResHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
+                _context.SaveChanges();
+
+                TempData["SuccessMessage"] = "Dormer successfully transferred!";
+                return RedirectToAction("Index");
+            }
+
+            TempData["ErrorMessage"] = "Error transferring dormer.";
+            return RedirectToAction("Index");
+        }
 
         /*Delete*/
         public IActionResult DeleteReservationDetail(int reservationId)
@@ -683,6 +865,12 @@ namespace PropertyManagementSystem.Controllers
             var roomName = _context.Rooms.Where(r => r.RoomId == _roomId).Select(r => r.RoomName).FirstOrDefault();
             var facilityName = _context.Facilities.Where(f => f.FacilityId == _facilityId).Select(f => f.FacilityName).FirstOrDefault();
             var empName = _context.Employees.FirstOrDefault(e => e.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+            var dormerHistory = _context.DormerRoomHistories
+                                .Where(d => d.DormerId == reservationDetails.ReservationDetailId)
+                                .OrderByDescending(d => d.TransferDate)
+                                .FirstOrDefault();
+
             if (reservation == null)
             {
                 return NotFound();
@@ -744,6 +932,34 @@ namespace PropertyManagementSystem.Controllers
                       roomName,
                       reservationDetails.Purpose
                   );*/
+            }
+            else if (action == "ApproveTransfer")
+            {
+                
+
+                reservation.Status = "APPROVED";
+                reservation.ApprovedBy = empName.Fullname;
+
+                dormerHistory.Status = "APPROVED";
+
+                TempData["AlertMessage"] = "Transfer Approved!";
+                TempData["AlertSubMessage"] = "Facility and Room reverted back to the original values.";
+                TempData["AlertType"] = "success";
+            }
+            else if (action == "RejectTransfer")
+            {
+                reservationDetails.FacilityId = dormerHistory.PreviousFacilityId;
+                reservationDetails.RoomId = dormerHistory.PreviousRoomId;
+
+                reservation.Status = "APPROVED";
+                reservation.Remarks = Remarks;
+                reservation.ApprovedBy = empName.Fullname;
+
+                dormerHistory.Status = "DISAPPROVED";
+
+                TempData["AlertMessage"] = "Transfer Rejected!";
+                TempData["AlertSubMessage"] = "Facility and Room reverted back to the original values.";
+                TempData["AlertType"] = "danger";
             }
             else if (action == "Reject")
             {

@@ -50,6 +50,7 @@
                                 .NoRecords()
                                 .Groupable()
                                 .Filterable()
+                                .Pageable()
                                 .Scrollable()
                                 .ToolBar(toolbar =>
                                 {
@@ -67,7 +68,7 @@
                                     model.Field(p => p.ReservationDetailId);
                                 })
                                 .Read(read => read.Action("getGuestHouseReservation", "Accommodation", new { gridType = "corporate" }))
-                                .PageSize(50)
+                                .PageSize(10)
                                 )
                                  .Events(events => events.DataBound("onGridDataBound"))
                                 )

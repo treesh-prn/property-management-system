@@ -137,6 +137,10 @@
                         {
                             <partial name="Shared/_view" />
                         }
+                        else
+                        {
+                            <partial name="Shared/_view" />
+                        }
                     }
                     else if (activeRole == "GFMS.Admin Manager")
                     {
@@ -148,6 +152,10 @@
                         {
                             <partial name="Shared/_view" />
                         }
+                        else
+                        {
+                            <partial name="Shared/_view" />
+                        }
                     }
                     else if (activeRole == "GFMS.Department Head")
                     {
@@ -156,6 +164,10 @@
                             <partial name="Shared/DepartmentHead/_pending" />
                         }
                         else if (Model.ReservationHeader.Requestor == employee.Fullname)
+                        {
+                            <partial name="Shared/_view" />
+                        }
+                        else
                         {
                             <partial name="Shared/_view" />
                         }

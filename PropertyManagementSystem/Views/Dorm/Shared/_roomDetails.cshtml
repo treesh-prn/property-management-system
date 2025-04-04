@@ -1,0 +1,40 @@
+﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
+{
+    <div class="card-body">
+        <div class="row align-items-start">
+            <div class="col-2">
+            </div>
+            <div class="col-9">
+                <div class="row mt-3">
+                    @if (Model.ReservationDetails.FirstOrDefault().AppliedUnit == 0)
+                    {
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Dorm Number</div>
+                                <div class="datagrid-content">@Model.Facility.FacilityName </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Room Number</div>
+
+                                <div class="datagrid-content">@Model.Room.RoomName</div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-lg-3 col-md-6 mb-4">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title text-primary">Housing Number</div>
+                                <div class="datagrid-content">@Model.Facility.FacilityName </div>
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+}

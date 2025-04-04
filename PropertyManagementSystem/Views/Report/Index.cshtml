@@ -1,77 +1,74 @@
 ﻿@using System.Globalization
+@inject PropertyManagementSystem.Services.IRoleService RoleService
 @model IEnumerable<PropertyManagementSystem.Models.ReservationReport>
 
+@{
+    var employee = await RoleService.GetUserName(User);
+}
 
 <div class="page-wrapper">
-    <!-- Page header -->
+    <!-- Page Header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        REPORTS
-                    </div>
-                    <h2 class="page-title">
-                        WEEKLY OCCUPANCY
-                    </h2>
-                </div>
-                <!-- Page title actions -->
-                <div class="col-auto ms-auto d-print-none">
+                    <div class="page-pretitle">REPORTS</div>
+                    <h2 class="page-title">Weekly Occupancy</h2>
                 </div>
             </div>
         </div>
-        <div class="container-xl mt-4">
-            <div class="card">
-                <div class="card-body">
-                    <form id="filterForm" class="row g-3" method="get" asp-action="GenerateWeelyOccupancy">
-                        <!-- Start Date Field -->
-                        <div class="col-lg-3">
-                            <label for="_startDate" class="form-label">Start Date</label>
-                            @(Html.Kendo().DatePicker()
-                                .Name("_startDate")
-                                .Value(DateTime.Today)
-                                .Format("yyyy/MM/dd")
-                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
-                                .HtmlAttributes(new { id = "_startDate", style = "width: 100%;" })
-                                )
-                        </div>
-
-                        <!-- End Date Field -->
-                        <div class="col-lg-3">
-                            <label for="_endDate" class="form-label">End Date</label>
-                            @(Html.Kendo().DatePicker()
-                                .Name("_endDate")
-                                .Value(DateTime.Today)
-                                .Format("yyyy/MM/dd")
-                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
-                                .HtmlAttributes(new { id = "_endDate", style = "width: 100%;" })
-                                )
-                        </div>
-
-                        <!-- Facility/Guesthouse Dropdown -->
-                        <div class="col-lg-3">
-                            <label for="_facility" class="form-label">Select Type</label>
-                            @(Html.Kendo().DropDownList()
-                                .Name("_facility")
-                                .OptionLabel("Select Type")
-                                .DataTextField("Text")
-                                .DataValueField("Value")
-                                .BindTo(new List<SelectListItem> {
-                            new SelectListItem { Text = "Facility", Value = "FN" },
-                            new SelectListItem { Text = "Guesthouse", Value = "GH" }
-                            })
-                                .HtmlAttributes(new { id = "_facility", style = "width: 100%;" })
-                                )
-                        </div>
-                        <!-- Submit Button -->
-                        <div class="col-lg-3 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-primary">Generate Report</button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-        </div>
-
     </div>
+
+    <!-- Filter Form -->
+    <div class="container-xl mt-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form id="filterForm" class="row row-cols-lg-auto row-cols-1 g-2 align-items-end justify-content-center" method="get" asp-action="GenerateWeelyOccupancy">
+                    <!-- Start Date -->
+                    <div class="col">
+                        <label for="_startDate" class="form-label">Start Date</label>
+                        @(Html.Kendo().DatePicker()
+                            .Name("_startDate")
+                            .Value(DateTime.Today)
+                            .Format("yyyy/MM/dd")
+                            .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                            .HtmlAttributes(new { id = "_startDate", style = "width: 100%;" })
+                            )
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="col">
+                        <label for="_endDate" class="form-label">End Date</label>
+                        @(Html.Kendo().DatePicker()
+                            .Name("_endDate")
+                            .Value(DateTime.Today)
+                            .Format("yyyy/MM/dd")
+                            .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
+                            .HtmlAttributes(new { id = "_endDate", style = "width: 100%;" })
+                            )
+                    </div>
+                    <div class="col">
+                        <label class="form-label required">Select Type</label>
+                        @(
+                            Html.Kendo().DropDownList()
+                            .Name("_facility")
+                            .BindTo(new List<SelectListItem> {
+                        new SelectListItem { Text = "Function Room", Value = "FN" },
+                        new SelectListItem { Text = "Guesthouse", Value = "GH" }
+                        })
+                            .HtmlAttributes(new { style = "width: 100%" })
+                            )
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="col">
+                        <button type="submit" name="reportType" value="excel" class="btn btn-green">Excel</button>
+                    </div>
+                    <div class="col">
+                        <button type="submit" name="reportType" value="pdf" class="btn btn-red">PDF</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

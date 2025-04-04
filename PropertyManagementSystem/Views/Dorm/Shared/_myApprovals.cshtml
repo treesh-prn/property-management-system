@@ -40,6 +40,7 @@
   .NoRecords()
   .Groupable()
   .Filterable()
+  .Pageable()
   .Scrollable()
   .Scrollable()
   .ToolBar(toolbar =>
@@ -56,6 +57,6 @@
       model.Field(p => p.ReservationDetailId);
   })
   .Read(read => read.Action("getDormReservation", "Dorm", new { gridType = "reservationApproval" }))
-  .PageSize(50)
+  .PageSize(10)
   )
 )

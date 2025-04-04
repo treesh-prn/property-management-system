@@ -28,6 +28,11 @@ namespace PropertyManagementSystem.Controllers
         {
             return View();
         }
+        [ActiveRoleAuthorize("GFMS.Admin Manager", "GFMS.Admin Approver")]
+        public IActionResult EquipmentUsage()
+        {
+            return View();
+        }
 
         // Action to trigger report generation
 
@@ -67,7 +72,7 @@ namespace PropertyManagementSystem.Controllers
 
 
 
-        public async Task<ActionResult> GenerateWeelyOccupancy(string _startDate, string _endDate, string _preparedBy, string _facility)
+        public async Task<ActionResult> GenerateWeelyOccupancy(string _startDate, string _endDate, string _preparedBy, string _facility, string reportType)
         {
             var parameters = new Dictionary<string, string>
             {
@@ -78,21 +83,58 @@ namespace PropertyManagementSystem.Controllers
 
             try
             {
-                var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GetReservationOccupancy", parameters);
-
-                // Validate the PDF file format
-                if (reportBytes.Length > 4 && reportBytes[0] == '%' && reportBytes[1] == 'P' && reportBytes[2] == 'D' && reportBytes[3] == 'F')
+                if (reportType == "excel")
                 {
-                    return File(reportBytes, "application/pdf", "Report.pdf");
+                    var reportBytes = await _ssrsService.GetReportAsExcelAsync("/PMS/GFMS_GetReservationOccupancy", parameters);
+                    return File(reportBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "WeeklyOccupancy.xlsx");
                 }
-
-                throw new Exception("The response is not a valid PDF file.");
+                else if (reportType == "pdf")
+                {
+                    var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GetReservationOccupancy", parameters);
+                    return File(reportBytes, "application/pdf", "WeeklyOccupancy.pdf");
+                }
+                else
+                {
+                    return BadRequest("Invalid report type requested.");
+                }
             }
             catch (Exception ex)
             {
                 return BadRequest($"Error generating report: {ex.Message}");
             }
         }
+        public async Task<ActionResult> GenerateEquipmentOccupancy(string _startDate, string _endDate, string _company, string _preparedBy, string _classification, string reportType)
+        {
+            var parameters = new Dictionary<string, string>
+            {
+                { "StartDate", _startDate },
+                { "EndDate", _endDate },
+                { "CompanyId", _company },
+                { "FacilityClassification", _classification },
+                { "PreparedBy", _preparedBy }
+            };
 
+            try
+            {
+                if (reportType == "excel")
+                {
+                    var reportBytes = await _ssrsService.GetReportAsExcelAsync("/PMS/GFMS_GenerateEquipmentUsageReport", parameters);
+                    return File(reportBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "EquipmentUsage.xlsx");
+                }
+                else if (reportType == "pdf")
+                {
+                    var reportBytes = await _ssrsService.GetReportAsPdfAsync("/PMS/GFMS_GenerateEquipmentUsageReport", parameters);
+                    return File(reportBytes, "application/pdf", "EquipmentUsage.pdf");
+                }
+                else
+                {
+                    return BadRequest("Invalid report type requested.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error generating report: {ex.Message}");
+            }
+        }
     }
 }

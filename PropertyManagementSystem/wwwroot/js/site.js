@@ -100,6 +100,122 @@ $(document).ready(function () {
     }
 });
 
+function loadRequestor(e) {
+    var facilityId = e.data.FacilityId;
+    var detailCell = e.detailCell.find(".requestor-grid");
+
+    detailCell.kendoGrid({
+        dataSource: {
+            transport: {
+                read: {
+                    url: "/Global/getRequestor",
+                    dataType: "json",
+                    data: function () {
+                        return { facilityId: facilityId };
+                    }
+                }
+            },
+            pageSize: 5
+        },
+        pageable: true,
+        columns: [
+            { field: "RequestorName", title: "Requestor Name" },
+            { field: "ContactNumber", title: "Contact" },
+            { field: "Company", title: "Company" },
+            { field: "ReservationType", title: "Type", hidden: true },
+            { field: "GUID", title: "GUID", hidden: true },
+            {
+                command: [
+                    {
+                        name: "view",
+                        text: "<i class='ti ti-eye'></i> VIEW",
+                        click: onViewClickReservationList
+                    }
+                ],
+                title: "Actions",
+                width: "250px"
+            }
+        ],
+        dataBound: function () {
+            $(".k-grid-view").each(function () {
+                $(this).addClass("k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success");
+            });
+        }
+    });
+}
+
+
+function loadRooms(e) {
+    var facilityId = e.data.FacilityId;
+
+    var detailCell = e.detailCell.find(".room-grid");
+
+    detailCell.kendoGrid({
+        dataSource: {
+            transport: {
+                read: {
+                    url: "/Global/GetRoomsByFacility",
+                    dataType: "json",
+                    data: { facilityId: facilityId }
+                }
+            },
+            pageSize: 10
+        },
+        pageable: true,
+        columns: [
+            { field: "RoomId", title: "Room ID", hidden: true },
+            { field: "RoomName", title: "Room Name" },
+            { field: "RoomStatus", title: "Status" }
+        ],
+        detailTemplate: kendo.template($("#dormer-template").html()), // Load Dormers inside Room
+        detailInit: loadDormers // Fetch Dormers inside the room
+    });
+}
+
+function loadDormers(e) {
+    var roomId = e.data.RoomId;
+    var detailCell = e.detailCell.find(".dormer-grid");
+
+    detailCell.kendoGrid({
+        dataSource: {
+            transport: {
+                read: {
+                    url: "/Global/GetDormersByRoom",
+                    dataType: "json",
+                    data: function () {
+                        return { roomId: roomId };
+                    }
+                }
+            },
+            pageSize: 5
+        },
+        pageable: true,
+        columns: [
+            { field: "DormerName", title: "Name" },
+            { field: "ContactNumber", title: "Contact" },
+            { field: "ReservationType", title: "Type", hidden: true },
+            { field: "GUID", title: "GUID", hidden: true },
+            {
+                command: [
+                    {
+                        name: "view",
+                        text: "<i class='ti ti-eye'></i> VIEW",
+                        click: onViewClickReservationList
+                    }
+                ],
+                title: "Actions",
+                width: "250px"
+            }
+        ],
+        dataBound: function () {
+            $(".k-grid-view").each(function () {
+                $(this).addClass("k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success");
+            });
+        }
+    });
+}
+
+
 
 
 $(document).ready(function () {
@@ -189,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
-
 
 
 function onDataBound(e) {
@@ -689,7 +804,6 @@ $(document).ready(function () {
         // Remove 'Add' button from cloned row
         newRow.find("#add-row").remove();
 
-
         // Ensure unique IDs to avoid conflicts
         newRow.find("input, select").each(function () {
             var id = $(this).attr("id");
@@ -712,7 +826,6 @@ $(document).ready(function () {
         $("#dynamic-rows").append(newRow);
     });
 
-
     // Remove row event
     $("#dynamic-rows").on("click", ".remove-row", function () {
         if ($("#dynamic-rows .row").length > 1) {
@@ -726,7 +839,13 @@ $(document).ready(function () {
             $(".companyDropdown").removeClass("show");
         }
     });
+
+    // Convert text inputs to uppercase on input
+    $(document).on("input", "input[type='text']", function () {
+        $(this).val($(this).val().toUpperCase());
+    });
 });
+
 
 
 //dorm - civil status
@@ -737,6 +856,7 @@ $(document).ready(function () {
         var dormOption = $('input[name="_unitApplied"][value="0"]');
 
         if (selectedValue === 'SINGLE') {
+            $('#dependents-card').slideUp();
             $('#dynamic-rows-dependent').slideUp();
             $('#dynamic-rows-dependent-label').slideUp();
 
@@ -748,6 +868,7 @@ $(document).ready(function () {
             // Disable Housing
             housingOption.prop('disabled', true);
         } else if (selectedValue === 'MARRIED') {
+            $('#dependents-card').slideDown();
             $('#dynamic-rows-dependent').slideDown();
             $('#dynamic-rows-dependent-label').slideDown();
 
@@ -761,6 +882,7 @@ $(document).ready(function () {
             // Enable Housing
             housingOption.prop('disabled', false);
         } else {
+            $('#dependents-card').slideUp();
             $('#dynamic-rows-dependent').slideUp();
             $('#dynamic-rows-dependent-label').slideUp();
 
@@ -797,6 +919,9 @@ $(document).ready(function () {
             $(this).attr('name', newName);
         });
 
+        // Remove the "Add" button from cloned rows
+        originalRow.find('#add-dependent').remove();
+
         // Remove any existing remove button from cloned rows
         originalRow.find('.remove-row').remove();
 
@@ -807,7 +932,8 @@ $(document).ready(function () {
             html: '<i class="ti ti-trash"></i>'
         });
 
-        originalRow.find('.col-lg-2.d-flex').append(removeButton);
+        originalRow.find('.col-lg-2.d-flex.gap-2').append(removeButton);
+
 
         // Append the cloned row
         $('#dynamic-rows-dependent').append(originalRow);

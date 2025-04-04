@@ -16,10 +16,10 @@
                 <div class="col">
                     <!-- Page pre-title -->
                     <div class="page-pretitle">
-                        ACCOMMODATION
+                        DORM and HOUSING
                     </div>
                     <h2 class="page-title">
-                        DORM and HOUSING
+                        DORM
                     </h2>
                 </div>
                 <!-- Page title actions -->
@@ -147,9 +147,7 @@
                                 Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
                                 .Name("grid")
                                 .ToolBar(tools => tools.Excel())
-                                .Excel(excel => excel
-                                .FileName("Reservations.xlsx")
-                                .AllPages(true))
+                                .Excel(excel => excel.FileName("Reservations.xlsx").AllPages(true))
                                 .Columns(columns =>
                                 {
                                     columns.Bound(c => c.FacilityId).Visible(false).Exportable(false);
@@ -157,23 +155,20 @@
                                     columns.Bound(c => c.FacilityName);
                                     columns.Bound(c => c.FacilityLocation);
                                 })
-                                .ClientDetailTemplateId("template")
+                                .ClientDetailTemplateId("room-template") // Reference the template for rooms
                                 .NoRecords()
                                 .Groupable()
                                 .Filterable()
                                 .Scrollable()
-                                .Scrollable()
-                                .ToolBar(toolbar =>
-                                {
-                                    toolbar.Search();
-                                })
+                                .ToolBar(toolbar => { toolbar.Search(); })
                                 .DataSource(dataSource => dataSource
                                 .Ajax()
                                 .Read(read => read.Action("getDormList", "Global"))
                                 .PageSize(50)
                                 )
-                                .Events(events => events.DataBound("dataBound"))
+                                .Events(events => events.DetailInit("loadRooms")) // Event to load rooms
                                 )
+
                         </div>
                     </div>
                 </div>
@@ -185,30 +180,9 @@
 <partial name="Shared/_newReservation" />
 @*END - NEW Room MODAL *@
 
-<script id="template" type="text/kendo-tmpl">
-    @(Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
-    .Name("childGrid")
-    .Columns(columns =>
-    {
-        columns.Bound(o => o.RoomName);
-        columns.Bound(o => o.Requestor).Title("Dormer");
-        columns.Command(command =>
-        {
-            command.Custom("view")
-            .Text("<i class='ti ti-eye'></i>View")
-            .Click("onViewClickReservationList")
-            .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success", style = "width: 250px;" });
-        })
-         .Title("Actions")
-         .Width(300)
-         .Exportable(false);
-    })
-    .DataSource(dataSource => dataSource
-        .Ajax()
-        .PageSize(10)
-        .Read(read => read.Action("getDormReservation", "Dorm", new { FacilityId = "#=FacilityId#", RoomId = "#=RoomId#" }))
-    )
-    .Sortable()
-    .ToClientTemplate()
-   )
+<script id="room-template" type="text/x-kendo-template">
+    <div class="room-grid" data-id="#= FacilityId #"></div>
+</script>
+<script id="dormer-template" type="text/x-kendo-template">
+    <div class="dormer-grid" data-id="#= RoomId #"></div>
 </script>
