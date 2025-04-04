@@ -100,6 +100,41 @@ $(document).ready(function () {
     }
 });
 
+$(document).ready(function () {
+    var recurrenceEditor = $("#RecurrenceEditor").data("kendoRecurrenceEditor");
+
+    // Function to toggle day selection
+    function toggleRecurrenceDay(selectedDay) {
+        var rule = recurrenceEditor.value(); // Get current rule
+
+        var byDayMatch = rule.match(/BYDAY=([^;]*)/); // Get existing days
+        var selectedDays = byDayMatch ? byDayMatch[1].split(",") : [];
+
+        if (selectedDays.includes(selectedDay)) {
+            // If already selected, remove it
+            selectedDays = selectedDays.filter(day => day !== selectedDay);
+        } else {
+            // If not selected, add it
+            selectedDays.push(selectedDay);
+        }
+
+        // Update rule: Replace old BYDAY with the new one
+        if (selectedDays.length > 0) {
+            rule = rule.replace(/BYDAY=[^;]*/, "BYDAY=" + selectedDays.join(","));
+        } else {
+            rule = rule.replace(/BYDAY=[^;]*;/, ""); // Remove if no days selected
+        }
+
+        recurrenceEditor.value(rule); // Update the recurrence editor
+    }
+
+    // Listen for clicks on the weekly recurrence days
+    $(document).on("click", ".k-recur-weekday", function () {
+        var selectedDay = $(this).data("value"); // Get clicked day (e.g., "MO", "WE")
+        toggleRecurrenceDay(selectedDay);
+    });
+});
+
 function loadRequestor(e) {
     var facilityId = e.data.FacilityId;
     var detailCell = e.detailCell.find(".requestor-grid");

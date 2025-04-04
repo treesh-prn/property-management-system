@@ -69,11 +69,11 @@
                     @if(activeRole == "GFMS.Requestor" && User.IsInRole("GFMS.Admin Approver"))
                     {
                         <div class="mb-3 d-flex justify-content-between align-items-center">
-                            <label class="form-label mb-0 required">Free of Charge?</label>
+                            <label class="form-label mb-0">Free of Charge?</label>
                             <div class="d-flex align-items-center">
                                 <span class="me-2 form-label">No</span>
                                 <span class="form-check form-check-single form-switch me-5">
-                                    <input required class="form-check-input" name="_isFreeOfCharge" type="checkbox" value="true" required/>
+                                    <input class="form-check-input" name="_isFreeOfCharge" type="checkbox" value="true"/>
                                 </span>
                                 <span class="ms-2 form-label">Yes</span>
                             </div>
