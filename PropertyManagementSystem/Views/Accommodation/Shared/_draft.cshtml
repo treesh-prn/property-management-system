@@ -1,8 +1,19 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel
+﻿@using Newtonsoft.Json
+@model PropertyManagementSystem.Models.ReservationViewModel
 @inject PropertyManagementSystem.Services.IRoleService RoleService
 
 @{
     var activeRole = await RoleService.GetActiveRoleAsync(User);
+
+    DateTime? startDate = DateTime.TryParse(TempData["_startDate"]?.ToString(), out var sdt) ? sdt : null;
+    DateTime? endDate = DateTime.TryParse(TempData["_endDate"]?.ToString(), out var edt) ? edt : null;
+    var purpose = TempData["_purpose"]?.ToString();
+    var recurrenceRule = TempData["_recurrenceRule"]?.ToString();
+
+    var guests = TempData["_guests"] != null ? JsonConvert.DeserializeObject<List<string>>(TempData["_guests"].ToString()) : new List<string>();
+    var companies = TempData["_company"] != null ? JsonConvert.DeserializeObject<List<string>>(TempData["_company"].ToString()) : new List<string>();
+    var relationships = TempData["_relationship"] != null ? JsonConvert.DeserializeObject<List<string>>(TempData["_relationship"].ToString()) : new List<string>();
+
 }
 <div class="row">
     <div class="col-md-9">
@@ -20,40 +31,87 @@
                                 </div>
                                 <div class="card-body">
                                     <div id="dynamic-rows">
-                                        <div class="row mb-3">
+                                        <!-- Header Labels -->
+                                        <div class="row mb-1">
                                             <div class="col-md-3">
                                                 <label class="form-label">Guest Name</label>
-                                                <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" oninput="this.value = this.value.toUpperCase()">
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label"> Company (N/A if not applicable)</label>
-                                                <div class="dropdown">
-                                                    <input type="text" name="_company[]" class="form-control companySearch" placeholder="Search or select a company..." autocomplete="off">
-                                                    <div class="dropdown-menu w-100 companyDropdown"></div>
-                                                </div>
-
+                                                <label class="form-label">Company (N/A if not applicable)</label>
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label">Relationship (N/A if not applicable)</label>
-                                                <input type="text" class="form-control" name="_relationship[]" placeholder="Relationship (N/A if not applicable)" oninput="this.value = this.value.toUpperCase()">
                                             </div>
-                                            <div class="col-sm-1 d-flex align-items-end">
-                                                <button type="button" id="add-row" class="btn btn-primary ml-2 custom-padding">
-                                                    <i class="ti ti-plus"></i>
-                                                </button>
-                                                <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
-                                                    <i class="ti ti-trash"></i>
-                                                </button>
+                                            <div class="col-md-1">
+                                                <!-- Optional: Action Buttons -->
                                             </div>
                                         </div>
+
+                                        @if (guests.Any())
+                                        {
+                                            for (int i = 0; i < guests.Count; i++)
+                                            {
+                                                var company = companies.Count > i ? companies[i] : "";
+                                                var relationship = relationships.Count > i ? relationships[i] : "";
+
+                                                <div class="row mb-3">
+                                                    <div class="col-md-3">
+                                                        <input type="text" class="form-control" name="_guests[]" value="@guests[i]" placeholder="Guest Name" oninput="this.value = this.value.toUpperCase()">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="dropdown">
+                                                            <input type="text" name="_company[]" value="@company" class="form-control companySearch" placeholder="Search or select a company..." autocomplete="off">
+                                                            <div class="dropdown-menu w-100 companyDropdown"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <input type="text" class="form-control" name="_relationship[]" value="@relationship" placeholder="Relationship (N/A if not applicable)" oninput="this.value = this.value.toUpperCase()">
+                                                    </div>
+                                                    <div class="col-sm-1 d-flex align-items-end">
+                                                        <button type="button" class="btn btn-primary ml-2 custom-padding add-row">
+                                                            <i class="ti ti-plus"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger ml-2 custom-padding remove-row">
+                                                            <i class="ti ti-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="row mb-3">
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" oninput="this.value = this.value.toUpperCase()">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="dropdown">
+                                                        <input type="text" name="_company[]" class="form-control companySearch" placeholder="Search or select a company..." autocomplete="off">
+                                                        <div class="dropdown-menu w-100 companyDropdown"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="text" class="form-control" name="_relationship[]" placeholder="Relationship (N/A if not applicable)" oninput="this.value = this.value.toUpperCase()">
+                                                </div>
+                                                <div class="col-sm-1 d-flex align-items-end">
+                                                    <button type="button" class="btn btn-primary ml-2 custom-padding add-row">
+                                                        <i class="ti ti-plus"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-danger ml-2 custom-padding remove-row">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
                                     </div>
+
                                     <label class="form-label">Duration of Stay</label>
                                     <div class="row mb-3">
                                         <div class="col-lg-6">
                                             <label class="form-label required">Arrival Date and Time</label>
                                             @(Html.Kendo().DateTimePicker()
                                                 .Name("_startDate")
-                                                .Value(DateTime.Today)
+                                                .Value(startDate ?? DateTime.Today)
                                                 .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                 .Max(DateTime.Today.AddMonths(1))
                                                 .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
@@ -64,7 +122,7 @@
                                             <label class="form-label required">Departure Date and Time</label>
                                             @(Html.Kendo().DateTimePicker()
                                                 .Name("_endDate")
-                                                .Value(DateTime.Today)
+                                                .Value(endDate ?? DateTime.Today)
                                                 .Max(DateTime.Today.AddMonths(1))
                                                 .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                 .HtmlAttributes(new { onkeydown = "return false;" })
@@ -78,6 +136,7 @@
                                             <label class="form-label">Recurrence</label>
                                             @(Html.Kendo().RecurrenceEditor()
                                                 .Name("RecurrenceEditor")
+                                                .Value(recurrenceRule)
                                                 )
                                         </div>
                                         <input type="hidden" name="RecurrenceRule" id="RecurrenceRule">
@@ -88,7 +147,7 @@
                                                 Purpose
                                                 <span id="charCount" class="form-label-description">0/50</span>
                                             </label>
-                                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" oninput="this.value = this.value.toUpperCase()"></textarea>
+                                            <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" oninput="this.value = this.value.toUpperCase()">@purpose</textarea>
                                         </div>
                                     </div>
                                 </div>

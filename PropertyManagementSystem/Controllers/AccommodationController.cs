@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using static Kendo.Mvc.UI.UIPrimitives;
 using Microsoft.Reporting.Map.WebForms.BingMaps;
 using Org.BouncyCastle.Asn1.Cmp;
+using Newtonsoft.Json;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -343,6 +344,13 @@ namespace PropertyManagementSystem.Controllers
                 TempData["AlertSubMessage"] = "Please select a valid end date.";
                 TempData["AlertType"] = "Warning";
 
+                TempData["_startDate"] = _startDate.ToString("yyyy-MM-ddTHH:mm:ss");
+                TempData["_endDate"] = _endDate.ToString("yyyy-MM-ddTHH:mm:ss");
+                TempData["_purpose"] = _purpose;
+                TempData["_recurrenceRule"] = RecurrenceRule;
+                TempData["_guests"] = JsonConvert.SerializeObject(_guests);
+                TempData["_company"] = JsonConvert.SerializeObject(_company);
+                TempData["_relationship"] = JsonConvert.SerializeObject(_relationship);
 
                 return RedirectToAction("ViewReservationDetails", new { id = guid });
             }
@@ -354,6 +362,14 @@ namespace PropertyManagementSystem.Controllers
                     TempData["AlertSubMessage"] = "Please select a future date.";
                     TempData["AlertType"] = "Warning";
 
+                    TempData["_startDate"] = _startDate.ToString("yyyy-MM-ddTHH:mm:ss");
+                    TempData["_endDate"] = _endDate.ToString("yyyy-MM-ddTHH:mm:ss");
+                    TempData["_purpose"] = _purpose;
+                    TempData["_recurrenceRule"] = RecurrenceRule;
+                    TempData["_guests"] = JsonConvert.SerializeObject(_guests);
+                    TempData["_company"] = JsonConvert.SerializeObject(_company);
+                    TempData["_relationship"] = JsonConvert.SerializeObject(_relationship);
+
                     return RedirectToAction("ViewReservationDetails", new { id = guid });
                 }
                 else if (_startDate <= now && !User.IsInRole("GFMS.Admin Approver"))
@@ -361,6 +377,14 @@ namespace PropertyManagementSystem.Controllers
                     TempData["AlertMessage"] = "You cannot file a reservation for the same day if the start time has already passed.";
                     TempData["AlertSubMessage"] = "Please select a future start time.";
                     TempData["AlertType"] = "Warning";
+
+                    TempData["_startDate"] = _startDate.ToString("yyyy-MM-ddTHH:mm:ss");
+                    TempData["_endDate"] = _endDate.ToString("yyyy-MM-ddTHH:mm:ss");
+                    TempData["_purpose"] = _purpose;
+                    TempData["_recurrenceRule"] = RecurrenceRule;
+                    TempData["_guests"] = JsonConvert.SerializeObject(_guests);
+                    TempData["_company"] = JsonConvert.SerializeObject(_company);
+                    TempData["_relationship"] = JsonConvert.SerializeObject(_relationship);
 
                     return RedirectToAction("ViewReservationDetails", new { id = guid });
                 }
@@ -610,6 +634,7 @@ namespace PropertyManagementSystem.Controllers
         [HttpPost]
         public IActionResult UpdateReservationDetails(int ReservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime _startDate, DateTime _endDate, string _purpose)
         {
+            var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == ReservationId);
 
             if (_startDate < new DateTime(1753, 1, 1) || _startDate > new DateTime(9999, 12, 31) ||
                 _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
@@ -688,6 +713,28 @@ namespace PropertyManagementSystem.Controllers
                     _context.ReservationDetails.Add(newDetail);
                 }
             }
+
+            if (reservationHeader != null)
+            {
+                var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservationHeader.RequestorID);
+
+                if (employee != null)
+                {
+                    var department = _context.Departments.FirstOrDefault(d => d.Id == employee.DepartmentId);
+                    var company = department != null
+                        ? _context.Companies.FirstOrDefault(c => c.Id == department.CompanyId)
+                        : null;
+
+                    if (reservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" &&
+                        department != null && department.DepartmentCode != "ADMIN" &&
+                        company != null && company.CompanyCode != "FDPPC")
+                    {
+                        reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
+                        _context.ReservationHeaders.Update(reservationHeader);
+                    }
+                }
+            }
+
             TempData["AlertMessage"] = "Reservation details updated successfully!";
             TempData["AlertSubMessage"] = "Your reservation has been updated";
             TempData["AlertType"] = "Success";

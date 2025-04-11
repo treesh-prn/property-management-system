@@ -5,7 +5,7 @@
         <form asp-action="CreateReservationDetails" asp-controller="Dorm" method="post">
             <div class="card">
                 <div class="card-body">
-                    <input type="hidden" class="form-control" name="_reservationId" asp-for="ReservationHeader.ReservationId">
+                    <input type="hidden" class="form-control" id="_reservationId" name="_reservationId" asp-for="ReservationHeader.ReservationId">
                     <div class="container container-lg mt-3">
                         <div id="dynamic-rows">
                             <div class="row">
@@ -374,19 +374,34 @@
                                     <label class="form-label">Attach Letter of Intent</label>
                                     @(Html.Kendo().Upload()
                                         .Name("files")
-                                        .Multiple(true)
                                         .Async(a => a
-                                        .Save("Upload", "Dorm")
+                                        .Save("UploadFiles", "Dorm")
                                         .Remove("Remove", "Dorm")
                                         .AutoUpload(true)
                                         )
-                                        .DropZone(".dropZoneElement")
+                                        .Multiple(true)
+                                        .Files(f =>
+                                        {
+                                            if (Model.FileAttachments != null)
+                                            {
+                                                foreach (var file in Model.FileAttachments)
+                                                {
+                                                    f.Add()
+                                                    .Name(System.IO.Path.GetFileName(file.FilePath))
+                                                    .Extension(System.IO.Path.GetExtension(file.FilePath))
+                                                    .Size(12345); // Mock file size
+                                                }
+                                            }
+                                        })
                                         .Events(e => e
                                         .Success("onSuccess")
                                         .Error("onError")
+                                        .Upload("onUpload")
+                                        .Remove("onRemove")
                                         )
                                         )
                                 </div>
+                                <input type="hidden" id="filesToRemove" name="filesToRemove" value="" />
                                 <input type="hidden" name="filePath" id="filePath" />
                                 <div id="uploadedFilesLinks" style="display: none;">
                                     <ul id="fileLinksList"></ul>

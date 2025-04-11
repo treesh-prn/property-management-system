@@ -1,8 +1,19 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel
+﻿@using Newtonsoft.Json
+@model PropertyManagementSystem.Models.ReservationViewModel
 @inject PropertyManagementSystem.Services.IRoleService RoleService
 
 @{
     var activeRole = await RoleService.GetActiveRoleAsync(User);
+    
+    var numOfGuests = TempData["_numOfGuests"]?.ToString();
+    var facilityId = TempData["_facilityId"]?.ToString();
+    var roomId = TempData["_roomId"]?.ToString();
+    DateTime? startDate = DateTime.TryParse(TempData["_startDate"]?.ToString(), out var sdt) ? sdt : null;
+    DateTime? endDate = DateTime.TryParse(TempData["_endDate"]?.ToString(), out var edt) ? edt : null;
+    var purpose = TempData["_purpose"]?.ToString();
+    var equipment = TempData["_equipment"] != null ? JsonConvert.DeserializeObject<List<string>>(TempData["_equipment"].ToString()) : new List<string>();
+    var contactNumber = TempData["_contactNumber"]?.ToString();
+    var recurrenceRule = TempData["_recurrenceRule"]?.ToString();
 }
 <div class="row">
     <div class="col-md-9">
@@ -23,7 +34,7 @@
                                         <div class="row mb-3">
                                             <div class="col-lg-6">
                                                 <label class="form-label required">Number of Attendees</label>
-                                                <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees" required>
+                                                <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees" required value="@numOfGuests">
                                             </div>
                                             <div class="col-lg-6">
                                                 <div>
@@ -34,7 +45,7 @@
                                                         <span class="input-group-text">
                                                             +63
                                                         </span>
-                                                        <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" required>
+                                                        <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" required value="@contactNumber">
                                                     </div>
 
                                                 </div>
@@ -46,7 +57,7 @@
                                                 <label class="form-label required">Start Date </label>
                                                 @(Html.Kendo().DateTimePicker()
                                                     .Name("_startDate")
-                                                    .Value(DateTime.Today.AddHours(7))
+                                                    .Value(startDate ?? DateTime.Today.AddHours(7))
                                                     .Min(DateTime.Today)
                                                     .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                     .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
@@ -58,7 +69,7 @@
                                                 <label class="form-label required">End Date </label>
                                                 @(Html.Kendo().DateTimePicker()
                                                     .Name("_endDate")
-                                                    .Value(DateTime.Today.AddHours(18))
+                                                    .Value(endDate ?? DateTime.Today.AddHours(18))
                                                     .Min(DateTime.Today)
                                                     .Format("yyyy/MM/dd HH:mm:ss.fff")
                                                     .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
@@ -73,6 +84,7 @@
                                                 <label class="form-label">Recurrence</label>
                                                 @(Html.Kendo().RecurrenceEditor()
                                                     .Name("RecurrenceEditor")
+                                                    .Value(recurrenceRule)
                                                     )
                                             </div>
                                             <input type="hidden" name="RecurrenceRule" id="RecurrenceRule">
@@ -86,6 +98,7 @@
                                                         Html.Kendo().DropDownList()
                                                         .Name("_facilityId")
                                                         .DataTextField("FacilityName")
+                                                        .Value(facilityId)
                                                         .DataValueField("FacilityId")
                                                         .DataSource(source =>
                                                         {
@@ -104,6 +117,7 @@
                                                         .Name("_roomId")
                                                         .DataTextField("RoomName")
                                                         .DataValueField("RoomId")
+                                                        .Value(roomId)
                                                         .CascadeFrom("_facilityId")
                                                         .DataSource(source =>
                                                         {
@@ -128,6 +142,7 @@
                                                     .NoDataTemplateId("noDataTemplate")
                                                     .DataTextField("EquipmentName")
                                                     .DataValueField("Id")
+                                                    .Value(equipment)
                                                     .Filter("contains")
                                                     .AutoBind(true)
                                                     .DataSource(source =>
@@ -148,7 +163,7 @@
                                                     Purpose
                                                     <span id="charCount" class="form-label-description">0/50</span>
                                                 </label>
-                                                <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" oninput="this.value = this.value.toUpperCase()"></textarea>
+                                                <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" value="@purpose" maxlength="50" oninput="this.value = this.value.toUpperCase()">@purpose</textarea>
                                             </div>
                                         </div>
                                     </div>

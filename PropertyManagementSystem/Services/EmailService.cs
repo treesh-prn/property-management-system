@@ -3,44 +3,58 @@ using MimeKit;
 using Microsoft.Extensions.Configuration;
 using System.Threading.Tasks;
 using PropertyManagementSystem.Models;
+using Microsoft.Extensions.Options;
 
 namespace PropertyManagementSystem.Services
 {
     public class EmailService
     {
         private readonly IConfiguration _config;
+        private readonly string _baseUrl;
 
         public EmailService(IConfiguration config)
         {
             _config = config;
+            _baseUrl = config["AppSettings:BaseUrl"];
         }
 
         string emailAdd = "trisha_paran@tecoindustrialpark.com";
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
-            var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress(_config["SmtpSettings:SenderName"], _config["SmtpSettings:SenderEmail"]));
-            emailMessage.To.Add(new MailboxAddress(toEmail, toEmail));
-            emailMessage.Subject = subject;
-
-            var bodyBuilder = new BodyBuilder { HtmlBody = body };
-            emailMessage.Body = bodyBuilder.ToMessageBody();
-
-            using (var client = new SmtpClient())
+            try
             {
-                await client.ConnectAsync(_config["SmtpSettings:Server"], int.Parse(_config["SmtpSettings:Port"]), false);
-                await client.AuthenticateAsync(_config["SmtpSettings:Username"], _config["SmtpSettings:Password"]);
-                await client.SendAsync(emailMessage);
-                await client.DisconnectAsync(true);
+                var emailMessage = new MimeMessage();
+                emailMessage.From.Add(new MailboxAddress(_config["SmtpSettings:SenderName"], _config["SmtpSettings:SenderEmail"]));
+                emailMessage.To.Add(new MailboxAddress(toEmail, toEmail));
+                emailMessage.Subject = subject;
+
+                var bodyBuilder = new BodyBuilder { HtmlBody = body };
+                emailMessage.Body = bodyBuilder.ToMessageBody();
+
+                using (var client = new SmtpClient())
+                {
+                    await client.ConnectAsync(_config["SmtpSettings:Server"], int.Parse(_config["SmtpSettings:Port"]), false);
+                    await client.AuthenticateAsync(_config["SmtpSettings:Username"], _config["SmtpSettings:Password"]);
+                    await client.SendAsync(emailMessage);
+                    await client.DisconnectAsync(true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error sending email: " + ex.Message);
+                throw; // rethrow or handle as needed
             }
         }
 
-        public async Task SendReservationApprovalEmail(GFMS_ReservationHeader reservationHeader, string requestorEmail, string startDate, string endDate, int numOfGuests, string facilityName, string roomName, string purpose)
+
+        public async Task SendReservationApprovalEmail(GFMS_ReservationHeader reservationHeader, string requestorEmail, string startDate, string endDate, int numOfGuests, string facilityName, string roomName, string purpose, string guid, string controllerName)
         {
+            string emailBody;
+
             if (roomName == null && facilityName == null)
             {
-                var emailBody = $@"
+                emailBody = $@"
                 <h1>Reservation Approval Needed</h1>
                 <p>Hello <b>{reservationHeader.Requestor}</b>,</p>
                 <p>A new reservation has been created and requires your approval. The details of the reservation are as follows:</p>
@@ -51,13 +65,13 @@ namespace PropertyManagementSystem.Services
                     <li><strong>Number of Guests:</strong> {numOfGuests}</li>
                     <li><strong>Purpose:</strong> {purpose}</li>
                 </ul>
-                <p>Please review and approve the <a href='https://localhost:7035/Identity/Account/Login'>reservation</a> at your earliest convenience.</p>
+                <p>Please review and approve the <a href='{_baseUrl}{controllerName}/ViewReservationDetails/{reservationHeader.GUID}'>reservation</a> at your earliest convenience.</p>
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
             }
             else
             {
-                var emailBody = $@"
+                emailBody = $@"
                 <h1>Reservation Approval Needed</h1>
                 <p>Hello <b>{reservationHeader.Requestor}</b>,</p>
                 <p>A new reservation has been created and requires your approval. The details of the reservation are as follows:</p>
@@ -70,13 +84,13 @@ namespace PropertyManagementSystem.Services
                     <li><strong>Room Name:</strong> {roomName}</li>
                     <li><strong>Purpose:</strong> {purpose}</li>
                 </ul>
-                <p>Please review and approve the <a href='https://localhost:7035/Identity/Account/Login'>reservation</a> at your earliest convenience.</p>
+                <p>Please review and approve the <a href='{_baseUrl}{controllerName}/ViewReservationDetails/{reservationHeader.GUID}'>reservation</a> at your earliest convenience.</p>
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
 
-                await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been created", emailBody);
             }
 
+            await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been created", emailBody);
 
         }
 
@@ -140,5 +154,29 @@ namespace PropertyManagementSystem.Services
                 <p>Property Management System</p>";
             await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been disapproved", emailBody);
         }
+
+        public async Task SendPendingRoomAssignmentEmail(GFMS_ReservationHeader reservationHeader, string adminApproverEmail, string controllerName)
+        {
+            var subject = $"Pending Room Assignment and Approval - {reservationHeader.ReservationCode}";
+            var baseUrl = _config["AppSettings:BaseUrl"]; // e.g., "https://yourdomain.com/"
+            var reservationLink = $"{baseUrl}{controllerName}/ViewReservationDetails/{reservationHeader.GUID}";
+
+            var emailBody = $@"
+                <h1>Action Required: Room Assignment & Approval</h1>
+                <p>Dear Admin Approver,</p>
+                <p>A reservation is pending room assignment and your approval. Below are the details:</p>
+                <ul>
+                    <li><strong>Reservation Code:</strong> {reservationHeader.ReservationCode}</li>
+                    <li><strong>Requestor:</strong> {reservationHeader.Requestor}</li>
+                    <li><strong>Department:</strong> {reservationHeader.Department}</li>
+                    <li><strong>Date Requested:</strong> {reservationHeader.DateFiled?.ToString("MMMM dd, yyyy")}</li>
+                </ul>
+                <p>Please <a href='{reservationLink}'>click here</a> to review and take action.</p>
+                <p>Thank you,<br/>Property Management System</p>
+            ";
+
+            await SendEmailAsync(adminApproverEmail, subject, emailBody);
+        }
+
     }
 }

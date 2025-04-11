@@ -18,6 +18,7 @@
 
 var fullyBookedDates = [];
 var availableDates = [];
+var filesToRemove = [];
 var bookings = [];
 var assignedData = {}; 
 
@@ -100,6 +101,44 @@ $(document).ready(function () {
     }
 });
 
+function onUpload(e) {
+    const reservationId = document.getElementById('_reservationId')?.value;
+
+    // Just in case it's null or empty
+    if (!reservationId) {
+        alert("Reservation ID is missing.");
+        return;
+    }
+
+    e.data = {
+        reservationId: reservationId
+    };
+}
+
+function onRemove(e) {
+    var fileName = e.files[0].name;
+    filesToRemove.push(fileName); // Add the removed file name to the list
+
+    // Update the hidden field with the list of files to remove
+    $('#filesToRemove').val(filesToRemove.join(',')); // Join file names with commas
+
+    $.ajax({
+        url: '/Dorm/Remove',
+        type: 'POST',
+        data: {
+            __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val(),
+            fileName: fileName
+        },
+        success: function (response) {
+            alert("File removed successfully!");
+        },
+        error: function (xhr, status, error) {
+            alert("Error removing file!");
+        }
+    });
+}
+
+
 $(document).ready(function () {
     var recurrenceEditor = $("#RecurrenceEditor").data("kendoRecurrenceEditor");
 
@@ -156,7 +195,6 @@ function loadRequestor(e) {
         columns: [
             { field: "RequestorName", title: "Requestor Name" },
             { field: "ContactNumber", title: "Contact" },
-            { field: "Company", title: "Company" },
             { field: "ReservationType", title: "Type", hidden: true },
             { field: "GUID", title: "GUID", hidden: true },
             {
@@ -880,6 +918,49 @@ $(document).ready(function () {
         $(this).val($(this).val().toUpperCase());
     });
 });
+
+// Clone row event (works for dynamically created .add-row buttons)
+$(document).on("click", ".add-row", function () {
+    var rowToClone = $(this).closest(".row");
+    var newRow = rowToClone.clone();
+
+    // Reset input fields
+    newRow.find("input[type='text']").val("");
+    newRow.find(".companyDropdown").removeClass("show").empty(); // Clear dropdown
+
+    // Remove any labels if accidentally present
+    newRow.find("label").remove();
+
+    // Ensure dropdown behavior will still work
+    newRow.find(".dropdown").each(function () {
+        $(this).find(".companyDropdown").removeClass("show").empty();
+    });
+
+    // Remove add-row button in newRow to avoid duplicate adds from the same row
+    newRow.find(".add-row").remove();
+
+    // Add new add/remove buttons
+    var buttonContainer = newRow.find(".d-flex");
+    buttonContainer.empty(); // Clear previous buttons to avoid duplication
+
+    var addBtn = $("<button>", {
+        type: "button",
+        class: "btn btn-primary ml-2 custom-padding add-row",
+        html: '<i class="ti ti-plus"></i>'
+    });
+
+    var removeBtn = $("<button>", {
+        type: "button",
+        class: "btn btn-danger ml-2 custom-padding remove-row",
+        html: '<i class="ti ti-trash"></i>'
+    });
+
+    buttonContainer.append(addBtn).append(removeBtn);
+
+    $("#dynamic-rows").append(newRow);
+});
+
+
 
 
 

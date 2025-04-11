@@ -10,7 +10,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form asp-action="UpdateReservationDetails" asp-controller="Dorm" method="post">
-                    <input type="hidden" name="reservationId" value="@Model.ReservationHeader.ReservationId">
+                    <input type="hidden" id="_reservationId" name="reservationId" value="@Model.ReservationHeader.ReservationId">
                     <input type="hidden" class="form-control" name="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" asp-for="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
                     <div class="container container-lg mt-3">
                         <div id="dynamic-rows">
@@ -371,30 +371,52 @@
                                                     @(Html.Kendo().Upload()
                                                         .Name("files")
                                                         .Async(a => a
-                                                        .Save("Upload", "Dorm")
+                                                        .Save("UploadFiles", "Dorm")
                                                         .Remove("Remove", "Dorm")
                                                         .AutoUpload(true)
                                                         )
-                                                        .DropZone(".dropZoneElement")
+                                                        .Multiple(true)
+                                                        .Files(f =>
+                                                        {
+                                                            if (Model.FileAttachments != null)
+                                                            {
+                                                                foreach (var file in Model.FileAttachments)
+                                                                {
+                                                                    f.Add()
+                                                                    .Name(System.IO.Path.GetFileName(file.FilePath))
+                                                                    .Extension(System.IO.Path.GetExtension(file.FilePath))
+                                                                    .Size(12345); // Mock file size
+                                                                }
+                                                            }
+                                                        })
                                                         .Events(e => e
                                                         .Success("onSuccess")
                                                         .Error("onError")
+                                                        .Upload("onUpload")
+                                                        .Remove("onRemove")
                                                         )
                                                         )
+
                                                 </div>
                                             </div>
 
                                             <input type="hidden" name="filePath" id="filePath" value="@Model.ReservationDetails.FirstOrDefault()?.FileAttachment" />
+                                            <input type="hidden" id="filesToRemove" name="filesToRemove" value="" />
 
                                             <div id="uploadedFilesLinks">
                                                 <ul id="fileLinksList">
-                                                    @if (!string.IsNullOrEmpty(Model.ReservationDetails.FirstOrDefault()?.FileAttachment))
+                                                    @if (Model.FileAttachments.Any() && Model.FileAttachments != null)
                                                     {
-                                                        <li>
-                                                            <a href="/uploads/@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
-                                                                @Model.ReservationDetails.FirstOrDefault().FileAttachment
-                                                            </a>
-                                                        </li>
+                                                        <ul>
+                                                            @foreach (var file in Model.FileAttachments)
+                                                            {
+                                                                <li>
+                                                                    <a href="@file.FilePath" target="_blank">
+                                                                        @file.FilePath
+                                                                    </a>
+                                                                </li>
+                                                            }
+                                                        </ul>
                                                     }
                                                 </ul>
                                             </div>

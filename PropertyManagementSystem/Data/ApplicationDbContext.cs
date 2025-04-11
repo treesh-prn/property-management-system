@@ -20,6 +20,7 @@ namespace PropertyManagementSystem.Data
             : base(options)
         {
         }
+        public DbSet<IdentityRole> Roles { get; set; }
         public virtual DbSet<Gen_Employee> Employees { get; set; }
         public virtual DbSet<Gen_Department> Departments { get; set; }
         public virtual DbSet<Gen_Company> Companies { get; set; }
@@ -32,6 +33,7 @@ namespace PropertyManagementSystem.Data
         public virtual DbSet<HRIS_EmploymentLevel> EmploymentLevels { get; set; }
         public virtual DbSet<GFMS_RoomEquipment> RoomEquipments { get; set; }
         public virtual DbSet<GFMS_DormerRoomHistory> DormerRoomHistories { get; set; }
+        public virtual DbSet<GFMS_FileAttachment> FileAttachments { get; set; }
         public DbSet<RoomOccupantViewModel> RoomOccupants { get; set; }
         public DbSet<ReservationReport> ReservationReports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -121,9 +121,25 @@
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Letter of Intent</div>
                             <div class="datagrid-content">
-                                <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
-                                    @Model.ReservationDetails.FirstOrDefault().FileAttachment
-                                </a>
+                                @if (Model.FileAttachments.Any() && Model.FileAttachments != null)
+                                {
+                                    <ul>
+                                        @foreach (var file in Model.FileAttachments)
+                                        {
+                                            <li>
+                                                <a href="@file.FilePath" target="_blank">
+                                                    @file.FilePath
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <a>
+                                        -
+                                    </a>
+                                }
                             </div>
                         </div>
                     </div>

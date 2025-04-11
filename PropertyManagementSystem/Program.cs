@@ -44,6 +44,7 @@ builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<SsrsService>();
 builder.Services.AddControllersWithViews();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 

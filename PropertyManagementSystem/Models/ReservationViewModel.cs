@@ -15,7 +15,7 @@ namespace PropertyManagementSystem.Models
         public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
         public List<DormerHistoryViewModel>? DormerHistoryDetails { get; set; }
-
+        public List<GFMS_FileAttachment> FileAttachments { get; set; }
 
 
         public int FacilityId { get; set; }

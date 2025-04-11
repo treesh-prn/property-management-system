@@ -164,20 +164,25 @@ namespace PropertyManagementSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult Remove([FromBody] string[] files)
+        public IActionResult Remove()
         {
-            foreach (var fullName in files)
+            var fileNames = Request.Form["fileNames[0]"];
+            foreach (var fileName in fileNames)
             {
-                var physicalPath = Path.Combine(Directory.GetCurrentDirectory(), "Uploads", fullName);
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", fileName);
 
-                if (System.IO.File.Exists(physicalPath))
+                if (System.IO.File.Exists(filePath))
                 {
-                    System.IO.File.Delete(physicalPath);
+                    System.IO.File.Delete(filePath);
                 }
             }
 
-            return Content("");
+
+
+            return Json(new { status = "success" });
         }
+
+
 
         public async Task<ActionResult> getDormReservationAsync([DataSourceRequest] DataSourceRequest request, string gridType, int FacilityId, int RoomId)
         {
@@ -437,6 +442,10 @@ namespace PropertyManagementSystem.Controllers
                         Status = h.Status,
                     }).ToList();
 
+                var fileAttachments = _context.FileAttachments
+                    .Where(f => f.ReservationId == reservationId)
+                    .ToList();
+
                 var reservation = new ReservationViewModel
                 {
                     Department = department,
@@ -448,7 +457,8 @@ namespace PropertyManagementSystem.Controllers
                     ReservationHeader = reservationHeader,
                     ReservationDetails = reservationDetails,
                     NumberOfGuest = reservationDetails.Sum(rd => rd.NumberOfGuest),
-                    DormerHistoryDetails = roomHistory // Add room history to the view model
+                    DormerHistoryDetails = roomHistory,
+                    FileAttachments = fileAttachments
                 };
 
                 return View(reservation);
@@ -526,7 +536,7 @@ namespace PropertyManagementSystem.Controllers
     string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation,
     string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime,
     string _fare, string _civilStat, string[] _dependents, string[] _age, string[] _location,
-    string[] _position, string filepath, string[] _dependent_status)
+    string[] _position, string filepath, string[] _dependent_status, List<string> filesToRemove)
         {
             string currentRole = await _roleService .GetActiveRoleAsync(User);
             try
@@ -593,6 +603,29 @@ namespace PropertyManagementSystem.Controllers
                         };
 
                         _context.ReservationDetails.Add(reservationDetails);
+                    }
+                }
+
+                if (filesToRemove != null && filesToRemove.Any())
+                {
+                    foreach (var fileName in filesToRemove)
+                    {
+                        if (string.IsNullOrWhiteSpace(fileName))
+                            continue; // Skip null or empty filenames
+
+                        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", fileName);
+                        if (System.IO.File.Exists(filePath))
+                        {
+                            System.IO.File.Delete(filePath);
+                        }
+
+                        var fileRecord = _context.FileAttachments
+                            .FirstOrDefault(f => f.FileName == fileName && f.ReservationId == _reservationId);
+
+                        if (fileRecord != null)
+                        {
+                            _context.FileAttachments.Remove(fileRecord);
+                        }
                     }
                 }
 
@@ -664,8 +697,8 @@ namespace PropertyManagementSystem.Controllers
                     }
                 }
                 _context.SaveChanges();
-                TempData["AlertMessage"] = "Reservation details created successfully!";
-                TempData["AlertSubMessage"] = "Your reservation has been saved";
+                TempData["AlertMessage"] = "Application details created successfully!";
+                TempData["AlertSubMessage"] = "Your application has been saved";
                 TempData["AlertType"] = "success";
             }
             catch (Exception ex)
@@ -678,8 +711,45 @@ namespace PropertyManagementSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateReservationDetails(int reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, List<string> _dependents, List<string> _age, List<string> _location, List<string> _position, List<string> _dependent_status, string filepath)
+        public async Task<IActionResult> UploadFiles(List<IFormFile> files, int reservationId)
         {
+            Console.WriteLine("ReservationId:" + reservationId);
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            foreach (var file in files)
+            {
+                if (file.Length > 0)
+                {
+                    var fileName = Path.GetFileName(file.FileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    var attachment = new GFMS_FileAttachment
+                    {
+                        ReservationId = reservationId,
+                        FileName = fileName,
+                        FilePath = "/uploads/" + fileName,
+                        DateUploaded = DateTime.UtcNow
+                    };
+
+                    _context.FileAttachments.Add(attachment);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpPost]
+        public IActionResult UpdateReservationDetails(int reservationId, int _unitApplied, int _schedType, string _contactNumber, string _permanentAdd, string _currentAdd, int _homeOwnership, int _ownedLocation, string _specificLocation, int _modeOfTransport, string _vehicleType, string _travelTime, string _fare, string _civilStat, List<string> _dependents, List<string> _age, List<string> _location, List<string> _position, List<string> _dependent_status, string filepath, List<string> filesToRemove)
+        {
+            var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == reservationId);
             var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == reservationId).Select(rh => rh.GUID).FirstOrDefault();
             Console.WriteLine("GUID:" + guid);
             var existingReservationDetails = _context.ReservationDetails
@@ -769,6 +839,53 @@ namespace PropertyManagementSystem.Controllers
                 }
             }
 
+            if (filesToRemove != null && filesToRemove.Any())
+            {
+                foreach (var fileName in filesToRemove)
+                {
+                    if (string.IsNullOrWhiteSpace(fileName))
+                        continue; // Skip null or empty filenames
+
+                    var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", fileName);
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+
+                    var fileRecord = _context.FileAttachments
+                        .FirstOrDefault(f => f.FileName == fileName && f.ReservationId == reservationId);
+
+                    if (fileRecord != null)
+                    {
+                        _context.FileAttachments.Remove(fileRecord);
+                    }
+                }
+            }
+
+
+            if (reservationHeader != null)
+            {
+                var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservationHeader.RequestorID);
+
+                if (employee != null)
+                {
+                    var department = _context.Departments.FirstOrDefault(d => d.Id == employee.DepartmentId);
+                    var company = department != null
+                        ? _context.Companies.FirstOrDefault(c => c.Id == department.CompanyId)
+                        : null;
+
+                    if (reservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" &&
+                        department != null && department.DepartmentCode != "ADMIN" &&
+                        company != null && company.CompanyCode != "FDPPC")
+                    {
+                        reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
+                        _context.ReservationHeaders.Update(reservationHeader);
+                    }
+                }
+            }
+            TempData["AlertMessage"] = "Application details updated successfully!";
+            TempData["AlertSubMessage"] = "Your application has been updated";
+            TempData["AlertType"] = "Success";
             // Save changes
             _context.SaveChanges();
 
