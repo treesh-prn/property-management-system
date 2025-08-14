@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using System;
 using static Kendo.Mvc.UI.UIPrimitives;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -22,13 +23,15 @@ namespace PropertyManagementSystem.Controllers
         private readonly IRoleService _roleService;
         private readonly EmailService _emailService;
         private readonly EmployeeService _employeeService;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public FunctionRoomController(DAL context, IRoleService roleService, EmailService emailService, EmployeeService employeeService)
+        public FunctionRoomController(DAL context, IRoleService roleService, EmailService emailService, EmployeeService employeeService, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _roleService = roleService;
             _emailService = emailService;
             _employeeService = employeeService;
+            _roleManager = roleManager;
         }
         public IActionResult Index()
         {
@@ -199,6 +202,10 @@ namespace PropertyManagementSystem.Controllers
                 {
                     query = query.Where(x => x.Status == "FOR ADMIN MANAGER'S APPROVAL" && x.DateSubmitted <= targetDateTime);
                 }
+            }
+            else if (gridType == "approvedReservation")
+            {
+                query = query.Where(x => x.Status == "APPROVED");
             }
 
             var reservationHeaders = query.ToList();
@@ -399,6 +406,9 @@ namespace PropertyManagementSystem.Controllers
         {
             string currentRole = await _roleService.GetActiveRoleAsync(User);
 
+            var approverEmails = await _roleService.GetEmailsByRoleAsync("GFMS.Admin Approver");
+            var adminManagerEmail = await _roleService.GetEmailsByRoleAsync("GFMS.Admin Manager");
+
             Console.WriteLine($"Requestor Email: {_requestorEmail}");
             Console.WriteLine($"Start Date: {_startDate}");
             Console.WriteLine($"End Date: {_endDate}");
@@ -497,7 +507,7 @@ namespace PropertyManagementSystem.Controllers
                 var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
                 var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservationHeader.RequestorID);
                 var department = _context.Departments.FirstOrDefault(e => e.Id == employee.DepartmentId);
-                var company = _context.Companies.FirstOrDefault(e => e.Id == employee.DepartmentId);
+                var company = _context.Companies.FirstOrDefault(e => e.Id == employee.CompanyId);
                 var controllerName = "FunctionRoom";
 
                 if (reservationHeader != null)
@@ -505,43 +515,32 @@ namespace PropertyManagementSystem.Controllers
                     if (User.IsInRole("GFMS.Admin Approver") && currentRole == "GFMS.Requestor")
                     {
                         reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
-                        /*if (reservationHeader != null)
+                        if (reservationHeader != null)
                         {
-                            await _emailService.SendReservationApprovalEmail(
+                            await _emailService.SendPendingRoomAssignmentEmail(
                                 reservationHeader,
-                                reservationHeader.RequestorEmail,
-                                _startDate.ToString(),
-                                _endDate.ToString(),
-                                _numOfGuests,
-                                facilityName,
-                                roomName,
-                                _purpose,
-                                reservationHeader.GUID,
-                                controllerName
-                            );
-                        }*/
+                                approverEmails,
+                                controllerName,
+                                department.DepartmentCode
+                                );
+                        }
 
                     }
                     else if (currentRole == "GFMS.Requestor" && department.DepartmentCode == "ADMIN" && company.CompanyCode == "FDPPC")
                     {
                         reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
-                        /*
-                         if (reservationHeader != null)
+
+                        if (reservationHeader != null)
                         {
-                            await _emailService.SendReservationApprovalEmail(
-                               reservationHeader,
-                                reservationHeader.RequestorEmail,
-                                _startDate.ToString(),
-                                _endDate.ToString(),
-                                _numOfGuests,
-                                facilityName,
-                                roomName,
-                                _purpose,
-                                reservationHeader.GUID,
-                                controllerName
+                           await _emailService.SendPendingRoomAssignmentEmail(
+                           reservationHeader,
+                           approverEmails,
+                           controllerName,
+                           department.DepartmentCode
                            );
+
                         }
-                         */
+
                     }
                     else if (User.IsInRole("GFMS.Admin Manager") && currentRole == "GFMS.Requestor")
                     {
@@ -551,24 +550,17 @@ namespace PropertyManagementSystem.Controllers
                     else if (User.IsInRole("GFMS.Department Head") && currentRole == "GFMS.Requestor")
                     {
                         reservationHeader.Status = "FOR ADMIN APPROVER'S APPROVAL";
-                        /*
-                         if (reservationHeader != null)
-                        {
-                            await _emailService.SendReservationApprovalEmail(
-                              reservationHeader,
-                                reservationHeader.RequestorEmail,
-                                _startDate.ToString(),
-                                _endDate.ToString(),
-                                _numOfGuests,
-                                facilityName,
-                                roomName,
-                                _purpose,
-                                reservationHeader.GUID,
-                                controllerName
-                           );
-                        }
-                         */
 
+                        if(reservationHeader != null)
+                        {
+                            await _emailService.SendPendingRoomAssignmentEmail(
+                           reservationHeader,
+                           approverEmails,
+                           controllerName,
+                           department.DepartmentCode
+                           );
+
+                        }
                     }
                     else
                     {
@@ -576,9 +568,9 @@ namespace PropertyManagementSystem.Controllers
 
                         if (reservationHeader != null)
                         {
-                            await _emailService.SendReservationApprovalEmail(
+                            await _emailService.SendFNReservationApprovalEmail(
                                 reservationHeader,
-                                reservationHeader.RequestorEmail,
+                                reservationHeader.ApproverEmail,
                                 _startDate.ToString(),
                                 _endDate.ToString(),
                                 _numOfGuests,
@@ -754,6 +746,12 @@ namespace PropertyManagementSystem.Controllers
         public async Task<IActionResult> UpdateReservationStatusAsync(int ReservationId, int ReservationDetailId, string action, int _facilityId, int _roomId, string Remarks, string EquipmentNeeded)
         {
             Console.WriteLine("ReservationDetailId: " + ReservationDetailId);
+            var approverEmails = await _roleService.GetEmailsByRoleAsync("GFMS.Admin Approver");
+            var adminManagerEmail = await _roleService.GetEmailsByRoleAsync("GFMS.Admin Manager");
+            foreach(var email in approverEmails)
+            {
+                Console.WriteLine("Admin Approver:" + email);
+            }
 
             if (ReservationDetailId <= 0 || string.IsNullOrEmpty(action))
             {
@@ -766,8 +764,12 @@ namespace PropertyManagementSystem.Controllers
             var roomName = _context.Rooms.Where(r => r.RoomId == _roomId).Select(r => r.RoomName).FirstOrDefault();
             var facilityName = _context.Facilities.Where(f => f.FacilityId == _facilityId).Select(f => f.FacilityName).FirstOrDefault();
             var empName = _context.Employees.FirstOrDefault(e => e.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+            var employee = _context.Employees.FirstOrDefault(e => e.EmployeeID == reservation.RequestorID);
+            var department = _context.Departments.FirstOrDefault(e => e.Id == employee.DepartmentId);
+            var company = _context.Companies.FirstOrDefault(e => e.Id == employee.CompanyId);
 
-            var controllerName = FunctionRoom;
+            var role = _roleManager.FindByNameAsync("GFMS.Admin Approver");
+            var controllerName = "FunctionRoom";
 
             if (reservation == null)
             {
@@ -776,11 +778,18 @@ namespace PropertyManagementSystem.Controllers
 
             if (action == "Approve" && reservation.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
             {
+                Console.WriteLine("ReservationDetailId: " + ReservationDetailId);
                 reservation.Status = "FOR ADMIN APPROVER'S APPROVAL";
                 TempData["AlertMessage"] = "Approved!";
                 TempData["AlertSubMessage"] = "Reservation has been approved";
                 TempData["AlertType"] = "success";
 
+                await _emailService.SendPendingRoomAssignmentEmail(
+                    reservation,
+                    approverEmails,
+                    controllerName,
+                    department.DepartmentCode
+                    );
             }
             else if (action == "Approve" && reservation.Status == "FOR ADMIN APPROVER'S APPROVAL")
             {
@@ -802,7 +811,7 @@ namespace PropertyManagementSystem.Controllers
                 TempData["AlertSubMessage"] = "Rooms are assigned to reservation";
                 TempData["AlertType"] = "success";
 
-                /*await _emailService.RoomAssignmentApprovalEmail(
+                await _emailService.RoomAssignmentApprovalEmail(
                        reservation,
                        reservation.RequestorEmail,
                        reservationDetails.StartDate.ToString(),
@@ -810,19 +819,12 @@ namespace PropertyManagementSystem.Controllers
                        reservationDetails.NumberOfGuest,
                        facilityName,
                        roomName,
-                       reservationDetails.Purpose
-                   );
+                       reservationDetails.Purpose,
+                       reservation.GUID,
+                       controllerName,
+                       adminManagerEmail
 
-                await _emailService.SendReservationApprovalEmail(
-                      reservation,
-                      reservation.RequestorEmail,
-                      reservationDetails.StartDate.ToString(),
-                      reservationDetails.EndDate.ToString(),
-                      reservationDetails.NumberOfGuest,
-                      facilityName,
-                      roomName,
-                      reservationDetails.Purpose
-                  );*/
+                   );
             }
             else if (action == "Reassign")
             {
@@ -850,6 +852,7 @@ namespace PropertyManagementSystem.Controllers
                 reservationDetails.FacilityId = _facilityId;
                 reservationDetails.RoomId = _roomId;
 
+
                 _context.SaveChanges();
 
                 return RedirectToAction("ViewReservationDetails", new { id = guid });
@@ -875,10 +878,12 @@ namespace PropertyManagementSystem.Controllers
                 TempData["AlertSubMessage"] = "Reservation has been approved";
                 TempData["AlertType"] = "success";
 
-                /*await _emailService.SendApprovalNotification(
+                await _emailService.SendApprovalNotification(
                      reservation,
-                     reservation.RequestorEmail
-                 );*/
+                     reservation.RequestorEmail,
+                     reservation.GUID,
+                     controllerName
+                 );
             }
             else if (action == "Reject")
             {
@@ -887,7 +892,10 @@ namespace PropertyManagementSystem.Controllers
                 reservation.ApprovedBy = empName.Fullname;
                 await _emailService.SendDisapprovalNotification(
                       reservation,
-                      reservation.RequestorEmail
+                      reservation.RequestorEmail,
+                      reservation.GUID,
+                      controllerName
+
                   );
             }
             else if (action == "Cancel")

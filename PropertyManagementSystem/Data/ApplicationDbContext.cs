@@ -43,6 +43,7 @@ namespace PropertyManagementSystem.Data
                 .WithMany(f => f.Rooms)
                 .HasForeignKey(r => r.FacilityId);
 
+
             modelBuilder.Entity<GFMS_ReservationDetails>()
                 .HasKey(r => r.ReservationDetailId);
 

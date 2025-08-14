@@ -15,7 +15,7 @@
       columns.Bound(c => c.RequestorEmail).Hidden(true);
       columns.Bound(c => c.Status).ClientTemplate(
       "<div class='datagrid-content'>" +
-      "# if (Status === 'PENDING' || Status === 'DRAFT') { #" +
+      "# if (Status === 'PENDING' || Status === 'DRAFT' || Status === 'FOR RENEWAL') { #" +
       "<span class='status status-blue'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
       "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\" || Status === \"FOR ADMIN MANAGER'S APPROVAL\" || Status === \"APPROVED\") { #" +
       "<span class='status status-green'><span class='status-dot'></span><strong><strong> #: Status # </strong></strong></span>" +

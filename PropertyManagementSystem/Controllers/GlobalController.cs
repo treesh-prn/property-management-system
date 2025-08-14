@@ -68,7 +68,7 @@ namespace PropertyManagementSystem.Controllers
 
 
 
-    public JsonResult getCompanies()
+        public JsonResult getCompanies()
         {
             var _companyList = _context.Companies.Select(c => new { c.Id, Company = c.Company.ToUpper(), CompanyCode = c.CompanyCode }).AsQueryable().ToList();
 

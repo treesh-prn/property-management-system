@@ -38,6 +38,17 @@
                             </span>
                         }
                     </span>
+                    <span class="ms-2">
+                        -
+                    </span>
+                    <span class="ms-2">
+                        @if (Model.ReservationHeader.isForRenewal == true)
+                        {
+                            <span class='status status-blue'>
+                                RENEWAL
+                            </span>
+                        }
+                    </span>
                 </div>
 
                 <div class="row mt-3">
@@ -111,11 +122,18 @@
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Letter of Intent</div>
                             <div class="datagrid-content">
-                                @if (Model.ReservationDetails.FirstOrDefault().FileAttachment.Any())
+                                @if (Model.FileAttachments.Any() && Model.FileAttachments != null)
                                 {
-                                    <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
-                                        @Model.ReservationDetails.FirstOrDefault().FileAttachment
-                                    </a>
+                                    <ul>
+                                        @foreach (var file in Model.FileAttachments)
+                                        {
+                                            <li>
+                                                <a href="@file.FilePath" target="_blank">
+                                                    @file.FilePath
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
                                 }
                                 else
                                 {
@@ -123,7 +141,6 @@
                                         -
                                     </a>
                                 }
-
                             </div>
                         </div>
                     </div>

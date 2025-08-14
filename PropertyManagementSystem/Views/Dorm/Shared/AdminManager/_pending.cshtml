@@ -1,7 +1,7 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
 @{
     var dormer = Model.DormerHistoryDetails?.FirstOrDefault();
-    var reservation = Model.ReservationDetails?.FirstOrDefault();
+    var reservation = Model.ReservationHeader;
 }
 <div class="card">
     <div class="card-body">
@@ -111,26 +111,32 @@
                         </div>
                     </div>
                 }
-                <div class="col-lg-3 col-md-6 mb-4">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title text-primary">Letter of Intent</div>
-                        <div class="datagrid-content">
-                            @if (Model.ReservationDetails.FirstOrDefault().FileAttachment.Any())
-                            {
-                                <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
-                                    @Model.ReservationDetails.FirstOrDefault().FileAttachment
-                                </a>
-                            }
-                            else
-                            {
-                                <a>
-                                    -
-                                </a>
-                            }
-
+                    <div class="col-lg-3 col-md-6 mb-4">
+                        <div class="datagrid-item">
+                            <div class="datagrid-title text-primary">Letter of Intent</div>
+                            <div class="datagrid-content">
+                                @if (Model.FileAttachments.Any() && Model.FileAttachments != null)
+                                {
+                                    <ul>
+                                        @foreach (var file in Model.FileAttachments)
+                                        {
+                                            <li>
+                                                <a href="@file.FilePath" target="_blank">
+                                                    @file.FilePath
+                                                </a>
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <a>
+                                        -
+                                    </a>
+                                }
+                            </div>
                         </div>
                     </div>
-                </div>
             </div>
         </div>
     </div>
@@ -167,7 +173,7 @@
                     Go Back
                 </a>
                 <div>
-                @if (dormer != null && reservation != null && dormer.DormerId == reservation.ReservationDetailId)
+                @if (dormer != null && dormer.Status == "PENDING TRANSFER")
                 {
                     <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
                         <i class="ti ti-ban m-1"></i> Disapprove Transfer

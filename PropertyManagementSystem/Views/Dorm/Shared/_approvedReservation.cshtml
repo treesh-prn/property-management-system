@@ -1,0 +1,70 @@
+﻿@(
+  Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
+  .Name("approvedReservation")
+  .ToolBar(tools => tools.Excel())
+  .Excel(excel => excel
+  .FileName("Reservations.xlsx")
+  .AllPages(true))
+  .Columns(columns =>
+  {
+      columns.Bound(c => c.ReservationId).Visible(false).Exportable(false);
+      columns.Bound(c => c.ReservationDetailId).Visible(false).Exportable(false);
+      columns.Bound(c => c.ReservationCode);
+      columns.Bound(c => c.ApprovedDateTime).Title("Date Approved").Width(150).Format("{0:MM-dd-yyyy}");
+      columns.Bound(c => c.Requestor);
+      columns.Bound(c => c.DepartmentName).Width(150);
+      columns.Bound(c => c.Company).Width(150);
+      columns.Bound(c => c.AppliedUnit).Width(200);
+      columns.Bound(c => c.RequestorEmail).Hidden(true);
+      columns.Bound(c => c.Status).ClientTemplate(
+      "<div class='datagrid-content'>" +
+      "# if (Status === 'PENDING' || Status === 'DRAFT' || Status === 'FOR RENEWAL') { #" +
+      "<span class='status status-blue'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
+      "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\" || Status === \"FOR ADMIN MANAGER'S APPROVAL\" || Status === \"APPROVED\") { #" +
+      "<span class='status status-green'><span class='status-dot'></span><strong><strong> #: Status # </strong></strong></span>" +
+      "# } else if (Status === 'CANCELLED' || Status === 'DISAPPROVED') { #" +
+      "<span class='status status-red'><span class='status-dot'></span><strong> #: Status # </strong></span>" +
+      "# } else { #" +
+      "<span>#: Status #</span>" +
+      "# } #" +
+      "</div>"
+      ).Title("Status");
+      columns.Command(command =>
+      {
+          command.Custom("view")
+      .Text("<i class='ti ti-eye'></i>View")
+      .Click("onViewClickReservationList")
+      .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success", style = "width: 150px;" });
+      })
+      .Title("Actions")
+      .Exportable(false);
+  })
+  .NoRecords()
+  .Groupable()
+  .Filterable()
+  .Pageable()
+  .Scrollable()
+  .Scrollable()
+  .ToolBar(toolbar =>
+  {
+      toolbar.Custom().Text("<i class='ti ti-refresh'></i> Trigger Renewal")
+        .HtmlAttributes(new
+        {
+            @class = "btn btn-sm btn-warning",
+            onclick = "openRenewalModal();"
+        });
+      toolbar.Search();
+  })
+  .DataSource(dataSource => dataSource
+  .Ajax()
+  .Model(model =>
+  {
+      model.Id(p => p.ReservationId);
+      model.Field(p => p.GUID);
+      model.Field(p => p.ReservationType);
+      model.Field(p => p.ReservationDetailId);
+  })
+  .Read(read => read.Action("getDormReservation", "Dorm", new { gridType = "approve" }))
+  .PageSize(10)
+  )
+)

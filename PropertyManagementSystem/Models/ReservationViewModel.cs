@@ -59,6 +59,7 @@ namespace PropertyManagementSystem.Models
         public int ChargeToCompany { get; set; }
         public int NumberOfGuest { get; set; }
         public int OccupantCount { get; set; }
+        public string? AppliedUnit { get; set; }
         public string? Purpose { get; set; }
         public string? EquipmentNeeded {  get; set; }
         public List<string>? EquipmentNames {  get; set; }

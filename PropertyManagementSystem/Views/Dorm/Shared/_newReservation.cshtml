@@ -7,11 +7,38 @@
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">New Reservation</h5>
+                <h5 class="modal-title">New Dorm Application</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="fcFRM1" asp-controller="Dorm" asp-action="CreateReservation" method="post">
                 <div class="modal-body">
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <label class="form-label mb-0">For Renewal?</label>
+                        <div class="d-flex align-items-center">
+                            <span class="me-2 form-label">No</span>
+                            <span class="form-check form-check-single form-switch me-5">
+                                <input class="form-check-input" name="_forRenewal" type="checkbox" value="true" />
+                            </span>
+                            <span class="ms-2 form-label">Yes</span>
+                        </div>
+                    </div>
+                    <div id="renewalApplicationContainer" class="mb-3" style="display: none;">
+                        <label class="form-label required">Select Application to Renew</label>
+                        @(Html.Kendo().DropDownList()
+                            .Name("_renewalReferenceId")
+                            .DataTextField("DisplayText")
+                            .DataValueField("Id")
+                            .OptionLabel("Select an application")
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("GetRenewableDormApplications", "Dorm");
+                                });
+                            })
+                            .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold;" })
+                            )
+                    </div>
                     <div class="row mb-3">
                         <div class="row mb-3">
                             <div class="col-lg-6">
@@ -20,7 +47,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <label class="form-label required">Employee Id</label>
-                                <input class="form-control" value="@employee.EmployeeID" readonly>
+                                <input class="form-control" name="_requestorId" value="@employee.EmployeeID" readonly>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -66,6 +93,7 @@
                             .HtmlAttributes(new { style = "width: 100%; font-size: 15px; font-weight: bold; border-color: var(--tblr-muted); opacity: .8;" })
                             )
                     </div>
+                    
                 </div>
                 <div class="modal-footer">
                     <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>

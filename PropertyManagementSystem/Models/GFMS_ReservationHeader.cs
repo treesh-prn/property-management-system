@@ -32,6 +32,8 @@ namespace PropertyManagementSystem.Models
         public string? ApprovedBy {  get; set; }
         public bool? isPersonal { get; set; }
         public bool? isFreeOfCharge { get; set; }
+        public bool? isForRenewal { get; set; }
+        public int? PreviousReservationId { get; set; }
 
         //public ICollection<GFMS_ReservationDetails> ReservationDetails { get; set; }
     }

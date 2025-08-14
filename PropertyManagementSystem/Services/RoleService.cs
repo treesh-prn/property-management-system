@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.ReportingServices.ReportProcessing.ReportObjectModel;
 using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.Security.Claims;
@@ -10,6 +11,7 @@ namespace PropertyManagementSystem.Services
         Task<IEnumerable<string>> GetRolesAsync(ClaimsPrincipal user);
         Task<string> GetActiveRoleAsync(ClaimsPrincipal user);
         Task<Gen_Employee> GetUserName(ClaimsPrincipal user);
+        Task<List<string>> GetEmailsByRoleAsync(string roleName);
     }
     public class RoleService : IRoleService
     {
@@ -61,6 +63,24 @@ namespace PropertyManagementSystem.Services
 
             return null;
         }
+
+        public async Task<List<string>> GetEmailsByRoleAsync(string roleName)
+        {
+            var usersInRole = await _user.GetUsersInRoleAsync(roleName);
+            var emails = new List<string>();
+
+            foreach (var user in usersInRole)
+            {
+                var employee = _context.Employees.FirstOrDefault(e => e.UserId == user.Id);
+                if (employee != null && !string.IsNullOrWhiteSpace(employee.Email))
+                {
+                    emails.Add(employee.Email);
+                }
+            }
+
+            return emails;
+        }
+
 
     }
 }

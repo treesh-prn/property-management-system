@@ -27955,7 +27955,7 @@ img {
     border: 1px solid #EB1D36;
     border-radius: 4px;
     padding: 8px 16px;
-    margin: 4px 15px 2px 15px;
+    margin: 4px 15px 0 15px;
     font-size: 14px;
     color: whitesmoke;
     font-weight: bold;
@@ -27965,7 +27965,7 @@ img {
     background-color: #206BC4;
     border: 1px solid #206BC4;
     padding: 8px 16px;
-    margin: 4px 7px 2px 15px;
+    margin: 4px 7px 0 15px;
     font-size: 14px;
     color: whitesmoke;
     font-weight: bold;
@@ -28125,4 +28125,3 @@ span.k-button-text{
     width: 300px;
     margin-bottom: 20px;
 }
-

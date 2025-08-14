@@ -9,62 +9,90 @@
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Current Position</div>
-                        @if(Model.Position.PositionName != null){
+                        @if (Model.Position != null && Model.Position.PositionName != null)
+                        {
                             <div class="datagrid-content">@Model.Position.PositionName</div>
-                        }else{
+                        }
+                        else
+                        {
                             <div class="datagrid-content"> - </div>
                         }
+
                         
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Employment Level</div>
-                        <div class="datagrid-content">@Model.EmploymentLevel.Name</div>
+                        @if (Model.EmploymentLevel != null && Model.EmploymentLevel.Name != null)
+                        {
+                            <div class="datagrid-content">@Model.EmploymentLevel.Name</div>
+                        }
+                        else
+                        {
+                            <div class="datagrid-content"> - </div>
+                        }
+
+                        
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Is Critical on Operations?</div>
-                        @if (Model.ReservationDetails.FirstOrDefault().isCritical == true)
+                        @if (Model.ReservationDetails.FirstOrDefault().isCritical != null)
                         {
-                            <div class="datagrid-content">
-                                <span class="status status-green">
-                                    Yes
+                            @if (Model.ReservationDetails.FirstOrDefault().isCritical == true)
+                            {
+                                <div class="datagrid-content">
+                                    <span class="status status-green">
+                                        Yes
+                                    </span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="status status-red">
+                                    No
                                 </span>
-                            </div>
+                            }
                         }
                         else
                         {
-                            <span class="status status-red">
-                                No
-                            </span>
+                            <div class="datagrid-content"> - </div>
                         }
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Is On Call?</div>
-                        @if (Model.ReservationDetails.FirstOrDefault().isOnCall == true)
+                        @if (Model.ReservationDetails.FirstOrDefault().isOnCall != null)
                         {
-                            <div class="datagrid-content">
-                                <span class="status status-green">
-                                    Yes
+                            @if (Model.ReservationDetails.FirstOrDefault().isOnCall == true)
+                            {
+                                <div class="datagrid-content">
+                                    <span class="status status-green">
+                                        Yes
+                                    </span>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="status status-red">
+                                    No
                                 </span>
-                            </div>
+                            }
                         }
                         else
                         {
-                            <span class="status status-red">
-                                No
-                            </span>
+                            <div class="datagrid-content"> - </div>
                         }
+
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Department Head Remarks</div>
-                        @if (Model.ReservationDetails.FirstOrDefault().DeptHeadRemarks.Any())
+                        @if (Model.ReservationDetails.FirstOrDefault().DeptHeadRemarks != null)
                         {
                             <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().DeptHeadRemarks</div>
                         }else{

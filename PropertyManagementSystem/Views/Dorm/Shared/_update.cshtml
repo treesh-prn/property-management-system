@@ -17,7 +17,6 @@
             <div class="col-9">
                 <div class="text-primary h3 d-flex align-items-center">
                     <span>@Model.ReservationHeader.ReservationCode</span>
-
                     <span class="ms-3">
 
                         @if (Model.ReservationHeader.Status == "APPROVED")
@@ -42,6 +41,17 @@
                         {
                             <span class='status status-blue'>
                                 <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
+                            </span>
+                        }
+                    </span>
+                    <span class="ms-2">
+                        -
+                    </span>
+                    <span class="ms-2">
+                        @if (Model.ReservationHeader.isForRenewal == true)
+                        {
+                            <span class='status status-blue'>
+                                RENEWAL
                             </span>
                         }
                     </span>

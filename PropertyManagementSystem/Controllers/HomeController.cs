@@ -112,6 +112,7 @@
                                                   && detail.EndDate.Value.Date >= today
                                             join header in _context.ReservationHeaders on detail.ReservationId equals header.ReservationId
                                             where header.Status == "APPROVED"
+                                            where header.ReservationType != "DRM"
                                             select new
                                             {
                                                 header.ReservationId,

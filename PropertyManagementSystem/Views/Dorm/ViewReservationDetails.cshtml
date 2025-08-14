@@ -96,181 +96,110 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards">
-                 @if ((activeRole == "GFMS.Admin Approver" || activeRole == "GFMS.Admin Manager") && Model.DormerHistoryDetails != null && Model.DormerHistoryDetails.Any())
+                <!-- Main Content Column (Expands to full width when DRAFT) -->
+                <div class="@(Model.DormerHistoryDetails != null && Model.DormerHistoryDetails.Any() && Model.ReservationHeader.Status != "DRAFT" ? "col-lg-9" : "col-lg-12")">
+                    @if (activeRole == "GFMS.Requestor")
+                    {
+                        if (User.IsInRole("GFMS.Admin Approver") && Model.ReservationHeader.Status != "DRAFT")
+                        {
+                            <partial name="Shared/_view" />
+                        }
+                        else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" ||
+                        (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" && Model.ReservationDetails.FirstOrDefault().FacilityId == 0))
+                        {
+                            <partial name="Shared/_update" />
+                        }
+                        else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" ||
+                        Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" ||
+                        Model.ReservationHeader.Status == "APPROVED" ||
+                        Model.ReservationHeader.Status == "CANCELLED" ||
+                        Model.ReservationHeader.Status == "FOR RENEWAL" ||
+                        Model.ReservationHeader.Status == "DISAPPROVED")
+                        {
+                            <partial name="Shared/_view" />
+                        }
+                        else
+                        {
+                            <partial name="Shared/_draft" />
+                        }
+                    }
+                    else if (activeRole == "GFMS.Admin Approver")
+                    {
+                        if (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
+                        {
+                            <partial name="Shared/AdminApprover/_pending" />
+                        }
+                        else
+                        {
+                            <partial name="Shared/_view" />
+                        }
+                    }
+                    else if (activeRole == "GFMS.Admin Manager")
+                    {
+                        if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                        {
+                            <partial name="Shared/AdminManager/_pending" />
+                        }
+                        else
+                        {
+                            <partial name="Shared/_view" />
+                        }
+                    }
+                    else if (activeRole == "GFMS.Department Head")
+                    {
+                        if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
+                        {
+                            <partial name="Shared/DepartmentHead/_pending" />
+                        }
+                        else
+                        {
+                            <partial name="Shared/_view" />
+                        }
+                    }
+                </div>
+
+                <!-- Right Sidebar: Room Transfer History (Only when NOT DRAFT) -->
+                @if (Model.DormerHistoryDetails != null && Model.DormerHistoryDetails.Any() && Model.ReservationHeader.Status != "DRAFT")
                 {
-                    <div class="col-lg-9">
-                        @if (activeRole == "GFMS.Requestor")
-                        {
-                            @if (User.IsInRole("GFMS.Admin Approver") && Model.ReservationHeader.Status != "DRAFT")
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" && Model.ReservationDetails.FirstOrDefault().FacilityId == 0))
-                            {
-                                <partial name="Shared/_update" />
-                            }
-                            else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED" || Model.ReservationHeader.Status == "CANCELLED")
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Status == "DISAPPROVED")
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_draft" />
-                            }
-                        }
-                        else if (activeRole == "GFMS.Admin Approver")
-                        {
-                            @if (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminApprover/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                        }
-                        else if (activeRole == "GFMS.Admin Manager")
-                        {
-                            @if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminManager/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                        }
-                        else if (activeRole == "GFMS.Department Head")
-                        {
-                            @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
-                            {
-                                <partial name="Shared/DepartmentHead/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                        }
-                    </div>
                     <div class="col-lg-3">
                         <div class="card">
                             <div class="card-body">
-                                <h3 class="card-title">Room Transfer History</h3>
+                                <h3 class="card-title">Dormer Room Transfer History</h3>
 
-                                @if (Model.DormerHistoryDetails != null && Model.DormerHistoryDetails.Any())
-                                {
-                                    <ul class="steps steps-vertical">
-                                        @foreach (var history in Model.DormerHistoryDetails)
-                                        {
-                                            <li class="step-item">
-                                                <div class="h4 m-0"> TRANSFER - @history.Status</div>
-                                                <div class="text-secondary">
+                                <ul class="steps steps-vertical">
+                                    @foreach (var history in Model.DormerHistoryDetails)
+                                    {
+                                        <li class="step-item">
+                                            <div class="h4 m-0">
+                                                @if (history.Status == "FOR RENEWAL")
+                                                {
+                                                    <span class="badge bg-warning text-dark">RENEWAL</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-info text-white">@history.Status</span>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(history.NewFacility) || !string.IsNullOrWhiteSpace(history.NewRoom))
+                                            {
+                                                <div class="text-secondary mt-1">
                                                     From <strong>@history.PreviousFacility - @history.PreviousRoom</strong>
-                                                    to <strong>@history.NewFacility - @history.NewRoom</strong>
+                                                    @if (!string.IsNullOrWhiteSpace(history.NewFacility) || !string.IsNullOrWhiteSpace(history.NewRoom))
+                                                    {
+                                                        <strong> → @history.NewFacility - @history.NewRoom</strong>
+                                                    }
                                                 </div>
-                                                <small class="text-muted">Transferred by: @history.TransferredBy</small><br>
-                                                <small class="text-muted">@history.TransferDate?.ToString("MMM dd, yyyy hh:mm tt")</small>
-                                            </li>
-                                        }
-                                    </ul>
-                                }
-                                else
-                                {
-                                    <p class="text-muted text-center">No transfer history available.</p>
-                                }
+                                            }
+                                            <small class="text-muted">Transferred by: @history.TransferredBy</small><br />
+                                            <small class="text-muted">@history.TransferDate?.ToString("MMM dd, yyyy hh:mm tt")</small>
+                                        </li>
+                                    }
+                                </ul>
                             </div>
                         </div>
                     </div>
                 }
-                else
-                {
-                    <div class="col-lg-12">
-                        @if (activeRole == "GFMS.Requestor")
-                        {
-                            @if (User.IsInRole("GFMS.Admin Approver") && Model.ReservationHeader.Status != "DRAFT")
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" && Model.ReservationDetails.FirstOrDefault().FacilityId == 0))
-                            {
-                                <partial name="Shared/_update" />
-                            }
-                            else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED" || Model.ReservationHeader.Status == "CANCELLED")
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Status == "DISAPPROVED")
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_draft" />
-                            }
-                        }
-                        else if (activeRole == "GFMS.Admin Approver")
-                        {
-                            @if (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminApprover/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                        }
-                        else if (activeRole == "GFMS.Admin Manager")
-                        {
-                            @if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminManager/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                        }
-                        else if (activeRole == "GFMS.Department Head")
-                        {
-                            @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
-                            {
-                                <partial name="Shared/DepartmentHead/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                        }
-                    </div>
-                }
+
             </div>
         </div>
     </div>

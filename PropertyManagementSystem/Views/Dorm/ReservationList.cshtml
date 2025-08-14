@@ -55,8 +55,17 @@
                                         <partial name="Shared/_myApprovals" />   
                                     </div>
                                     </text>);
-                                   
-                                }else{
+                                     if(activeRole == "GFMS.Admin Approver" || activeRole == "GFMS.Admin Manager"){
+                                     tabstrip.Add().Text("Approved Reservations")
+                                    .Encoded(false)
+                                    .Content(@<text>
+                                    <div id="approvedReservation">
+                                        <partial name="Shared/_approvedReservation" />   
+                                    </div>
+                                    </text>);
+                                }
+                                }
+                                else{
                                      tabstrip.Add().Text("My Reservation")
                                     .Encoded(false)
                                     .Selected(true)
@@ -110,3 +119,44 @@
     </div>
 </div>
 @*END DELETE MODAL*@
+@*START WARNING MODAL*@
+<div class="modal modal-blur fade" id="modal-confirmation" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-warning"></div>
+            <div class="modal-body text-center py-4">
+                <!-- Warning Icon -->
+                <div class="mb-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24"
+                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                         stroke-linejoin="round" class="text-yellow">
+                        <path d="M12 2L2 22h20L12 2z"></path>
+                        <path d="M12 16h.01"></path>
+                        <path d="M12 10h.01"></path>
+                    </svg>
+                </div>
+                <h3>Renew Dorm Applications</h3>
+                <p class="text-secondary">
+                    This action will mark all dorm applications for renewal. Are you sure you want to continue?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="col">
+                            <form id="renewalForm" method="post" asp-controller="Dorm" asp-action="TriggerDormRenewalNow">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-primary w-100" id="confirmSubmit">Confirm & Submit</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@*END WARNING MODAL*@

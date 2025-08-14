@@ -1350,3 +1350,28 @@ function onTabActivate(e) {
         $("#detailsButton").hide(); // Hide button otherwise
     }
 }
+
+function openRenewalModal() {
+    var modal = new bootstrap.Modal(document.getElementById('modal-confirmation'));
+    modal.show();
+}
+
+//for renewal switch toggle
+$(document).ready(function () {
+    const renewalSwitch = $("input[name='_forRenewal']");
+    const renewalContainer = $("#renewalApplicationContainer");
+
+    renewalSwitch.on("change", function () {
+        if ($(this).is(":checked")) {
+            renewalContainer.stop(true, true).slideDown("fast");
+        } else {
+            renewalContainer.stop(true, true).slideUp("fast", function () {
+                let dropdown = $("#_renewalReferenceId").data("kendoDropDownList");
+                if (dropdown) {
+                    dropdown.value(null);
+                }
+            });
+        }
+    });
+});
+               

@@ -2,7 +2,7 @@
 {
     public class DormerHistoryViewModel
     {
-        public int DormerId { get; set; }
+        public string DormerId { get; set; }
         public string PreviousRoom { get; set; }
         public string NewRoom { get; set; }
         public string PreviousFacility { get; set; }

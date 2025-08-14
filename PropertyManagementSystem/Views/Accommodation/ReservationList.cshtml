@@ -100,7 +100,15 @@
                                         <partial name="Shared/_personalRequest" />   
                                     </div>
                                     </text>);
-                                   
+                                    if(activeRole == "GFMS.Admin Approver" || activeRole == "GFMS.Admin Manager"){
+                                        tabstrip.Add().Text("Approved Reservations")
+                                    .Encoded(false)
+                                    .Content(@<text>
+                                    <div id="approvedReservation">
+                                        <partial name="Shared/_approvedReservation" />   
+                                    </div>
+                                    </text>);
+                                    }
                                 }else{
                                      tabstrip.Add().Text("Company")
                                     .Encoded(false)
