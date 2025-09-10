@@ -86,7 +86,7 @@
                     <div class="col-lg-3 col-md-6 mb-4">
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Schedule Type</div>
-                            @if (Model.ReservationDetails.FirstOrDefault().ScheduleType == 0)
+                            @if (Model.DormApplicants.SchedType == 0)
                             {
                                 <div class="datagrid-content">Regular</div>
                             }
@@ -112,7 +112,7 @@
                     <div class="col-lg-3 col-md-6 mb-4">
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Number of Dependents</div>
-                            @if (@Model.ReservationDetails.FirstOrDefault().CivilStatus == "MARRIED")
+                            @if (@Model.Employees.MaritalStatus == "MARRIED")
                             {
                                 <div class="datagrid-content">@Model.ReservationDetails.Count()</div>
                             }
@@ -192,7 +192,7 @@
                             <div class="d-flex align-items-center">
                                 <span class="me-2 form-label">No</span>
                                 <span class="form-check form-check-single form-switch me-5">
-                                    <input required class="form-check-input" name="_isCritical" type="checkbox" value="true" required @(Model.ReservationDetails.FirstOrDefault().isCritical == true ? "checked" : "") />
+                                    <input required class="form-check-input" name="_isCritical" type="checkbox" value="true" required @(Model.DormApplicants.isCritical == true ? "checked" : "") />
                                 </span>
                                 <span class="ms-2 form-label">Yes</span>
                             </div>
@@ -202,7 +202,7 @@
                             <div class="d-flex align-items-center">
                                 <span class="me-2 form-label">No</span>
                                 <span class="form-check form-check-single form-switch me-5">
-                                    <input required class="form-check-input" name="_isOnCall" type="checkbox" value="true" required @(Model.ReservationDetails.FirstOrDefault().isOnCall == true ? "checked" : "") />
+                                    <input required class="form-check-input" name="_isOnCall" type="checkbox" value="true" required @(Model.DormApplicants.isOnCall == true ? "checked" : "") />
                                 </span>
                                 <span class="ms-2 form-label">Yes</span>
                             </div>

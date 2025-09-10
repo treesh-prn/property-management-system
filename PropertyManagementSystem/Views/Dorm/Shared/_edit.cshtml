@@ -25,7 +25,7 @@
                                             <div class="form-selectgroup-boxes row mb-3">
                                                 <div class="col-lg-4">
                                                     <label class="form-selectgroup-item">
-                                                        <input type="radio" name="_civilStat" value="SINGLE" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus">
+                                                        <input type="radio" name="_civilStat" value="SINGLE" class="form-selectgroup-input" asp-for="@Model.Employees.MaritalStatus">
                                                         <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                             <span class="me-3">
                                                                 <span class="form-selectgroup-check"></span>
@@ -38,7 +38,7 @@
                                                 </div>
                                                 <div class="col-lg-4">
                                                     <label class="form-selectgroup-item">
-                                                        <input type="radio" name="_civilStat" value="MARRIED" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus">
+                                                        <input type="radio" name="_civilStat" value="MARRIED" class="form-selectgroup-input" asp-for="@Model.Employees.MaritalStatus">
                                                         <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                             <span class="me-3">
                                                                 <span class="form-selectgroup-check"></span>
@@ -52,7 +52,7 @@
                                                 </div>
                                                 <div class="col-lg-4">
                                                     <label class="form-selectgroup-item">
-                                                        <input type="radio" name="_civilStat" value="WIDOWED" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus">
+                                                        <input type="radio" name="_civilStat" value="WIDOWED" class="form-selectgroup-input" asp-for="@Model.Employees.MaritalStatus">
                                                         <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                             <span class="me-3">
                                                                 <span class="form-selectgroup-check"></span>
@@ -99,7 +99,7 @@
                                                     <div class="form-selectgroup-boxes row mb-3">
                                                         <div class="col-lg-6">
                                                             <label class="form-selectgroup-item">
-                                                                <input type="radio" name="_schedType" id="regularRadio" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ScheduleType">
+                                                                <input type="radio" name="_schedType" id="regularRadio" value="0" class="form-selectgroup-input" asp-for="@Model.DormApplicants.SchedType">
                                                                 <span class="form-selectgroup-label d-flex align-items-center p-2">
                                                                     <span class="me-3">
                                                                         <span class="form-selectgroup-check"></span>
@@ -113,7 +113,7 @@
                                                         
                                                         <div class="col-lg-6">
                                                             <label class="form-selectgroup-item">
-                                                                <input type="radio" name="_schedType" value="1" id="gyRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ScheduleType">
+                                                                <input type="radio" name="_schedType" value="1" id="gyRadio" class="form-selectgroup-input" asp-for="@Model.DormApplicants.SchedType">
                                                                 <span class="form-selectgroup-label d-flex align-items-center p-2">
                                                                     <span class="me-3">
                                                                         <span class="form-selectgroup-check"></span>
@@ -145,7 +145,7 @@
                                                         <label class="form-label">
                                                             Permanent Home Address
                                                         </label>
-                                                        <input type="text" class="form-control" name="_permanentAdd" placeholder="Permanent Home Address" asp-for="@Model.ReservationDetails.FirstOrDefault().PermanentAddress">
+                                                        <input type="text" class="form-control" name="_permanentAdd" placeholder="Permanent Home Address" asp-for="@Model.DormApplicants.PermanentAddress">
                                                     </div>
                                                 </div>
                                             </div>
@@ -155,7 +155,7 @@
                                                         <label class="form-label">
                                                             Current Home Address
                                                         </label>
-                                                        <input type="text" class="form-control" name="_currentAdd" placeholder="Current Home Address" asp-for="@Model.ReservationDetails.FirstOrDefault().CurrentAddress">
+                                                        <input type="text" class="form-control" name="_currentAdd" placeholder="Current Home Address" asp-for="@Model.DormApplicants.CurrentAddress">
                                                     </div>
                                                 </div>
                                             </div>
@@ -172,7 +172,7 @@
                                                     <div class="form-selectgroup-boxes row mb-3">
                                                         <div class="col-lg-4">
                                                             <label class="form-selectgroup-item">
-                                                                <input type="radio" name="_homeOwnership" id="ownedRadio" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership">
+                                                                <input type="radio" name="_homeOwnership" id="ownedRadio" value="0" class="form-selectgroup-input" asp-for="@Model.DormApplicants.HomeOwnership">
                                                                 <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                                     <span class="me-3">
                                                                         <span class="form-selectgroup-check"></span>
@@ -185,7 +185,7 @@
                                                         </div>
                                                         <div class="col-lg-3">
                                                             <label class="form-selectgroup-item">
-                                                                <input type="radio" name="_homeOwnership" value="1" id="rentedRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership">
+                                                                <input type="radio" name="_homeOwnership" value="1" id="rentedRadio" class="form-selectgroup-input" asp-for="@Model.DormApplicants.HomeOwnership">
                                                                 <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                                     <span class="me-3">
                                                                         <span class="form-selectgroup-check"></span>
@@ -198,7 +198,7 @@
                                                         </div>
                                                         <div class="col-lg-5">
                                                             <label class="form-selectgroup-item">
-                                                                <input type="radio" name="_homeOwnership" value="2" id="livingWithParentsRadio" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().HomeOwnership">
+                                                                <input type="radio" name="_homeOwnership" value="2" id="livingWithParentsRadio" class="form-selectgroup-input" asp-for="@Model.DormApplicants.HomeOwnership">
                                                                 <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                                     <span class="me-3">
                                                                         <span class="form-selectgroup-check"></span>
@@ -215,7 +215,7 @@
                                                         <div class="form-selectgroup-boxes row mb-3">
                                                             <div class="col-lg-6">
                                                                 <label class="form-selectgroup-item">
-                                                                    <input type="radio" id="ownedHouseLocWithin" name="_ownedLocation" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().OwnedHouseLocation">
+                                                                    <input type="radio" id="ownedHouseLocWithin" name="_ownedLocation" value="0" class="form-selectgroup-input" asp-for="@Model.DormApplicants.OwnedHouseLocation">
                                                                     <span class="form-selectgroup-label d-flex align-items-center p-2">
                                                                         <span class="me-3">
                                                                             <span class="form-selectgroup-check"></span>
@@ -228,7 +228,7 @@
                                                             </div>
                                                             <div class="col-lg-6">
                                                                 <label class="form-selectgroup-item">
-                                                                    <input type="radio" id="ownedHouseLocOutside" name="_ownedLocation" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().OwnedHouseLocation">
+                                                                    <input type="radio" id="ownedHouseLocOutside" name="_ownedLocation" value="1" class="form-selectgroup-input" asp-for="@Model.DormApplicants.OwnedHouseLocation">
                                                                     <span class="form-selectgroup-label d-flex align-items-center p-2">
                                                                         <span class="me-3">
                                                                             <span class="form-selectgroup-check"></span>
@@ -243,7 +243,7 @@
                                                         <div class="row mb-3">
                                                             <div class="col">
                                                                 <label class="form-label">Specific Location</label>
-                                                                <input type="text" id="specificLoc" class="form-control" name="_specificLocation" placeholder="Specific Location" asp-for="@Model.ReservationDetails.FirstOrDefault().SpecificLocation">
+                                                                <input type="text" id="specificLoc" class="form-control" name="_specificLocation" placeholder="Specific Location" asp-for="@Model.DormApplicants.SpecificLocation">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -254,7 +254,7 @@
                                                     <div class="form-selectgroup-boxes row mb-3">
                                                         <div class="col-lg-6">
                                                             <label class="form-selectgroup-item">
-                                                                <input type="radio" id="ownVehicle" name="_modeOfTransport" value="0" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ModeOfTransportation">
+                                                                <input type="radio" id="ownVehicle" name="_modeOfTransport" value="0" class="form-selectgroup-input" asp-for="@Model.DormApplicants.ModeOfTransportation">
                                                                 <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                                     <span class="me-3">
                                                                         <span class="form-selectgroup-check"></span>
@@ -267,7 +267,7 @@
                                                         </div>
                                                         <div class="col-lg-6">
                                                             <label class="form-selectgroup-item">
-                                                                <input type="radio" id="commute" name="_modeOfTransport" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ModeOfTransportation">
+                                                                <input type="radio" id="commute" name="_modeOfTransport" value="1" class="form-selectgroup-input" asp-for="@Model.DormApplicants.ModeOfTransportation">
                                                                 <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                                     <span class="me-3">
                                                                         <span class="form-selectgroup-check"></span>
@@ -283,7 +283,7 @@
                                                         <div class="row mb-4">
                                                             <div class="col">
                                                                 <label class="form-label mb-2">Plate Number</label>
-                                                                <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Plate Number" asp-for="@Model.ReservationDetails.FirstOrDefault().VehicleType">
+                                                                <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Plate Number" asp-for="@Model.DormApplicants.PlateNumber">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -291,11 +291,11 @@
                                                         <div class="row mb-3">
                                                             <div class="col-lg-6">
                                                                 <label class="form-label">Travel Time</label>
-                                                                <input type="text" id="travelTime" class="form-control" name="_travelTime" placeholder="Travel Time" asp-for="@Model.ReservationDetails.FirstOrDefault().TravelTime">
+                                                                <input type="text" id="travelTime" class="form-control" name="_travelTime" placeholder="Travel Time" asp-for="@Model.DormApplicants.TravelTime">
                                                             </div>
                                                             <div class="col-lg-6">
                                                                 <label class="form-label">Fare</label>
-                                                                <input type="text" id="fare" class="form-control" name="_fare" placeholder="Fare" asp-for="@Model.ReservationDetails.FirstOrDefault().Fare" value="@Model.ReservationDetails.FirstOrDefault().Fare">
+                                                                <input type="text" id="fare" class="form-control" name="_fare" placeholder="Fare" asp-for="@Model.DormApplicants.Fare" value="@Model.DormApplicants.Fare">
                                                             </div>
                                                         </div>
                                                     </div>
@@ -324,9 +324,9 @@
                                                 </div>
                                             </div>
                                             <div id="dynamic-rows-dependent">
-                                                @for (int i = 0; i < Model.ReservationDetails.Count; i++)
+                                                @for (int i = 0; i < Model.HousingDependents.Count; i++)
                                                 {
-                                                    var detail = Model.ReservationDetails[i];
+                                                    var detail = Model.HousingDependents[i];
                                                     <div class="row mb-3 original-row g-2 align-items-center">
                                                         <div class="col-lg-2 col-md-4 col-sm-6">
                                                             <input type="text" class="form-control" name="_dependents[]" placeholder="Name" value="@detail.DependentName">
@@ -337,20 +337,20 @@
                                                         <div class="col-lg-2 col-md-4 col-sm-6 justify-content-center">
                                                             <div class="d-flex">
                                                                 <label class="form-selectgroup-item me-1">
-                                                                    <input type="radio" name="_dependent_status[@i]" value="studying" class="form-selectgroup-input" @(detail.OtherInfo == "studying" ? "checked" : "")>
+                                                                    <input type="radio" name="_dependent_status[@i]" value="studying" class="form-selectgroup-input" @(detail.Status == "studying" ? "checked" : "")>
                                                                     <span class="form-selectgroup-label" style="font-weight:bold">Studying</span>
                                                                 </label>
                                                                 <label class="form-selectgroup-item me-5">
-                                                                    <input type="radio" name="_dependent_status[@i]" value="working" class="form-selectgroup-input" @(detail.OtherInfo == "working" ? "checked" : "")>
+                                                                    <input type="radio" name="_dependent_status[@i]" value="working" class="form-selectgroup-input" @(detail.Status == "working" ? "checked" : "")>
                                                                     <span class="form-selectgroup-label" style="font-weight:bold">Working</span>
                                                                 </label>
                                                             </div>
                                                         </div>
                                                         <div class="col-lg-2 col-md-4 col-sm-6" id="position">
-                                                            <input type="text" class="form-control" name="_position[]" placeholder="Position" value="@detail.WorkPosition">
+                                                            <input type="text" class="form-control" name="_position[]" placeholder="Position" value="@detail.SchoolName">
                                                         </div>
                                                         <div class="col-lg-2 col-md-4 col-sm-6" id="location">
-                                                            <input type="text" class="form-control" name="_location[]" placeholder="Name of School" value="@detail.StudyLocation">
+                                                            <input type="text" class="form-control" name="_location[]" placeholder="Name of School" value="@detail.SchoolLocation">
                                                         </div>
                                                         <div class="col-lg-2 col-md-3 col-sm-6 d-flex justify-content-center gap-2">
                                                             <button type="button" id="add-dependent" class="btn btn-primary">
@@ -400,7 +400,7 @@
                                                 </div>
                                             </div>
 
-                                            <input type="hidden" name="filePath" id="filePath" value="@Model.ReservationDetails.FirstOrDefault()?.FileAttachment" />
+                                            <input type="hidden" name="filePath" id="filePath" value="@Model.FileAttachments.FirstOrDefault().FilePath" />
                                             <input type="hidden" id="filesToRemove" name="filesToRemove" value="" />
 
                                             <div id="uploadedFilesLinks">

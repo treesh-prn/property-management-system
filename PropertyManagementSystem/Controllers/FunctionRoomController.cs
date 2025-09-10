@@ -496,11 +496,26 @@ namespace PropertyManagementSystem.Controllers
                     EndDate = _endDate,
                     Purpose = _purpose,
                     DateAdded = DateTime.UtcNow,
-                    EquipmentNeeded = string.Join(",", equipmentNeeded.Select(e => e.Trim())),
                     ContactNumber = _contactNumber
                 };
 
                 _context.ReservationDetails.Add(reservationDetails);
+                _context.SaveChanges();
+
+                if (equipmentNeeded != null && equipmentNeeded.Any())
+                {
+                    foreach (var eqId in equipmentNeeded)
+                    {
+                        var reservationEquipment = new GFMS_ReservationEquipment
+                        {
+                            ReservationDetailId = reservationDetails.ReservationDetailId,
+                            EquipmentId = Convert.ToInt32(eqId)
+                        };
+
+                        _context.ReservationEquipment.Add(reservationEquipment);
+                    }
+                    _context.SaveChanges();
+                }
 
                 var roomName = _context.Rooms.Where(r => r.RoomId == _roomId).Select(r => r.RoomName).FirstOrDefault();
                 var facilityName = _context.Facilities.Where(f => f.FacilityId == _facilityId).Select(f => f.FacilityName).FirstOrDefault();

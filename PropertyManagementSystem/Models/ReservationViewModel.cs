@@ -16,6 +16,8 @@ namespace PropertyManagementSystem.Models
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
         public List<DormerHistoryViewModel>? DormerHistoryDetails { get; set; }
         public List<GFMS_FileAttachment> FileAttachments { get; set; }
+        public GFMS_DormApplicants? DormApplicants { get; set; }
+        public List<GFMS_HousingDependents>? HousingDependents { get; set; }
 
 
         public int FacilityId { get; set; }

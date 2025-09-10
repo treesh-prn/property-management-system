@@ -34,6 +34,9 @@ namespace PropertyManagementSystem.Data
         public virtual DbSet<GFMS_RoomEquipment> RoomEquipments { get; set; }
         public virtual DbSet<GFMS_DormerRoomHistory> DormerRoomHistories { get; set; }
         public virtual DbSet<GFMS_FileAttachment> FileAttachments { get; set; }
+        public virtual DbSet<GFMS_DormApplicants> DormApplicants { get; set; }
+        public virtual DbSet<GFMS_HousingDependents> HousingDependents { get; set; }
+        public virtual DbSet<GFMS_ReservationEquipment> ReservationEquipment { get; set; }
         public DbSet<RoomOccupantViewModel> RoomOccupants { get; set; }
         public DbSet<ReservationReport> ReservationReports { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,6 +54,20 @@ namespace PropertyManagementSystem.Data
                 .HasOne(rd => rd.ReservationHeader)
                 .WithMany()
                 .HasForeignKey(rd => rd.ReservationId);
+
+            modelBuilder.Entity<GFMS_ReservationEquipment>()
+            .HasKey(re => new { re.ReservationDetailId, re.EquipmentId });
+
+            // Relationships
+            modelBuilder.Entity<GFMS_ReservationEquipment>()
+                .HasOne(re => re.ReservationDetail)
+                .WithMany(rd => rd.ReservationEquipments)
+                .HasForeignKey(re => re.ReservationDetailId);
+
+            modelBuilder.Entity<GFMS_ReservationEquipment>()
+                .HasOne(re => re.Equipment)
+                .WithMany(eq => eq.ReservationEquipments)
+                .HasForeignKey(re => re.EquipmentId);
 
             modelBuilder.Entity<GFMS_ReservationDetails>()
             .Property(e => e.StartDate)

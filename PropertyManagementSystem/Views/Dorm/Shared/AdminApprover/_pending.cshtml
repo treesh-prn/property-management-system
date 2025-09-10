@@ -86,7 +86,7 @@
                     <div class="col-lg-3 col-md-6 mb-4">
                         <div class="datagrid-item">
                             <div class="datagrid-title text-primary">Schedule Type</div>
-                            @if (Model.ReservationDetails.FirstOrDefault().ScheduleType == 0)
+                            @if (Model.DormApplicants.SchedType == 0)
                             {
                                 <div class="datagrid-content">Regular</div>
                             }

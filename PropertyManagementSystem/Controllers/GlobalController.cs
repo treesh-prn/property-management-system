@@ -610,28 +610,28 @@ namespace PropertyManagementSystem.Controllers
 
         public ActionResult GetEquipments(DateTime startDate, DateTime endDate)
         {
-            // Fetch all equipment data
-            List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable()
-                .Where(eq => eq.isFacilityEquipment == false).ToList();
-            List<equipmentList> _eqList = new List<equipmentList>();
+            var equipments = _context.Equipments
+                .Where(eq => eq.isFacilityEquipment == false)
+                .ToList();
 
-            foreach (var item in _Equipments)
+            var eqList = new List<equipmentList>();
+
+            foreach(var item in equipments)
             {
-                // Check if the equipment is currently reserved
-                bool isReserved = _context.ReservationDetails
-                    .Any(r => r.EquipmentNeeded.Contains(item.Id.ToString())
-                              && r.StartDate <= DateTime.Now
-                              && r.EndDate >= DateTime.Now);
+                bool isReserved = _context.ReservationEquipment
+                    .Any(re => re.EquipmentId == item.Id &&
+                    _context.ReservationDetails.Any(rd => rd.ReservationDetailId == re.ReservationDetailId
+                    && rd.StartDate < endDate &&
+                    rd.EndDate > startDate));
 
-                // Add equipment to the list with reservation status
-                _eqList.Add(new equipmentList
+                eqList.Add(new equipmentList
                 {
                     Id = item.Id,
-                    EquipmentName = item.EquipmentName,
+                    EquipmentName = item.EquipmentName
                 });
             }
 
-            return Json(_eqList);
+            return Json(eqList);
         }
 
         [HttpPost]

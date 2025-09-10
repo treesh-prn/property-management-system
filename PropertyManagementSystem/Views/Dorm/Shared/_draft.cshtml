@@ -266,7 +266,7 @@
                                             </div>
                                             <div class="col-lg-6">
                                                 <label class="form-selectgroup-item">
-                                                    <input type="radio" id="commute" name="_modeOfTransport" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().ModeOfTransportation">
+                                                    <input type="radio" id="commute" name="_modeOfTransport" value="1" class="form-selectgroup-input" asp-for="@Model.DormApplicants.ModeOfTransportation">
                                                     <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                         <span class="me-3">
                                                             <span class="form-selectgroup-check"></span>
@@ -282,7 +282,7 @@
                                             <div class="row mb-4">
                                                 <div class="col">
                                                     <label class="form-label mb-2">Plate Number</label>
-                                                    <input type="text" id="vehicleType" class="form-control" name="_vehicleType" placeholder="Plate Number" required>
+                                                    <input type="text" id="plateNumber" class="form-control" name="_plateNumber" placeholder="Plate Number" required>
                                                 </div>
                                             </div>
                                         </div>
@@ -345,9 +345,8 @@
                                                 </label>
                                             </div>
                                         </div>
-
                                         <div class="col-lg-2 col-md-4 col-sm-6">
-                                            <input type="text" class="form-control" name="_position[]" placeholder="Position">
+                                            <input type="text" class="form-control" name="_name[]" placeholder="Position">
                                         </div>
                                         <div class="col-lg-2 col-md-4 col-sm-6">
                                             <input type="text" class="form-control" name="_location[]" placeholder="Location">

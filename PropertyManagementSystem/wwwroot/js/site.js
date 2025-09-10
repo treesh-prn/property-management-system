@@ -1071,10 +1071,10 @@ $(document).ready(function () {
         var selectedStatus = row.find('input[name^="_dependent_status"]:checked').val();
 
         if (selectedStatus === "studying") {
-            row.find('input[name="_position[]"]').attr("placeholder", "School");
+            row.find('input[name="_name[]"]').attr("placeholder", "School");
             row.find('input[name="_location[]"]').attr("placeholder", "School Location");
         } else if (selectedStatus === "working") {
-            row.find('input[name="_position[]"]').attr("placeholder", "Company");
+            row.find('input[name="_name[]"]').attr("placeholder", "Company");
             row.find('input[name="_location[]"]').attr("placeholder", "Work Location");
         }
     }
@@ -1095,7 +1095,7 @@ $(document).ready(function () {
         newRow.find("input[type='radio']").prop("checked", false);
 
         // Reset placeholders to default
-        newRow.find('input[name="_position[]"]').attr("placeholder", "Position");
+        newRow.find('input[name="_name[]"]').attr("placeholder", "Position");
         newRow.find('input[name="_location[]"]').attr("placeholder", "Location");
 
         // Update name attributes to prevent duplicate names
@@ -1120,7 +1120,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ownVehicle = document.getElementById('ownVehicle');
     const commute = document.getElementById('commute');
 
-    const vehicleType = document.getElementById('vehicleType');
+    const plateNumber = document.getElementById('plateNumber');
     const travelTime = document.getElementById('travelTime');
     const fare = document.getElementById('fare')
 
@@ -1157,7 +1157,7 @@ document.addEventListener('DOMContentLoaded', function () {
     //mode of transportation
     ownVehicle.addEventListener('change', function () {
         if (ownVehicle.checked) {
-            vehicleType.disabled = false;
+            plateNumber.disabled = false;
             travelTime.disabled = true;
             fare.disabled = true;
 
@@ -1167,8 +1167,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     commute.addEventListener('change', function () {
         if (commute.checked) {
-            vehicleType.disabled = true;
-            vehicleType.value = '';
+            plateNumber.disabled = true;
+            plateNumber.value = '';
             travelTime.disabled = false;
             fare.disabled = false;
         }
@@ -1188,10 +1188,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (commute.checked) {
-        vehicleType.disabled = true;
-        vehicleType.value = '';
+        plateNumber.disabled = true;
+        plateNumber.value = '';
     } else {
-        vehicleType.disabled = false;
+        plateNumber.disabled = false;
         travelTime.disabled = true;
         fare.disabled = true;
 

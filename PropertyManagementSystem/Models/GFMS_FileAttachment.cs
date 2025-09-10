@@ -11,5 +11,7 @@ namespace PropertyManagementSystem.Models
         public string FilePath { get; set; }
         public DateTime DateUploaded { get; set; }
 
+
+
     }
 }
