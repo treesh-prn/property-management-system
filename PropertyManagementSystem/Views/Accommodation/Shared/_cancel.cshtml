@@ -1,0 +1,62 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@{
+    var reservationId = Model.ReservationHeader.ReservationId;
+    var modalId = $"modal-cancel-{reservationId}";
+    var firstDetail = Model.ReservationDetails?.FirstOrDefault();
+}
+
+<div class="modal modal-blur fade" id="@modalId" tabindex="-1" role="dialog"
+     aria-labelledby="@($"{modalId}-title")" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content cancellation-modal">
+            <div class="modal-header">
+                <div class="cancellation-modal-heading">
+                    <span class="cancellation-modal-icon" aria-hidden="true"><i class="ti ti-calendar-x"></i></span>
+                    <div>
+                        <span>Guesthouse reservation</span>
+                        <h3 class="modal-title" id="@($"{modalId}-title")">Cancel reservation?</h3>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="CancelReservation" asp-controller="Accommodation" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ReservationId" value="@reservationId" />
+                <input type="hidden" name="HeaderRowVersion" value="@Convert.ToBase64String(Model.ReservationHeader.RowVersion)" />
+                <div class="modal-body">
+                    <div class="cancellation-modal-warning">
+                        <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+                        <div>
+                            <strong>This will release all assigned rooms.</strong>
+                            <span>The request cannot continue through approval after it is cancelled.</span>
+                        </div>
+                    </div>
+                    <dl class="cancellation-modal-summary">
+                        <div>
+                            <dt>Request</dt>
+                            <dd>@Model.ReservationHeader.ReservationCode</dd>
+                        </div>
+                        <div>
+                            <dt>Stay</dt>
+                            <dd>@(firstDetail?.StartDate?.ToString("MMM d, yyyy hh:mm tt") ?? "Not provided")</dd>
+                        </div>
+                    </dl>
+                    <label class="form-label" for="cancel-reason-@reservationId">
+                        Reason for cancellation <span class="form-label-description">Optional</span>
+                    </label>
+                    <textarea class="form-control" id="cancel-reason-@reservationId" name="Remarks"
+                              rows="3" maxlength="50"
+                              placeholder="Briefly explain why this reservation is being cancelled"></textarea>
+                    <div class="form-hint">Maximum 50 characters.</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep Reservation</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ti ti-x" aria-hidden="true"></i>
+                        Cancel Reservation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

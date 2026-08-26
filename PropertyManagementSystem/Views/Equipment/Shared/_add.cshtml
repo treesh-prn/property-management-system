@@ -1,11 +1,12 @@
 ﻿<form id="fcFRM1" asp-controller="Equipment" asp-action="newEquipments" enctype="multipart/form-data" method="post">
+    <div class="management-form-section-title">Equipment information</div>
     <div class="mb-3">
         <label for="equipmentName" class="form-label required">Equipment Name</label>
         <input id="equipmentName" class="form-control" name="_name" type="text" required>
     </div>
 
     <div class="mb-3">
-        <label for="equipmentQty" class="form-label required">Equipment Qty</label>
+        <label for="equipmentQty" class="form-label required">Quantity</label>
         <input id="equipmentQty" class="form-control" name="_quantity" type="number" min="1" required>
     </div>
 
@@ -15,7 +16,7 @@
     </div>
 
     <div class="mb-3">
-        <label for="halfCost" class="form-label required">Half Cost</label>
+        <label for="halfCost" class="form-label required">Half Day Cost</label>
         <input id="halfCost" class="form-control" name="_halfCost" type="number" step="0.01" min="0" required>
     </div>
 
@@ -29,14 +30,15 @@
         <input id="remarks" class="form-control" name="_remarks" type="text" required>
     </div>
 
-    <div class="mb-3 d-flex align-items-center">
+    <div class="management-form-section-title">Availability and assignment</div>
+    <div class="management-toggle-row">
         <label for="isActiveCheckbox" class="form-label me-auto">Is Active</label>
         <div class="form-check form-switch">
             <input id="isActiveCheckbox" class="form-check-input" name="_isActive" type="checkbox" value="true" checked>
         </div>
     </div>
 
-    <div class="mb-3 d-flex align-items-center">
+    <div class="management-toggle-row">
         <label for="isFacilityEquipment" class="form-label me-auto">Is Facility Equipment?</label>
         <div class="form-check form-switch">
             <input id="isFacilityEquipment" class="form-check-input" name="_isFacilityEquipment" type="checkbox" value="true">
@@ -46,7 +48,7 @@
     <!-- Facility and Room Dropdowns Wrapper -->
     <div id="facilityRoomWrapper" style="display: none;">
         <div class="mb-3">
-            <label for="facilityId" class="form-label required">Facility</label>
+            <label for="facilityId" class="form-label required">Function Room Facility</label>
             @(
                 Html.Kendo().DropDownList()
                 .Name("_facilityId")
@@ -56,15 +58,15 @@
                 {
                     source.Read(read =>
                     {
-                        read.Action("GetFacility", "FunctionRoom").Data("filterFacilities");
+                        read.Action("GetFunctionRoomFacilities", "Global");
                     });
                 })
                 .HtmlAttributes(new { style = "width: 100%" })
-                .OptionLabel("Select Facility")
+                .OptionLabel("Select Function Room Facility")
                 )
         </div>
         <div class="mb-3">
-            <label for="roomId" class="form-label required">Room</label>
+            <label for="roomId" class="form-label">Function Room <span class="text-secondary">Optional</span></label>
             @(Html.Kendo().DropDownList()
                 .Name("_roomId")
                 .DataTextField("RoomName")
@@ -74,16 +76,36 @@
                 {
                     source.Read(read =>
                     {
-                        read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
+                        read.Action("GetFunctionRooms", "Global").Data("equipmentRoomFilter");
                     }).ServerFiltering(true);
                 })
                 .HtmlAttributes(new { style = "width: 100%" })
-                .OptionLabel("Select Room")
+                .OptionLabel("Select Function Room")
                 )
+            <div class="form-hint">Leave blank to link the equipment to the entire facility.</div>
+        </div>
+        <div class="row g-2 mb-3">
+            <div class="col-sm-7">
+                <label for="equipmentLinkType" class="form-label">Reservation behavior</label>
+                <select id="equipmentLinkType" class="form-select" name="_linkType">
+                    <option value="INCLUDED">Automatically included</option>
+                    <option value="ADD_ON">Available add-on</option>
+                </select>
+            </div>
+            <div class="col-sm-5">
+                <label for="equipmentDefaultQuantity" class="form-label">Default quantity</label>
+                <input id="equipmentDefaultQuantity" class="form-control" name="_defaultQuantity" type="number" min="1" value="1" />
+            </div>
+        </div>
+        <div class="management-toggle-row mb-3">
+            <label for="equipmentIsFixed" class="form-label me-auto">Fixed to this location</label>
+            <div class="form-check form-switch">
+                <input id="equipmentIsFixed" class="form-check-input" name="_isFixed" type="checkbox" value="true" />
+            </div>
         </div>
     </div>
 
-    <div class="mb-3 text-end">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+    <div class="management-form-actions">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-plus" aria-hidden="true"></i> Add Equipment</button>
     </div>
 </form>

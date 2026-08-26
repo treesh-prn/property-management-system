@@ -10,147 +10,165 @@
 @{
     var employee = await RoleService.GetUserName(User);
     var gfmsRoles = await RoleService.GetRolesAsync(User);
-    var activeRole = await RoleService.GetActiveRoleAsync(User);
+    var employeeName = employee?.Fullname ?? string.Empty;
+    var identityEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+        ?? User.FindFirst("email")?.Value
+        ?? User.Identity?.Name;
+    var isOwner = PropertyManagementSystem.Services.ReservationOwnership.IsOwner(
+        Model.ReservationHeader,
+        identityEmail,
+        employee?.Email);
+    var reservationDetails = Model.ReservationDetails ?? new List<PropertyManagementSystem.Models.GFMS_ReservationDetails>();
+    var allGuestsAssigned = reservationDetails.Count > 0 &&
+        reservationDetails.All(detail => detail.FacilityId.HasValue && detail.RoomId.HasValue);
+    var isCurrentApprover =
+        (gfmsRoles.Contains("GFMS.Admin Approver") && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL") ||
+        (gfmsRoles.Contains("GFMS.Admin Manager") && Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL");
+    var alertMessage = TempData["AlertMessage"] as string;
+    var alertSubMessage = TempData["AlertSubMessage"] as string;
+    var alertType = TempData["AlertType"] as string;
 }
-<div class="page-wrapper">
-    <div class="col-lg-6 ms-auto alert alert-warning alert-dismissible fade show custom-alert" role="alert"
-         style="display:@(TempData["AlertMessage"] != null ? "block" : "none");">
-        <div class="d-flex">
-            <div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon alert-icon">
-                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                    <circle cx="12" cy="12" r="9" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-            </div>
-            <div>
-                <h4 class="alert-title">@TempData["AlertType"]</h4>
-                <div class="text-secondary">
-                    @if (TempData["AlertMessage"] != null)
-                    {
-                        <strong>@TempData["AlertMessage"]</strong>
-                        <br />
-                        @TempData["AlertSubMessage"]
-                    }
-                </div>
-            </div>
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
+<div class="page-wrapper reservation-page reservation-detail-page unified-detail-view requestor-detail-view accommodation-detail-view">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
                     <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        View Reservation
-                    </div>
+                    <div class="page-pretitle">View Reservation</div>
                     <h2 class="page-title">
                         Guesthouse Reservation
                     </h2>
+                    <div class="text-secondary mt-1">Review booking details, approval status, and available actions.</div>
 
                 </div>
                 <!-- Page title actions -->
             </div>
         </div>
     </div>
+    <div class="container-xl">
+        @if (!string.IsNullOrWhiteSpace(alertMessage))
+        {
+            <section class="reservation-validation-banner @(alertType == "success" ? "is-success" : string.Empty) alert alert-dismissible fade show"
+                     role="alert"
+                     aria-live="assertive">
+                <span class="reservation-validation-icon" aria-hidden="true">
+                    <i class="ti @(alertType == "success" ? "ti-circle-check" : "ti-calendar-exclamation")"></i>
+                </span>
+                <div class="reservation-validation-copy">
+                    <span>@(alertType == "success" ? "Assignment updated" : "Schedule conflict")</span>
+                    <h3>@alertMessage</h3>
+                    @if (!string.IsNullOrWhiteSpace(alertSubMessage))
+                    {
+                        <p>@alertSubMessage</p>
+                    }
+                </div>
+                @if (isCurrentApprover)
+                {
+                    <a class="btn @(alertType == "success" ? "btn-outline-success" : "btn-outline-warning") reservation-validation-action"
+                       href="#guest-room-assignment-heading">
+                        Review room assignments
+                    </a>
+                }
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss validation message"></button>
+            </section>
+        }
+        <div class="reservation-detail-hero">
+            <div class="reservation-detail-hero-copy">
+                <span class="reservation-eyebrow">Booking overview</span>
+                <h3>@Model.ReservationHeader.ReservationCode</h3>
+                <p>Guesthouse stay details, guests, assigned room, schedule, and approval actions.</p>
+            </div>
+            <div class="reservation-detail-hero-meta">
+                <div>
+                    <span>Date Filed</span>
+                    <strong>@(Model.ReservationHeader.DateFiled?.ToString("MMM d, yyyy h:mm tt") ?? "Not available")</strong>
+                </div>
+                <div>
+                    <span>Requestor</span>
+                    <strong>@Model.ReservationHeader.Requestor</strong>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
-            <div class="row row-cards">
+            <div class="reservation-detail-workspace @(isOwner && Model.ReservationHeader.Status != "DRAFT" ? "has-status-sidebar" : string.Empty)">
+                @if (isOwner && Model.ReservationHeader.Status != "DRAFT")
+                {
+                    <aside class="request-status-sidebar" aria-label="Request approval status">
+                        <partial name="~/Views/Shared/_RequestStatus.cshtml" model="Model" />
+                    </aside>
+                }
+                <main class="reservation-detail-main">
+                <div class="row row-cards">
 
                 <div class="col-lg-12">
-                    <div class="card">
+                    <div class="card reservation-form-card">
 
-                        @if (User.IsInRole("GFMS.Requestor"))
+                        @if (isOwner)
                         {
                             @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
                             {
                                 <partial name="Shared/_update" />
                             }
-                            else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED")
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else
+                            else if (Model.ReservationHeader.Status == "DRAFT")
                             {
                                 <partial name="Shared/_draft" />
                             }
-                        }
-                        else if (User.IsInRole("GFMS.Department Head"))
-                        {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
-                            {
-                                <partial name="Shared/DepartmentHead/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Approver == employee.Fullname)
+                            else
                             {
                                 <partial name="Shared/_view" />
                             }
                         }
-                        else if (User.IsInRole("GFMS.Admin Manager"))
+                        else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" &&
+                                 gfmsRoles.Contains("GFMS.Department Head"))
                         {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminManager/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
+                            <partial name="Shared/DepartmentHead/_pending" />
                         }
-                        else if (User.IsInRole("GFMS.Admin Approver"))
+                        else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" &&
+                                 gfmsRoles.Contains("GFMS.Admin Manager"))
                         {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminApprover/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
+                            <partial name="Shared/AdminManager/_pending" />
+                        }
+                        else if (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" &&
+                                 gfmsRoles.Contains("GFMS.Admin Approver"))
+                        {
+                            <partial name="Shared/AdminApprover/_pending" />
+                        }
+                        else
+                        {
+                            <partial name="Shared/_view" />
                         }
                     </div>
-                    @if (User.IsInRole("GFMS.Admin Approver") || User.IsInRole("GFMS.Admin Manager"))
+                    @if (isCurrentApprover && !isOwner)
                     {
-                        <div class="row mt-3">
-                            <div class="col-lg-12 col-md-12">
-
-                                @if (Model.ReservationHeader.Requestor != employee.Fullname && (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL"))
-                                {
-                                    <partial name="Shared/_grid" />
-                                }
-
-                            </div>
-                        </div>
                         <div class="card mt-1">
                             <form asp-action="UpdateReservationStatus" method="post">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
                                 <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId">
                                 <div class="card-footer d-flex justify-content-between align-items-center">
-                                    <button type="submit" name="action" value="Revert" class="btn btn-link link-secondary">
+                                    <a href="@Url.Action("ReservationList", "Accommodation")"
+                                       class="btn btn-link link-secondary"
+                                       data-assignment-back-link>
                                         Go Back
-                                    </button>
+                                    </a>
                                     <div class="ms-auto">
+                                        <span class="text-warning me-3 @((allGuestsAssigned) ? "d-none" : string.Empty)"
+                                              data-assignment-approval-warning>
+                                            <i class="ti ti-alert-triangle me-1"></i>Select a room for every guest before approval.
+                                        </span>
                                         <button type="button" class="btn btn-red" data-bs-toggle="modal" data-bs-target="#modal-danger-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
                                             <i class="ti ti-ban m-1"></i> Disapprove
                                         </button>
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-approve-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
+                                        <button type="button"
+                                                class="btn btn-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modal-approve-@Model.ReservationDetails.FirstOrDefault().ReservationDetailId"
+                                                data-assignment-approval-trigger
+                                                disabled="@(!allGuestsAssigned)">
                                             <i class="ti ti-check m-1"></i> Approve
                                         </button>
                                     </div>
@@ -162,6 +180,8 @@
                     }
 
                 </div>
+            </div>
+                </main>
             </div>
         </div>
     </div>

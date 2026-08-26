@@ -1,0 +1,120 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@{
+    var reservationDetails = Model.ReservationDetails?.ToList() ?? new List<PropertyManagementSystem.Models.GFMS_ReservationDetails>();
+    var stayDetails = reservationDetails.FirstOrDefault();
+}
+
+<section class="accommodation-reservation-details" aria-labelledby="accommodation-details-heading">
+    <header class="accommodation-details-header">
+        <div class="accommodation-details-icon" aria-hidden="true">
+            <i class="ti ti-bed"></i>
+        </div>
+        <div>
+            <h3 id="accommodation-details-heading">Reservation details</h3>
+            <p>Guest information, room assignments, and stay schedule.</p>
+        </div>
+        <span class="accommodation-guest-count">
+            @reservationDetails.Count @(reservationDetails.Count == 1 ? "guest" : "guests")
+        </span>
+    </header>
+
+    @if (reservationDetails.Count > 0)
+    {
+        <div class="accommodation-detail-section">
+            <h4>Guests and room assignments</h4>
+            <div class="accommodation-roster" role="table" aria-label="Guests and assigned rooms">
+                <div class="accommodation-roster-header" role="row">
+                    <span role="columnheader">Guest</span>
+                    <span role="columnheader">Company</span>
+                    <span role="columnheader">Facility</span>
+                    <span role="columnheader">Room</span>
+                </div>
+                @foreach (var detail in reservationDetails)
+                {
+                    var facilityName = detail.Facility?.FacilityName ?? Model.Facility?.FacilityName ?? "For assignment";
+                    var roomName = detail.Room?.RoomName ?? Model.Room?.RoomName ?? "For assignment";
+                    <div class="accommodation-roster-row" role="row">
+                        <div class="accommodation-roster-guest" role="cell">
+                            <span class="accommodation-guest-avatar" aria-hidden="true"><i class="ti ti-user"></i></span>
+                            <span>
+                                <strong>@(string.IsNullOrWhiteSpace(detail.GuestName) ? "Guest name not provided" : detail.GuestName)</strong>
+                                @if (!string.IsNullOrWhiteSpace(detail.Relationship))
+                                {
+                                    <small>@detail.Relationship</small>
+                                }
+                            </span>
+                        </div>
+                        <div role="cell" data-label="Company">@(string.IsNullOrWhiteSpace(detail.Company) ? "Not provided" : detail.Company)</div>
+                        <div role="cell" data-label="Facility">@facilityName</div>
+                        <div role="cell" data-label="Room">@roomName</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.IncludedEquipments.Count > 0 || Model.AdditionalEquipments.Count > 0)
+        {
+            <div class="accommodation-detail-section">
+                <h4>Equipment assignment</h4>
+                @if (Model.IncludedEquipments.Count > 0)
+                {
+                    <div class="reservation-equipment-group">
+                        <span class="reservation-equipment-label">Included with facility or room</span>
+                        <div class="reservation-equipment-chips">
+                            @foreach (var item in Model.IncludedEquipments)
+                            {
+                                <span class="badge bg-blue-lt">@item.Quantity× @item.EquipmentName</span>
+                            }
+                        </div>
+                    </div>
+                }
+                @if (Model.AdditionalEquipments.Count > 0)
+                {
+                    <div class="reservation-equipment-group">
+                        <span class="reservation-equipment-label">Additional requested equipment</span>
+                        <div class="reservation-equipment-chips">
+                            @foreach (var item in Model.AdditionalEquipments)
+                            {
+                                <span class="badge bg-secondary-lt">@item.Quantity× @item.EquipmentName</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="accommodation-stay-summary">
+            <div class="accommodation-stay-item">
+                <span class="accommodation-stay-icon" aria-hidden="true"><i class="ti ti-calendar-check"></i></span>
+                <div>
+                    <span>Arrival</span>
+                    <strong>@(stayDetails?.StartDate?.ToString("MMM d, yyyy hh:mm tt") ?? "Not provided")</strong>
+                </div>
+            </div>
+            <div class="accommodation-stay-item">
+                <span class="accommodation-stay-icon" aria-hidden="true"><i class="ti ti-calendar-event"></i></span>
+                <div>
+                    <span>Departure</span>
+                    <strong>@(stayDetails?.EndDate?.ToString("MMM d, yyyy hh:mm tt") ?? "Not provided")</strong>
+                </div>
+            </div>
+            <div class="accommodation-stay-item accommodation-purpose-item">
+                <span class="accommodation-stay-icon" aria-hidden="true"><i class="ti ti-notes"></i></span>
+                <div>
+                    <span>Purpose</span>
+                    <strong>@(string.IsNullOrWhiteSpace(stayDetails?.Purpose) ? "Not provided" : stayDetails.Purpose)</strong>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="accommodation-details-empty">
+            <i class="ti ti-bed-off" aria-hidden="true"></i>
+            <div>
+                <strong>No reservation details available</strong>
+                <span>Guest and stay information has not been added yet.</span>
+            </div>
+        </div>
+    }
+</section>

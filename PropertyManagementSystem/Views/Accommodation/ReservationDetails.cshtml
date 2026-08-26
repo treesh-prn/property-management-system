@@ -9,19 +9,18 @@
     ViewData["Title"] = "Home Page";
 
 }
-<div class="page-wrapper">
+<div class="page-wrapper reservation-page reservation-detail-page">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
                     <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        Accommodation
-                    </div>
+                    <div class="page-pretitle">Accommodation</div>
                     <h2 class="page-title">
                         Guesthouse Reservation
                     </h2>
+                    <div class="text-secondary mt-1">Complete the guest information, stay dates, and purpose for this reservation.</div>
 
                 </div>
                 <!-- Page title actions -->
@@ -55,13 +54,15 @@
         <div class="container-xl">
             <div class="row row-cards">
                 <div class="col-lg-3">
-                    <div class="card text-center">
+                    <div class="card text-center reservation-summary-card">
                         <div class="card-header card-header-light">
                             <h3 class="card-title">Reservation #@Model.ReservationHeader.ReservationId</h3>
                         </div>
-                        <img class="img-responsive2 mx-auto" src="@Url.Content("~/img/calendar.jpg")" alt="Reservation Image">
+                        <div class="reservation-summary-icon mx-auto">
+                            <i class="ti ti-bed"></i>
+                        </div>
                         <div class="card-body">
-                            <h5 class="card-title">Reservation Details</h5>
+                            <h5 class="card-title">Reservation Summary</h5>
                             <table class="table table-borderless text-left">
                                 <tbody>
                                     <tr>
@@ -82,38 +83,43 @@
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="card">
-                        <div class="card">
+                    <div class="card reservation-form-card">
+                        <div class="reservation-form-inner">
                             <div class="card-header">
                                 <div>
                                     <h3 class="card-title">
                                         Guesthouse Reservation Form
                                     </h3>
-                                    <p class="card-subtitle">
-                                    </p>
+                                    <p class="card-subtitle">Add guest and stay details to finalize the request.</p>
                                 </div>
                             </div>
                             <div class="card-body">
-                                <div class="modal-content">
-                                    <form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post">
+                                <div class="reservation-form-surface">
+                                    <form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post" class="reservation-workflow-form">
                                         <div class="modal-body">
 
                                             <input type="hidden" class="form-control" name="_reservationId" asp-for="ReservationHeader.ReservationId">
                                             <div id="dynamic-rows">
-                                                <div class="row mb-3">
+                                                <div class="reservation-section-title">
+                                                    <i class="ti ti-users"></i>
+                                                    Guest information
+                                                </div>
+                                                <div class="row mb-3 guest-row">
                                                     <div class="col-lg-5">
                                                         <label class="form-label">Guest Name</label>
                                                         <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name">
                                                     </div>
                                                      <div class="col-lg-3">
                                                         <label class="form-label">Company</label>
-                                                        <input type="text" class="form-control" name="_company[]" placeholder="Company">
+                                                        <select class="form-select guest-company-select" name="_company[]" required>
+                                                            <option value="">Select company</option>
+                                                        </select>
                                                     </div>
                                                     <div class="col-lg-3">
                                                         <label class="form-label">Relationship</label>
                                                         <input type="text" class="form-control" name="_relationship[]" placeholder="Input Relationship if applicable">
                                                     </div>
-                                                    <div class="col-sm-1 d-flex align-items-end">
+                                                    <div class="col-sm-1 d-flex align-items-end guest-row-actions">
                                                         <button type="button" id="add-row" class="btn btn-primary ml-2 custom-padding">
                                                             <i class="ti ti-plus"></i>
                                                         </button>
@@ -123,22 +129,29 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <label class="form-label">Duration of Stay</label>
+                                            <div class="reservation-section-title">
+                                                <i class="ti ti-calendar-time"></i>
+                                                Duration of stay
+                                            </div>
                                             <div class="row mb-3">
                                                 <div class="col-lg-6">
                                                     <label class="form-label required">Start Date </label>
                                                     @(Html.Kendo().DateTimePicker()
                                                         .Name("_startDate")
-                                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                        .Format("MM/dd/yyyy hh:mm tt")
+                                                        .TimeFormat("hh:mm tt")
+                                                        .Interval(30)
+                                                        .ParseFormats(new string[] { "MM/dd/yyyy HH:mm", "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                                         )
                                                 </div>
                                                 <div class="col-lg-6">
                                                     <label class="form-label required">End Date </label>
                                                     @(Html.Kendo().DateTimePicker()
                                                         .Name("_endDate")
-                                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                        .Format("MM/dd/yyyy hh:mm tt")
+                                                        .TimeFormat("hh:mm tt")
+                                                        .Interval(30)
+                                                        .ParseFormats(new string[] { "MM/dd/yyyy HH:mm", "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                                         )
                                                 </div>
                                             </div>
@@ -146,7 +159,7 @@
                                                 <div>
                                                     <label class="form-label">
                                                         Purpose
-                                                        <span class="form-label-description">26/50</span>
+                                                        <span class="form-label-description">Max 50 characters</span>
                                                     </label>
                                                     <textarea class="form-control" rows="3" name="_purpose"></textarea>
                                                 </div>
@@ -157,8 +170,7 @@
                                                 Cancel
                                             </a>
                                             <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
-                                                <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                                                <i class="ti ti-check"></i>
                                                 Create
                                             </button>
                                         </div>

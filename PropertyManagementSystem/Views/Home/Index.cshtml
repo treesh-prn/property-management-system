@@ -6,132 +6,141 @@
     var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
 
     var employee = await RoleService.GetUserName(User);
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+    var isRequestor = activeRole == "GFMS.Requestor";
+    var greeting = DateTime.Now.Hour < 12 ? "Good morning" : DateTime.Now.Hour < 18 ? "Good afternoon" : "Good evening";
+    var firstName = employee?.Firstname;
+    var displayFirstName = string.IsNullOrWhiteSpace(firstName)
+        ? "there"
+        : char.ToUpperInvariant(firstName[0]) + firstName.Substring(1).ToLowerInvariant();
+    var displayRole = activeRole.Replace("GFMS.", string.Empty);
+    var defaultDate = DateTime.Today;
+    var defaultStartTime = DateTime.Today.AddHours(8);
+    var defaultEndTime = DateTime.Today.AddHours(17);
 }
 
-<div class="page-wrapper">
+<div class="page-wrapper dashboard-page @(isRequestor ? "requestor-dashboard" : "management-dashboard")">
     <!-- Page header -->
-    <div class="page-header d-print-none">
-        <div class="container-xl">
-            <div class="row g-2 align-items-center">
-                <div class="col">
-                    <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        HOME
-                    </div>
-                    <h2 class="page-title">
-                        DASHBOARD
-                    </h2>
+    <div class="page-header dashboard-page-header d-print-none">
+        <div class="container-fluid dashboard-container">
+            <div class="dashboard-welcome">
+                <div>
+                    <div class="dashboard-eyebrow"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Workspace overview</div>
+                    <h1>@greeting, @displayFirstName</h1>
+                    <p>@(isRequestor ? "Start a request, check availability, or review upcoming room schedules." : "Review requests that need your attention and keep room schedules moving.")</p>
                 </div>
-                <!-- Page title actions -->
-                <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                    </div>
+                <div class="dashboard-welcome-meta" aria-label="Dashboard context">
+                    <span><i class="ti ti-user-shield" aria-hidden="true"></i> @displayRole</span>
+                    <span><i class="ti ti-calendar" aria-hidden="true"></i> @DateTime.Today.ToString("dddd, MMMM d")</span>
                 </div>
             </div>
         </div>
     </div>
     <!-- Page body -->
     <div class="page-body">
-        <div class="container-xl">
+        <div class="container-fluid dashboard-container">
             <div class="row row-deck row-cards">
-                <div class="col-12">
-                    <div class="row row-cards">
-                        <div class="col-sm-6 col-lg-3">
+                @if (isRequestor)
+                {
+                    <div class="col-12 request-service-section">
+                        <div class="request-service-grid" aria-label="Request services">
+                            <a href="@Url.Action("ReservationList", "FunctionRoom")" class="request-service-card">
+                                <img src="@Url.Content("~/img/facility-room.jpg")" alt="" loading="lazy">
+                                <div class="request-service-content">
+                                    <span class="request-service-icon"><i class="ti ti-building-community" aria-hidden="true"></i></span>
+                                    <div>
+                                        <h3>Reserve a Facility</h3>
+                                        <p>Book meeting rooms, training rooms, and company event spaces.</p>
+                                        <span class="request-service-action">View Reservations <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="@Url.Action("ReservationList", "Accommodation")" class="request-service-card">
+                                <img src="@Url.Content("~/img/guest-room.jpg")" alt="" loading="lazy">
+                                <div class="request-service-content">
+                                    <span class="request-service-icon"><i class="ti ti-bed" aria-hidden="true"></i></span>
+                                    <div>
+                                        <h3>Reserve a Guesthouse</h3>
+                                        <p>Request accommodation for employees, visitors, and company guests.</p>
+                                        <span class="request-service-action">View Reservations <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
+                                    </div>
+                                </div>
+                            </a>
+                            <a href="@Url.Action("Index", "Dorm")" class="request-service-card">
+                                <img src="@Url.Content("~/img/dorm-room.jpg")" alt="" loading="lazy">
+                                <div class="request-service-content">
+                                    <span class="request-service-icon"><i class="ti ti-home" aria-hidden="true"></i></span>
+                                    <div>
+                                        <h3>Apply for Dorm or Housing</h3>
+                                        <p>Submit and track an employee dorm or housing application.</p>
+                                        <span class="request-service-action">My Housing <i class="ti ti-arrow-right" aria-hidden="true"></i></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                <div class="col-12 dashboard-summary">
+                    <div class="dashboard-metric-grid" aria-label="Approval summary">
+                        <div>
                             <a href="@Url.Action("ReservationList", "FunctionRoom")"
-                               class="card card-sm text-decoration-none"
+                               class="dashboard-metric-card metric-blue"
                                onclick="goToReservationApproval(event, this)">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-primary text-white avatar">
-                                                    <i class="ti ti-briefcase" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-medium" style="font-weight:600">
-                                                    Function Room
-                                                </div>
-                                                <div class="text-secondary">
-                                                    @Model.NewFNReservationsCount waiting for approval
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="dashboard-metric-icon"><i class="ti ti-building-community" aria-hidden="true"></i></div>
+                                <div class="dashboard-metric-content">
+                                    <span class="dashboard-metric-label">Function rooms</span>
+                                    <strong>@Model.NewFNReservationsCount</strong>
+                                    <span class="dashboard-metric-caption">@(Model.NewFNReservationsCount == 1 ? "request" : "requests") awaiting approval</span>
                                 </div>
+                                <i class="ti ti-arrow-up-right dashboard-metric-arrow" aria-hidden="true"></i>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "Accommodation")" class="card card-sm text-decoration-none">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-success text-white avatar">
-                                                    <i class="ti ti-door" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-medium" style="font-weight:600">
-                                                    Accommodation
-                                                </div>
-                                                <div class="text-secondary">
-                                                    @Model.NewGHReservationsCount waiting for approval
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div>
+                            <a href="@Url.Action("ReservationList", "Accommodation")" class="dashboard-metric-card metric-green">
+                                <div class="dashboard-metric-icon"><i class="ti ti-door" aria-hidden="true"></i></div>
+                                <div class="dashboard-metric-content">
+                                    <span class="dashboard-metric-label">Accommodation</span>
+                                    <strong>@Model.NewGHReservationsCount</strong>
+                                    <span class="dashboard-metric-caption">@(Model.NewGHReservationsCount == 1 ? "request" : "requests") awaiting approval</span>
                                 </div>
+                                <i class="ti ti-arrow-up-right dashboard-metric-arrow" aria-hidden="true"></i>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <a href="@Url.Action("ReservationList", "Dorm")" class="card card-sm text-decoration-none">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-yellow text-white avatar">
-                                                    <i class="ti ti-bed" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-medium" style="font-weight:600">
-                                                    Dorm
-                                                </div>
-                                                <div class="text-secondary">
-                                                    @Model.NewDRMReservationsCount waiting for approval
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div>
+                            <a href="@Url.Action("ReservationList", "Dorm")" class="dashboard-metric-card metric-amber">
+                                <div class="dashboard-metric-icon"><i class="ti ti-bed" aria-hidden="true"></i></div>
+                                <div class="dashboard-metric-content">
+                                    <span class="dashboard-metric-label">Dorm &amp; housing</span>
+                                    <strong>@Model.NewDRMReservationsCount</strong>
+                                    <span class="dashboard-metric-caption">@(Model.NewDRMReservationsCount == 1 ? "request" : "requests") awaiting approval</span>
                                 </div>
+                                <i class="ti ti-arrow-up-right dashboard-metric-arrow" aria-hidden="true"></i>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-lg-3">
-                            <div class="card card-sm">
-                                <div class="card-body">
-                                    <div class="row align-items-center">
-                                        <div class="col-auto">
-                                            <span class="bg-warning text-white avatar">
-                                                <i class="ti ti-home" style="font-size: 30px;"></i>
-                                            </span>
-                                        </div>
-                                        <div class="col">
-                                            <div class="font-weight-medium" style="font-weight:600">
-                                                Total Rooms
-                                            </div>
-                                            <div class="text-secondary">
-                                                12 waiting reservation
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div>
+                            <div class="dashboard-metric-card metric-violet is-static">
+                                <div class="dashboard-metric-icon"><i class="ti ti-calendar-check" aria-hidden="true"></i></div>
+                                <div class="dashboard-metric-content">
+                                    <span class="dashboard-metric-label">Today’s bookings</span>
+                                    <strong>@(Model.TodaysBookings?.Count() ?? 0)</strong>
+                                    <span class="dashboard-metric-caption">approved @(Model.TodaysBookings?.Count() == 1 ? "schedule" : "schedules") today</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-9">
-                    <div class="card">
+                }
+                <div class="col-12 col-xl-9">
+                    <div class="card dashboard-schedule-card">
+                        <div class="card-header dashboard-section-header">
+                            <div class="dashboard-section-icon"><i class="ti ti-calendar-month" aria-hidden="true"></i></div>
+                            <div>
+                                <h3 class="card-title">Room schedule</h3>
+                                <p class="card-subtitle">See approved and pending reservations across shared spaces.</p>
+                            </div>
+                        </div>
                         @(Html.Kendo().TabStrip()
                                 .Name("tabstrip")
                                 .Animation(animation =>
@@ -159,145 +168,92 @@
                             )
                     </div>
                 </div>
-                <div class="col-sm-6 col-lg-3">
-                    <div class="card card-sm">
+                <div class="col-12 col-xl-3" id="dashboardAvailability">
+                    <div class="card card-sm dashboard-availability-card">
                         <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-auto">
-                                    <span class="bg-pink text-white avatar">
-                                        <i class="ti ti-calendar-event" style="font-size: 30px;"></i>
-                                    </span>
-                                </div>
-                                <div class="col">
-                                    <div style="font-weight:600">
-                                        Availability Checker
-                                    </div>
-                                    <div class="text-secondary">
-                                        Select facility and room to check availability.
-                                    </div>
-                                </div>
-                                <!-- Filter Icon Button on the Side -->
-                                <div class="col-auto text-end">
-                                    <button class="btn" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="false" aria-controls="filterPanel">
-                                        <i class="ti ti-filter" style="font-size: 20px;"></i>
-                                    </button>
+                            <div class="dashboard-section-header dashboard-checker-header">
+                                <div class="dashboard-section-icon is-pink"><i class="ti ti-calendar-search" aria-hidden="true"></i></div>
+                                <div>
+                                    <h3 class="card-title">Find an available room</h3>
+                                    <p class="card-subtitle">Choose a location and time to check instantly.</p>
                                 </div>
                             </div>
 
-                            <!-- Collapsible Filter Categories -->
-                            <div class="collapse mt-3" id="filterPanel">
-                                <div class="card card-body">
-                                    <!-- Facility and Room Selection -->
-                                    <div class="mb-2">
-                                        <label class="form-label required">Facility</label>
-                                        @(
-                                            Html.Kendo().DropDownList()
-                                            .Name("_facilityId")
-                                            .DataTextField("FacilityName")
-                                            .DataValueField("FacilityId")
-                                            .DataSource(source =>
-                                            {
-                                                source.Read(read =>
-                                                {
-                                                    read.Action("GetAllFacility", "Global").Data("filterFacilities");
-                                                });
-                                            })
-                                            .HtmlAttributes(new { style = "width: 100%" })
-                                            .OptionLabel("Select Facility")
-                                            )
-                                    </div>
-
-                                    <div class="mb-2">
-                                        <label class="form-label required">Room</label>
-                                        @(Html.Kendo().DropDownList()
-                                            .Name("_roomId")
-                                            .DataTextField("RoomName")
-                                            .DataValueField("RoomId")
-                                            .CascadeFrom("_facilityId")
-                                            .DataSource(source =>
-                                            {
-                                                source.Read(read =>
-                                                {
-                                                    read.Action("GetAllRooms", "Global").Data("filterRooms");
-                                                }).ServerFiltering(true);
-                                            })
-                                            .HtmlAttributes(new { style = "width: 100%" })
-                                            .OptionLabel("Select Room")
-                                            )
-                                    </div>
-
-                                    <!-- Apply Filter Button -->
-                                    <div class="mb-3">
-                                        <button id="checkAvailabilityButton" class="btn btn-primary">
-                                            <i class="fa fa-filter"></i> Check Room Availability
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Calendar Preview -->
-                            <div class="mt-3 mb-3 k-d-flex-col k-text-align-center k-align-items-center">
-                                <div id="special-days">
-                                    @(Html.Kendo().Calendar()
-                                        .Name("calendar")
-                                        .WeekNumber(false)
-                                        .Footer(@"
-                                    <div class='color-legend'>
-                                    <span class='legend-item'>
-                                    <span class='legend-box legend-fully-booked'></span> Fully Booked
-                                    </span>
-                                    <span class='legend-item'>
-                                    <span class='legend-box legend-available'></span> Available
-                                    </span>
-                                    <span class='legend-item'>
-                                    <span class='legend-box legend-current'></span> Current
-                                    </span>
-                                    </div>
-                                    ")
-                                        .MonthTemplate(month => month.Content(@"
-                                    # if ($.inArray(data.date.getTime(), fullyBookedDates) !== -1) { #
-                                    <div class='fully-booked'>#= data.value #</div>
-                                    # } else if ($.inArray(data.date.getTime(), availableDates) !== -1) { #
-                                    <div class='available'>#= data.value #</div>
-                                    # } else { #
-                                    <div>#= data.value #</div>
-                                    # } #
-                                    "))
+                            <div class="availability-form mt-3">
+                                <div class="mb-2">
+                                    <label class="form-label required">Facility</label>
+                                    @(
+                                        Html.Kendo().DropDownList()
+                                        .Name("_dashboardFacilityId")
+                                        .DataTextField("FacilityName")
+                                        .DataValueField("FacilityId")
+                                        .DataSource(source =>
+                                        {
+                                            source.Read(read => read.Action("GetFunctionRoomFacilities", "Home"));
+                                        })
+                                        .HtmlAttributes(new { style = "width: 100%" })
+                                        .OptionLabel("Select Facility")
                                         )
                                 </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-lg-12">
-                                    <div style="font-weight:600; font-size:medium">
-                                        Today's Bookings
-                                    </div>
-                                </div>
-                            </div>
 
-                            @foreach (var booking in Model.TodaysBookings)
-                            {
-                                <div class="col-auto">
-                                    <div class="mb-3 card card-sm @(booking.ReservationType == "FN" ? "bg-blue-lt" : booking.ReservationType == "GH" ? "bg-green-lt" : "bg-gray-lt")">
-                                        <div class="card-body">
-                                            <div class="row align-items-center">
-                                                <div class="col-auto">
-                                                    <span class="@(booking.ReservationType == "FN" ? "bg-blue" : booking.ReservationType == "GH" ? "bg-green" : "bg-gray") text-white avatar">
-                                                        <i class="@(booking.ReservationType == "FN" ? "ti ti-briefcase" : booking.ReservationType == "GH" ? "ti ti-door" : "ti ti-calendar")" style="font-size: 30px;"></i>
-                                                    </span>
-                                                </div>
-                                                <div class="col">
-                                                    <div style="font-weight:600">
-                                                        @booking.Purpose
-                                                    </div>
-                                                    <div class="text-secondary">
-                                                        @booking.StartDate - @booking.EndDate
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Room</label>
+                                    @(Html.Kendo().DropDownList()
+                                        .Name("_dashboardRoomId")
+                                        .DataTextField("RoomName")
+                                        .DataValueField("RoomId")
+                                        .CascadeFrom("_dashboardFacilityId")
+                                        .DataSource(source =>
+                                        {
+                                            source.Read(read =>
+                                            {
+                                                read.Action("GetFunctionRoomRooms", "Home").Data("filterDashboardFunctionRooms");
+                                            }).ServerFiltering(true);
+                                        })
+                                        .HtmlAttributes(new { style = "width: 100%" })
+                                        .OptionLabel("All rooms")
+                                        )
+                                </div>
+
+                                <div class="mb-2">
+                                    <label class="form-label required">Date</label>
+                                    @(Html.Kendo().DatePicker()
+                                        .Name("_dashboardDate")
+                                        .Value(defaultDate)
+                                        .Format("MM/dd/yyyy")
+                                        .HtmlAttributes(new { style = "width: 100%" }))
+                                </div>
+
+                                <div class="availability-time-grid mb-3">
+                                    <div>
+                                        <label class="form-label required">Start time</label>
+                                        @(Html.Kendo().TimePicker()
+                                            .Name("_dashboardStartTime")
+                                            .Value(defaultStartTime)
+                                            .Format("hh:mm tt")
+                                            .HtmlAttributes(new { style = "width: 100%" }))
+                                    </div>
+                                    <div>
+                                        <label class="form-label required">End time</label>
+                                        @(Html.Kendo().TimePicker()
+                                            .Name("_dashboardEndTime")
+                                            .Value(defaultEndTime)
+                                            .Format("hh:mm tt")
+                                            .HtmlAttributes(new { style = "width: 100%" }))
                                     </div>
                                 </div>
-                            }
+
+                                <button id="checkFunctionRoomAvailabilityButton" type="button" class="btn btn-primary w-100">
+                                    <i class="ti ti-search"></i> Check Availability
+                                </button>
+
+                                <div id="availabilityResult" class="availability-result mt-3" aria-live="polite">
+                                    <div class="availability-result-prompt">
+                                        <i class="ti ti-info-circle" aria-hidden="true"></i>
+                                        <span>Choose a facility and schedule to see available rooms.</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,39 +1,40 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
-<form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post">
+<form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post" class="reservation-workflow-form" data-preserve-draft="accommodation" data-accommodation-schedule-form>
     <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
     <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
     <input type="hidden" class="form-control" name="_requestorEmail" asp-for="@Model.ReservationHeader.RequestorEmail">
     <div class="container container-lg mt-3">
         <div class="row">
             <div class="col-lg-8 mb-3">
-                <div class="card">
+                <div class="card reservation-input-card">
                     <div class="card-header">
                         <h3 class="card-title">Guesthouse Reservation Form</h3>
                     </div>
                     <div class="card-body">
                         <div id="dynamic-rows">
-                            <div class="row mb-3">
+                            <div class="row mb-3 guest-row">
                                 <div class="col-lg-5">
                                     <label class="form-label">Guest Name</label>
-                                    <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name">
+                                    <input type="text" class="form-control" name="_guests[]" placeholder="Guest Name" required>
                                 </div>
                                 <div class="col-lg-3">
-                                    <label class="form-label"> Company (N/A if not applicable)</label>
-                                    <input type="text" class="form-control" name="_company[]" placeholder="Company (N/A if not applicable)">
+                                    <label class="form-label">Company <span class="form-label-description">Optional</span></label>
+                                    <select class="form-select guest-company-select" name="_company[]" required>
+                                        <option value="">Select company</option>
+                                    </select>
                                 </div>
                                 <div class="col-lg-3">
-                                    <label class="form-label">Relationship (N/A if not applicable)</label>
-                                    <input type="text" class="form-control" name="_relationship[]" placeholder="Relationship (N/A if not applicable)">
+                                    <label class="form-label">Relationship <span class="form-label-description">Optional</span></label>
+                                    <input type="text" class="form-control" name="_relationship[]" placeholder="Relationship to requestor">
                                 </div>
-                                <div class="col-sm-1 d-flex align-items-end">
-                                    <button type="button" id="add-row" class="btn btn-primary ml-2 custom-padding">
-                                        <i class="ti ti-plus"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-danger remove-row ml-2 custom-padding">
-                                        <i class="ti ti-trash"></i>
-                                    </button>
-                                </div>
+                                <div class="col-sm-1 guest-row-actions"></div>
                             </div>
+                        </div>
+                        <div class="guest-list-actions">
+                            <button type="button" id="add-row" class="btn btn-outline-primary">
+                                <i class="ti ti-plus" aria-hidden="true"></i>Add Another Guest
+                            </button>
+                            <span id="guest-row-count" class="text-secondary">1 guest</span>
                         </div>
                         <label class="form-label">Duration of Stay</label>
                         <div class="row mb-3">
@@ -42,9 +43,13 @@
                                 @(Html.Kendo().DateTimePicker()
                                     .Name("_startDate")
                                     .Value(DateTime.Today)
-                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
-                                    .HtmlAttributes(new {onkeydown = "return false;" })
+                                    .Min(DateTime.Today)
+                                    .Format("MM/dd/yyyy hh:mm tt")
+                                    .TimeFormat("hh:mm tt")
+                                    .Interval(30)
+                                    .ParseFormats(new string[] { "MM/dd/yyyy HH:mm", "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                    .Events(e => e.Open("onAccommodationDateTimePickerOpen"))
+                                    .HtmlAttributes(new { onkeydown = "return false;", required = "required", aria_describedby = "accommodationScheduleValidation" })
                                     )
                             </div>
                             <div class="col-lg-6">
@@ -52,11 +57,22 @@
                                 @(Html.Kendo().DateTimePicker()
                                     .Name("_endDate")
                                     .Value(DateTime.Today)
-                                    .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                    .HtmlAttributes(new { onkeydown = "return false;" })
-                                    .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                    .Min(DateTime.Today)
+                                    .Format("MM/dd/yyyy hh:mm tt")
+                                    .TimeFormat("hh:mm tt")
+                                    .Interval(30)
+                                    .Events(e => e.Open("onAccommodationDateTimePickerOpen"))
+                                    .HtmlAttributes(new { onkeydown = "return false;", required = "required", aria_describedby = "accommodationScheduleValidation" })
+                                    .ParseFormats(new string[] { "MM/dd/yyyy HH:mm", "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                     )
                             </div>
+                        </div>
+                        <div id="accommodationScheduleValidation"
+                             class="alert alert-danger py-2 px-3 mb-3"
+                             role="alert"
+                             aria-live="polite"
+                             hidden>
+                            Departure date and time must be later than arrival date and time.
                         </div>
                         <div class="col-lg-12">
                             <div>
@@ -64,78 +80,49 @@
                                     Purpose
                                     <span id="charCount" class="form-label-description">0/50</span>
                                 </label>
-                                <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50"></textarea>
+                                <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" aria-describedby="guestPurposeHelp" required></textarea>
+                                <div id="guestPurposeHelp" class="form-hint">Briefly describe why accommodation is required.</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-lg-4">
-                <div class="card booking-summary">
+                <div class="card booking-summary reservation-summary-panel" data-review-panel="guesthouse">
                     <div class="card-header">
-                        <h3 class="card-title">Reservation Summary</h3>
+                        <h3 class="card-title">Quick Review</h3>
                     </div>
                     <div class="card-body">
-                        <div class="row align-items-start">
-                            <div class="col-3">
-                                <img src="@Url.Content("~/img/guest-room.jpg")" alt="Dorm Reservation" class="rounded">
-                            </div>
-                            <div class="col-9">
-                                <div class="text-primary h4 d-flex align-items-center">
-                                    <span>@Model.ReservationHeader.ReservationCode</span>
-                                    <span class="ms-3">
-                                        @if (Model.ReservationHeader.Status == "APPROVED")
-                                        {
-                                            <span class='status status-teal'>
-                                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                            </span>
-                                        }
-                                        else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                                        {
-                                            <span class='status status-teal'>
-                                                <span class='status-dot status-dot-animated'></span>FOR APPROVAL
-                                            </span>
-                                        }
-                                        else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
-                                        {
-                                            <span class='status status-red'>
-                                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class='status status-blue'>
-                                                <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                            </span>
-                                        }
-                                    </span>
-                                </div>
-                                <div class="row mt-3">
-                                    <dl class="row">
-                                        <dt class="col-4 text-primary">Requestor:</dt>
-                                        <dd class="col-8 ">@Model.ReservationHeader.Requestor</dd>
-                                        <dt class="col-4 text-primary">Email:</dt>
-                                        <dd class="col-8">@Model.ReservationHeader.RequestorEmail</dd>
-                                        <dt class="col-4 text-primary">Department:</dt>
-                                        <dd class="col-8">@Model.Department.DepartmentCode</dd>
-                                    </dl>
-                                </div>
-                            </div>
+                        <div class="quick-review-intro">
+                            <i class="ti ti-clipboard-check"></i>
+                            <span>Review the stay details before submitting.</span>
                         </div>
+                        <dl class="quick-review-list">
+                            <dt>Guests</dt>
+                            <dd data-review-value="guestCount">No guests added</dd>
+                            <dt>Guest Names</dt>
+                            <dd data-review-value="guestNames">Not provided</dd>
+                            <dt>Arrival</dt>
+                            <dd data-review-value="start">Select arrival date</dd>
+                            <dt>Departure</dt>
+                            <dd data-review-value="end">Select departure date</dd>
+                            <dt>Purpose</dt>
+                            <dd data-review-value="purpose">No purpose entered</dd>
+                        </dl>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center">
-        <a href="@Url.Action("ReservationList", "Accommodation")" class="btn btn-link link-secondary">
-            Go Back
+        <a href="@Url.Action("ReservationList", "Accommodation")" class="btn btn-link link-secondary" data-draft-back>
+            Back to My Requests
         </a>
         <div class="ms-auto">
             <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
                 <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                Create
+                Submit Request
             </button>
         </div>
     </div>

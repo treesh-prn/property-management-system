@@ -13,23 +13,55 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using static Kendo.Mvc.UI.UIPrimitives;
 using Microsoft.Reporting.Map.WebForms.BingMaps;
+using PropertyManagementSystem.Attributes;
 
 namespace PropertyManagementSystem.Controllers
 {
     [Authorize]
+    [ActiveRoleAuthorize(
+        ReservationRoles.Requestor,
+        ReservationRoles.DepartmentHead,
+        ReservationRoles.AdminManager,
+        ReservationRoles.AdminApprover,
+        ReservationRoles.SystemAdmin)]
     public class AccommodationController : Controller
     {
         private readonly DAL _context;
         private readonly IRoleService _roleService;
         private readonly EmailService _emailService;
         private readonly EmployeeService _employeeService;
+        private readonly IReservationAuthorizationService _authorization;
+        private readonly IReservationAuditService _audit;
+        private readonly IReservationAssignmentService _assignments;
+        private readonly IReservationCodeService _reservationCodes;
+        private readonly IReservationProcessingPolicy _processingPolicy;
+        private readonly IReservationScheduleStatusService _scheduleStatus;
+        private readonly IReservationEquipmentAllocationService _equipmentAllocations;
 
-        public AccommodationController(DAL context, IRoleService roleService, EmailService emailService, EmployeeService employeeService)
+        public AccommodationController(
+            DAL context,
+            IRoleService roleService,
+            EmailService emailService,
+            EmployeeService employeeService,
+            IReservationAuthorizationService authorization,
+            IReservationAuditService audit,
+            IReservationAssignmentService assignments,
+            IReservationCodeService reservationCodes,
+            IReservationProcessingPolicy processingPolicy,
+            IReservationScheduleStatusService scheduleStatus,
+            IReservationEquipmentAllocationService equipmentAllocations)
         {
             _context = context;
             _roleService = roleService;
             _emailService = emailService;
             _employeeService = employeeService;
+            _authorization = authorization;
+            _audit = audit;
+            _assignments = assignments;
+            _reservationCodes = reservationCodes;
+            _processingPolicy = processingPolicy;
+            _scheduleStatus = scheduleStatus;
+            _equipmentAllocations = equipmentAllocations;
         }
         public IActionResult GetFacility()
         {
@@ -72,14 +104,47 @@ namespace PropertyManagementSystem.Controllers
            })
            .ToList();
 
-            var newReservationCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING" || r.Status == "DRAFT");
-            var occupiedRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "APPROVED");
-            var availableRoomsCount = _context.ReservationHeaders.Count(r => r.Status == "PENDING");
+            var now = DateTime.Now;
+            var pendingReservationCount = _context.ReservationHeaders.Count(r =>
+                r.ReservationType == "GH" &&
+                (r.Status == "FOR DEPARTMENT HEAD'S APPROVAL" ||
+                 r.Status == "FOR ADMIN MANAGER'S APPROVAL" ||
+                 r.Status == "FOR ADMIN APPROVER'S APPROVAL"));
+
+            var currentStays =
+                from detail in _context.ReservationDetails
+                join header in _context.ReservationHeaders on detail.ReservationId equals header.ReservationId
+                where header.ReservationType == "GH"
+                      && header.Status == "APPROVED"
+                      && detail.StartDate.HasValue
+                      && detail.EndDate.HasValue
+                      && detail.StartDate.Value <= now
+                      && detail.EndDate.Value >= now
+                select new
+                {
+                    header.ReservationId,
+                    detail.ReservationDetailId,
+                    detail.RoomId
+                };
+
+            var activeGuestCount = currentStays
+                .Select(stay => stay.ReservationDetailId)
+                .Distinct()
+                .Count();
+            var occupiedRoomsCount = currentStays
+                .Where(stay => stay.RoomId.HasValue)
+                .Select(stay => stay.RoomId)
+                .Distinct()
+                .Count();
+            var activeRoomCount = _context.Rooms.Count(room => room.RoomType == 0 && room.isActive);
 
 
             var viewModel = new ReservationViewModel
             {
-                //NewReservationsCount = newReservationCount,
+                NewGHReservationsCount = pendingReservationCount,
+                ActiveGuestCount = activeGuestCount,
+                OccupiedRoomsCount = occupiedRoomsCount,
+                AvailableRoomsCount = Math.Max(activeRoomCount - occupiedRoomsCount, 0)
             };
 
             ViewData["Rooms"] = rooms;
@@ -92,21 +157,32 @@ namespace PropertyManagementSystem.Controllers
             return View();
         }
 
-        public IActionResult ReservationList()
+        public async Task<IActionResult> ReservationList()
         {
+            await _scheduleStatus.RefreshAllAsync(DateTime.Now);
+            var employee = await _roleService.GetUserName(User);
+            var requestorEmail = User.FindFirst(ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value
+                ?? User.Identity?.Name;
+
+            ViewData["ReservationYears"] = await ReservationHistoryYearService.GetAvailableYearsAsync(
+                _context, "GH", requestorEmail, employee?.Email, employee?.Fullname);
 
             return View();
 
         }
-        public IActionResult ViewReservation([DataSourceRequest] DataSourceRequest request)
+        [HttpGet]
+        public async Task<IActionResult> ViewReservation([DataSourceRequest] DataSourceRequest request)
         {
-            var currUser = User.Identity.Name;
-            Console.WriteLine("Current User: " + currUser);
-            bool isRequestor = User.IsInRole("GFMS.Requestor");
-            bool isDeptHead = User.IsInRole("GFMS.Department Head");
+            await _scheduleStatus.RefreshAllAsync(DateTime.Now);
+            var actor = await _authorization.GetActorAsync(User);
+            var visibleHeaders = _context.ReservationHeaders
+                .AsNoTracking()
+                .Where(header => header.ReservationType == "GH")
+                .ForCalendarViewer(actor.ActiveRole, actor.Email, actor.EmployeeEmail);
 
-            var reservationsQuery = from resDetails in _context.ReservationDetails
-                                    join resHeader in _context.ReservationHeaders on resDetails.ReservationId equals resHeader.ReservationId
+            var reservationsQuery = from resDetails in _context.ReservationDetails.AsNoTracking()
+                                    join resHeader in visibleHeaders on resDetails.ReservationId equals resHeader.ReservationId
                                     join room in _context.Rooms on resDetails.RoomId equals room.RoomId
                                     join facility in _context.Facilities on resDetails.FacilityId equals facility.FacilityId
                                     select new
@@ -127,11 +203,6 @@ namespace PropertyManagementSystem.Controllers
                                         FacilityName = facility.FacilityName
                                     };
 
-            if (isRequestor || isDeptHead)
-            {
-                reservationsQuery = reservationsQuery.Where(r => r.RequestorEmail == currUser && r.ReservationType == "GH");
-            }
-            reservationsQuery = reservationsQuery.Where(r => r.ReservationType == "GH");
             var reservationList = reservationsQuery.ToList();
 
             var groupedReservations = reservationList.GroupBy(r => r.ReservationId)
@@ -160,8 +231,8 @@ namespace PropertyManagementSystem.Controllers
                                                              Title = firstItem.Purpose,
                                                              Purpose = firstItem.Purpose,
                                                              StartDate = firstItem.StartDate.HasValue ? firstItem.StartDate.Value.ToShortTimeString() : "",
-                                                             RoomId = firstItem.RoomId,
-                                                             FacilityId = firstItem.FacilityId,
+                                                             RoomId = firstItem.RoomId ?? 0,
+                                                             FacilityId = firstItem.FacilityId ?? 0,
                                                              RoomName = firstItem.RoomName,
                                                              FacilityName = firstItem.FacilityName,
                                                          };
@@ -171,39 +242,22 @@ namespace PropertyManagementSystem.Controllers
         }
 
 
-        private string GenerateReservationCode()
-        {
-            int currentYear = DateTime.Now.Year;
-            int sequenceNumber = 1;
-
-            var lastReservation = _context.ReservationHeaders
-                .Where(r => r.ReservationType == "GH")
-                .OrderByDescending(r => r.DateSubmitted)
-                .FirstOrDefault();
-
-            if (lastReservation != null)
-            {
-                string[] codeParts = lastReservation.ReservationCode?.Split('-');
-                if (codeParts?.Length == 4 &&
-                    int.TryParse(codeParts[2], out int lastYear) &&
-                    int.TryParse(codeParts[3], out int lastSequenceNumber))
-                {
-                    if (lastYear == currentYear)
-                    {
-                        sequenceNumber = lastSequenceNumber + 1;
-                    }
-                }
-            }
-
-            return $"RSQ-GH-{currentYear}-{sequenceNumber:D4}";
-        }
-
         [HttpPost]
         public async Task<IActionResult> CreateReservation(int _company, string _requestor, string _requestorEmail, int _department)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var actor = await _authorization.GetActorAsync(User);
+            if (!await _authorization.CanCreateAsync(User)) return Forbid();
+            var userId = actor.UserId;
             Console.WriteLine("User Id: " + userId);
             Console.WriteLine("Department Id: " + _department);
+
+            if (string.IsNullOrWhiteSpace(actor.EmployeeEmail) ||
+                string.IsNullOrWhiteSpace(actor.EmployeeName) ||
+                !actor.DepartmentId.HasValue ||
+                !actor.CompanyId.HasValue)
+            {
+                return Forbid();
+            }
 
             var (managerEmail, managerFullName) = await _employeeService.GetManagerInfo(userId);
 
@@ -214,30 +268,26 @@ namespace PropertyManagementSystem.Controllers
 
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
-            var reservationCode = GenerateReservationCode();
-
             GFMS_ReservationHeader _reservation = new GFMS_ReservationHeader()
             {
                 GUID = unique,
-                ChargeToCompany = _company,
-                Requestor = _requestor,
-                RequestorEmail = _requestorEmail,
+                ChargeToCompany = actor.CompanyId.Value,
+                Requestor = actor.EmployeeName,
+                RequestorEmail = actor.EmployeeEmail,
                 Approver = managerFullName,
                 ApproverEmail = managerEmail,
                 DateFiled = DateTime.Now,
-                DateSubmitted = DateTime.Now,
+                DateSubmitted = null,
                 Status = "DRAFT",
-                Department = _department,
-                ReservationCode = reservationCode,
+                Department = actor.DepartmentId.Value,
                 ReservationType = "GH"
             };
 
-            _context.ReservationHeaders.Add(_reservation);
-            await _context.SaveChangesAsync();
+            await _reservationCodes.CreateAsync(_reservation, "RSQ-GH");
 
             return RedirectToAction("ViewReservationDetails", new { Id = unique });
         }
-        public IActionResult ViewReservationDetails(string Id)
+        public async Task<IActionResult> ViewReservationDetails(string Id)
         {
             if (string.IsNullOrEmpty(Id))
             {
@@ -251,6 +301,11 @@ namespace PropertyManagementSystem.Controllers
                 {
                     return NotFound("Reservation Header not found");
                 }
+                if (reservationHeader.ReservationType != "GH") return NotFound();
+                await _scheduleStatus.RefreshAsync(reservationHeader, DateTime.Now);
+                var authorization = await _authorization.AuthorizeAsync(
+                    User, reservationHeader, ReservationOperation.Read);
+                if (!authorization.Succeeded) return Forbid();
 
                 int reservationId = reservationHeader.ReservationId;
 
@@ -281,13 +336,30 @@ namespace PropertyManagementSystem.Controllers
 
                 department = _context.Departments.FirstOrDefault(d => d.Id == reservationHeader.Department);
 
+                var availableRoomsByDetail = new Dictionary<int, List<RoomAssignmentOption>>();
+                var occupiedRoomsByDetail = new Dictionary<int, List<OccupiedRoomAssignmentOption>>();
+                foreach (var detail in reservationDetails)
+                {
+                    availableRoomsByDetail[detail.ReservationDetailId] =
+                        await _assignments.GetAvailableRoomsAsync(
+                            detail.ReservationDetailId, "GH");
+                    occupiedRoomsByDetail[detail.ReservationDetailId] =
+                        await _assignments.GetOccupiedRoomsAsync(
+                            detail.ReservationDetailId, "GH");
+                }
+
                 var reservation = new ReservationViewModel
                 {
                     ReservationHeader = reservationHeader,
                     ReservationDetails = reservationDetails,
                     Department = department,
                     ReservationId = reservationId,
+                    AvailableRoomAssignmentsByDetail = availableRoomsByDetail,
+                    OccupiedRoomAssignmentsByDetail = occupiedRoomsByDetail
                 };
+                var equipment = _equipmentAllocations.GetForReservation(reservationId);
+                reservation.IncludedEquipments = equipment.Where(item => item.IsAutomatic).ToList();
+                reservation.AdditionalEquipments = equipment.Where(item => !item.IsAutomatic).ToList();
 
                 return View(reservation);
             }
@@ -309,31 +381,55 @@ namespace PropertyManagementSystem.Controllers
             }
         }
 
-        public IActionResult CreateReservationDetails(int _reservationId, string[] _guests, string[] _company, string[] _relationship, DateTime _startDate, DateTime _endDate, string _purpose)
+        public async Task<IActionResult> CreateReservationDetails(int _reservationId, string[] _guests, string[] _company, string[] _relationship, DateTime _startDate, DateTime _endDate, string _purpose)
         {
             Console.WriteLine($"Start Date: {_startDate}");
             Console.WriteLine($"End Date: {_endDate}");
 
-            if (_startDate < new DateTime(1753, 1, 1) || _startDate > new DateTime(9999, 12, 31) ||
-                _endDate < new DateTime(1753, 1, 1) || _endDate > new DateTime(9999, 12, 31))
+            var reservationHeader = _context.ReservationHeaders
+                .FirstOrDefault(rh => rh.ReservationId == _reservationId && rh.ReservationType == "GH");
+            if (reservationHeader == null) return NotFound();
+            var authorization = await _authorization.AuthorizeAsync(
+                User, reservationHeader, ReservationOperation.CreateDetails);
+            var denied = AuthorizationFailure(authorization);
+            if (denied != null) return denied;
+            var guid = reservationHeader.GUID;
+
+            if (!IsValidSqlSchedule(_startDate, _endDate))
             {
-                throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
+                return GuestScheduleValidationFailure(
+                    guid,
+                    "Select valid arrival and departure dates.");
             }
 
-            var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == _reservationId).Select(rh => rh.GUID).FirstOrDefault();
-
-            if (_endDate < _startDate)
+            if (_guests == null || _company == null || _relationship == null ||
+                _guests.Length == 0 || _guests.Length != _company.Length ||
+                _guests.Length != _relationship.Length)
             {
-                TempData["AlertMessage"] = "End date cannot be earlier than the start date.";
-                TempData["AlertSubMessage"] = "Please select a valid end date.";
-                TempData["AlertType"] = "Warning";
+                return GuestCompanyValidationFailure(
+                    guid,
+                    "Complete the guest name, company, and relationship fields for every guest.");
+            }
 
+            var normalizedCompanies = await NormalizeGuestCompaniesAsync(_company);
+            if (normalizedCompanies == null)
+            {
+                return GuestCompanyValidationFailure(
+                    guid,
+                    "Select a company from the list or choose N/A for every guest.");
+            }
 
-                return RedirectToAction("ViewReservationDetails", new { id = guid });
+            if (_endDate <= _startDate)
+            {
+                return GuestScheduleValidationFailure(
+                    guid,
+                    "Departure date and time must be later than arrival date and time.");
             }
 
             try
             {
+                var previousStatus = reservationHeader.Status;
+                var submissionStatus = await _authorization.GetSubmissionStatusAsync(reservationHeader);
                 if (_guests != null && _company != null && _relationship != null)
                 {
                     int length = Math.Min(Math.Min(_guests.Length, _company.Length), _relationship.Length);
@@ -344,7 +440,7 @@ namespace PropertyManagementSystem.Controllers
                         {
                             ReservationId = _reservationId,
                             GuestName = _guests[i],
-                            Company = _company[i],
+                            Company = normalizedCompanies[i],
                             Relationship = _relationship[i],
                             StartDate = _startDate,
                             EndDate = _endDate,
@@ -353,23 +449,16 @@ namespace PropertyManagementSystem.Controllers
                         };
 
                         _context.ReservationDetails.Add(reservationDetails);
-                        var reservationHeader = _context.ReservationHeaders.FirstOrDefault(rh => rh.ReservationId == _reservationId);
                         if (reservationHeader != null)
                         {
-                            if (User.IsInRole("GFMS.Admin Approver"))
-                            {
-                                reservationHeader.Status = "FOR ADMIN MANAGER'S APPROVAL";
-                               
-                            }
-                            else
-                            {
-                                reservationHeader.Status = "FOR DEPARTMENT HEAD'S APPROVAL";
-                                
-                            }
+                            reservationHeader.DateSubmitted = _processingPolicy.GetSubmissionTimestamp();
+                            reservationHeader.Status = submissionStatus;
                         }
                     }
 
                     _context.SaveChanges();
+                    await AddSubmissionAuditAsync(
+                        reservationHeader, previousStatus, "SUBMIT");
                     TempData["AlertMessage"] = "Reservation details created successfully!";
                     TempData["AlertSubMessage"] = "Your reservation has been saved";
                     TempData["AlertType"] = "success";
@@ -390,33 +479,59 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("ReservationList", "Accommodation");
         }
 
-        public ActionResult getGuestHouseReservation([DataSourceRequest] DataSourceRequest request, string gridType)
+        [HttpGet]
+        public async Task<ActionResult> getGuestHouseReservation(
+            [DataSourceRequest] DataSourceRequest? request,
+            string? gridType = "myReservation",
+            int? year = null)
         {
-            Task<Gen_Employee> employeeTask = _roleService.GetUserName(User);
-            var employee = employeeTask.Result;
-
+            await _scheduleStatus.RefreshAllAsync(DateTime.Now);
+            var employee = await _roleService.GetUserName(User);
+            var assignedRoles = await _roleService.GetRolesAsync(User);
+            var requestorEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value
+                ?? User.Identity?.Name
+                ?? string.Empty;
+            var employeeEmail = employee?.Email ?? string.Empty;
+            request ??= new DataSourceRequest();
+            gridType = string.IsNullOrWhiteSpace(gridType) ? "myReservation" : gridType;
             var query = _context.ReservationHeaders.AsQueryable()
                 .Where(x => x.ReservationType == "GH")
                 .Where(x => x.Status != "DELETED");
 
             if (gridType == "myReservation")
             {
-                query = query.Where(x => x.Requestor == employee.Fullname);
+                var selectedYear = NormalizeReservationYear(year);
+                if (selectedYear.HasValue)
+                {
+                    var yearStart = new DateTime(selectedYear.Value, 1, 1);
+                    var nextYearStart = yearStart.AddYears(1);
+                    query = query.Where(header =>
+                        header.Status == ReservationStatuses.ForRescheduling ||
+                        _context.ReservationDetails.Any(detail =>
+                            detail.ReservationId == header.ReservationId &&
+                            detail.StartDate >= yearStart && detail.StartDate < nextYearStart) ||
+                        (!_context.ReservationDetails.Any(detail => detail.ReservationId == header.ReservationId) &&
+                         header.DateFiled >= yearStart && header.DateFiled < nextYearStart));
+                }
+
+                var requestorName = employee?.Fullname;
+                query = query.Where(x =>
+                    (!string.IsNullOrEmpty(requestorEmail) && x.RequestorEmail == requestorEmail) ||
+                    (!string.IsNullOrEmpty(employeeEmail) && x.RequestorEmail == employeeEmail) ||
+                    (!string.IsNullOrEmpty(requestorName) && x.Requestor == requestorName));
             }
             else if (gridType == "reservationApproval")
             {
-                if (User.IsInRole("GFMS.Department Head"))
-                {
-                    query = query.Where(x => x.Approver == employee.Fullname && x.Status == "FOR DEPARTMENT HEAD'S APPROVAL");
-                }
-                else if (User.IsInRole("GFMS.Admin Approver"))
-                {
-                    query = query.Where(x => x.Status == "FOR ADMIN APPROVER'S APPROVAL");
-                }
-                else if (User.IsInRole("GFMS.Admin Manager"))
-                {
-                    query = query.Where(x => x.Status == "FOR ADMIN MANAGER'S APPROVAL");
-                }
+                query = query.ForAssignedApprovalRoles(
+                    assignedRoles,
+                    employee,
+                    _context.Employees.AsNoTracking(),
+                    requestorEmail);
+            }
+            else
+            {
+                query = query.Where(_ => false);
             }
 
             var reservationHeaders = query.ToList();
@@ -461,21 +576,36 @@ namespace PropertyManagementSystem.Controllers
             return Json(result);
         }
 
-        public ActionResult getGHApprovals([DataSourceRequest] DataSourceRequest request, int reservationId)
+        private static int? NormalizeReservationYear(int? year)
         {
-            Task<Gen_Employee> employeeTask = _roleService.GetUserName(User);
-            var employee = employeeTask.Result;
+            if (year == 0) return null;
+            return year is >= 2000 && year <= 9999 ? year : DateTime.Today.Year;
+        }
+
+        public async Task<ActionResult> getGHApprovals([DataSourceRequest] DataSourceRequest request, int reservationId)
+        {
+            var requestedHeader = _context.ReservationHeaders
+                .FirstOrDefault(x => x.ReservationId == reservationId && x.ReservationType == "GH");
+            if (requestedHeader == null) return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, requestedHeader, ReservationOperation.Read);
+            if (!access.Succeeded) return Forbid();
+
+            var activeRole = await _roleService.GetActiveRoleAsync(User);
 
             var query = _context.ReservationHeaders.AsQueryable()
                 .Where(x => x.ReservationType == "GH");
 
-            if (User.IsInRole("GFMS.Admin Approver"))
+            if (activeRole == ReservationRoles.AdminApprover)
             {
                 query = query.Where(x => x.Status == "FOR ADMIN APPROVER'S APPROVAL" || x.Status == "RESERVED");
             }
-            else if (User.IsInRole("GFMS.Admin Manager"))
+            else if (activeRole == ReservationRoles.AdminManager)
             {
                 query = query.Where(x => x.Status == "FOR ADMIN MANAGER'S APPROVAL");
+            }
+            else if (activeRole != ReservationRoles.SystemAdmin)
+            {
+                return Forbid();
             }
 
             // You can now use the reservationId parameter directly to filter
@@ -502,9 +632,9 @@ namespace PropertyManagementSystem.Controllers
                     Relationship = detail.Relationship,
                     StartDate = detail.StartDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "",
                     EndDate = detail.EndDate ?? DateTime.MinValue,
-                    FacilityId = detail.FacilityId,
+                    FacilityId = detail.FacilityId ?? 0,
                     FacilityName = facility != null ? facility.FacilityName : "Not assigned",
-                    RoomId = detail.RoomId,
+                    RoomId = detail.RoomId ?? 0,
                     RoomName = room != null ? room.RoomName : "Not assigned"
                 };
 
@@ -531,38 +661,76 @@ namespace PropertyManagementSystem.Controllers
 
         /*Update*/
         [HttpPost]
-        public ActionResult UpdateFacility([DataSourceRequest] DataSourceRequest request, ReservationViewModel model)
+        public async Task<IActionResult> UpdateFacility([DataSourceRequest] DataSourceRequest request, ReservationViewModel model)
         {
             if (model != null && ModelState.IsValid)
             {
                 var reservationDetail = _context.ReservationDetails.FirstOrDefault(r => r.ReservationDetailId == model.ReservationDetailId);
                 if (reservationDetail != null)
                 {
+                    var header = _context.ReservationHeaders.FirstOrDefault(h =>
+                        h.ReservationId == reservationDetail.ReservationId && h.ReservationType == "GH");
+                    if (header == null) return NotFound();
+                    var authorization = await _authorization.AuthorizeAsync(
+                        User, header, ReservationOperation.Assign);
+                    var denied = AuthorizationFailure(authorization);
+                    if (denied != null) return denied;
+                    var facilityValidation = await _assignments.ValidateFacilityAsync(
+                        model.FacilityId, "GH");
+                    var facilityFailure = CommitFailure(facilityValidation);
+                    if (facilityFailure != null) return facilityFailure;
                     reservationDetail.FacilityId = model.FacilityId;
                     _context.SaveChanges();
+                    await _audit.AddAsync(header, User, "ASSIGN", header.Status, header.Status,
+                        $"ReservationDetailId={reservationDetail.ReservationDetailId}");
                 }
+                else return NotFound();
             }
             return Json(new[] { model }.ToDataSourceResult(request, ModelState));
         }
 
         [HttpPost]
-        public IActionResult UpdateReservationDetails(int ReservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime startDate, DateTime endDate, string purpose)
+        public async Task<IActionResult> UpdateReservationDetails(int ReservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime startDate, DateTime endDate, string purpose)
         {
 
-            if (startDate < new DateTime(1753, 1, 1) || startDate > new DateTime(9999, 12, 31) ||
-                endDate < new DateTime(1753, 1, 1) || endDate > new DateTime(9999, 12, 31))
+            var header = _context.ReservationHeaders
+                .FirstOrDefault(h => h.ReservationId == ReservationId && h.ReservationType == "GH");
+            if (header == null) return NotFound();
+            var authorization = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Edit);
+            var denied = AuthorizationFailure(authorization);
+            if (denied != null) return denied;
+            var previousStatus = header.Status;
+            var isResubmission = previousStatus == ReservationStatuses.ForRescheduling;
+            var guid = header.GUID;
+            purpose = purpose?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(purpose) || purpose.Length > 50)
             {
-                throw new ArgumentOutOfRangeException("The dates are out of the valid range for SQL Server datetime.");
+                TempData["AlertMessage"] = "Enter a valid reservation purpose.";
+                TempData["AlertSubMessage"] = "Purpose is required and must not exceed 50 characters.";
+                TempData["AlertType"] = "warning";
+                return RedirectToAction("ViewReservationDetails", new { id = guid });
             }
-            var guid = _context.ReservationHeaders.Where(rh => rh.ReservationId == ReservationId).Select(rh => rh.GUID).FirstOrDefault();
 
-            if (endDate < startDate)
+            if (!IsValidSqlSchedule(startDate, endDate))
             {
-                TempData["AlertMessage"] = "End date cannot be earlier than the start date.";
-                TempData["AlertSubMessage"] = "Please select a valid end date.";
-                TempData["AlertType"] = "Warning";
+                return GuestScheduleValidationFailure(
+                    guid,
+                    "Select valid arrival and departure dates.");
+            }
 
+            if (endDate <= startDate)
+            {
+                return GuestScheduleValidationFailure(
+                    guid,
+                    "Departure date and time must be later than arrival date and time.");
+            }
 
+            if (isResubmission && startDate <= DateTime.Now)
+            {
+                TempData["AlertMessage"] = "Choose a future reservation schedule.";
+                TempData["AlertSubMessage"] = "The revised start date and time must be later than the current time.";
+                TempData["AlertType"] = "warning";
                 return RedirectToAction("ViewReservationDetails", new { id = guid });
             }
 
@@ -570,6 +738,39 @@ namespace PropertyManagementSystem.Controllers
             var existingReservationDetails = _context.ReservationDetails
                 .Where(rd => rd.ReservationId == ReservationId)
                 .ToList();
+
+            if (_guests == null || _company == null || _relationship == null ||
+                _guests.Count == 0 || _guests.Count != _company.Count ||
+                _guests.Count != _relationship.Count)
+            {
+                return GuestCompanyValidationFailure(
+                    guid,
+                    "Complete the guest name, company, and relationship fields for every guest.");
+            }
+
+            var normalizedCompanies = await NormalizeGuestCompaniesAsync(
+                _company,
+                existingReservationDetails.Select(detail => detail.Company));
+            if (normalizedCompanies == null)
+            {
+                return GuestCompanyValidationFailure(
+                    guid,
+                    "Select a company from the list or choose N/A for every guest.");
+            }
+
+            if (!isResubmission && existingReservationDetails.Any(d => d.RoomId.HasValue || d.FacilityId.HasValue))
+            {
+                var rescheduled = await _assignments.RescheduleAsync(
+                    ReservationId,
+                    "GH",
+                    header.Status!,
+                    header.RowVersion.ToArray(),
+                    startDate,
+                    endDate);
+                var rescheduleFailure = CommitFailure(rescheduled);
+                if (rescheduleFailure != null) return rescheduleFailure;
+                header = rescheduled.Reservation!;
+            }
 
             for (int i = 0; i < existingReservationDetails.Count; i++)
             {
@@ -582,11 +783,16 @@ namespace PropertyManagementSystem.Controllers
                 if (index != -1)
                 {
                     existingDetail.GuestName = _guests[index];
-                    existingDetail.Company = _company[index];
+                    existingDetail.Company = normalizedCompanies[index];
                     existingDetail.Relationship = _relationship[index];
                     existingDetail.StartDate = startDate;
                     existingDetail.EndDate = endDate;
                     existingDetail.Purpose = purpose;
+                    if (isResubmission)
+                    {
+                        existingDetail.FacilityId = null;
+                        existingDetail.RoomId = null;
+                    }
 
 
                     _context.ReservationDetails.Update(existingDetail);
@@ -607,7 +813,7 @@ namespace PropertyManagementSystem.Controllers
                     {
                         ReservationId = ReservationId,
                         GuestName = _guests[i],
-                        Company = _company[i],
+                        Company = normalizedCompanies[i],
                         Relationship = _relationship[i],
                         StartDate = startDate,
                         EndDate = endDate,
@@ -620,13 +826,50 @@ namespace PropertyManagementSystem.Controllers
             TempData["AlertMessage"] = "Reservation details updated successfully!";
             TempData["AlertSubMessage"] = "Your reservation has been updated";
             TempData["AlertType"] = "success";
+            if (isResubmission)
+            {
+                header.Status = await _authorization.GetSubmissionStatusAsync(header);
+                header.DateSubmitted = _processingPolicy.GetSubmissionTimestamp();
+                header.Remarks = null;
+                header.ApprovedBy = null;
+                TempData["AlertMessage"] = "Reservation resubmitted successfully!";
+                TempData["AlertSubMessage"] = "The revised schedule was returned to the first approval stage.";
+            }
             _context.SaveChanges();
+            if (isResubmission)
+            {
+                await AddSubmissionAuditAsync(
+                    header, previousStatus, "RESCHEDULE_AND_RESUBMIT");
+            }
+            else
+            {
+                await _audit.AddAsync(
+                    header, User, "EDIT", previousStatus, header.Status);
+            }
             return RedirectToAction("ReservationList", "Accommodation");
+        }
+
+        private async Task AddSubmissionAuditAsync(
+            GFMS_ReservationHeader reservation,
+            string? previousStatus,
+            string action)
+        {
+            var bypassed = reservation.Status == ReservationStatuses.AdminApproverApproval &&
+                await _authorization.ShouldBypassDepartmentHeadAsync(reservation);
+            await _audit.AddAsync(
+                reservation,
+                User,
+                bypassed ? $"{action}_DEPARTMENT_HEAD_BYPASSED" : action,
+                previousStatus,
+                reservation.Status,
+                bypassed
+                    ? "Department Head review was not required because the assigned approver also holds the Admin Manager role."
+                    : null);
         }
 
         /*Delete*/
         [HttpPost]
-        public IActionResult DeleteReservationDetail(int reservationId)
+        public async Task<IActionResult> DeleteReservationDetail(int reservationId)
         {
             try
             {
@@ -639,13 +882,17 @@ namespace PropertyManagementSystem.Controllers
                 {
                     return NotFound("Reservation detail not found.");
                 }
+                if (reservationHeader.ReservationType != "GH") return NotFound();
+                var authorization = await _authorization.AuthorizeAsync(
+                    User, reservationHeader, ReservationOperation.Delete);
+                var denied = AuthorizationFailure(authorization);
+                if (denied != null) return denied;
 
-                if (reservationHeader != null)
-                {
-                    reservationHeader.Status = "DELETED";
-                }
-
+                var previousStatus = reservationHeader.Status;
+                reservationHeader.Status = ReservationStatuses.Deleted;
                 _context.SaveChanges();
+                await _audit.AddAsync(
+                    reservationHeader, User, "DELETE", previousStatus, reservationHeader.Status);
 
                 return RedirectToAction("Index", "Accommodation");
             }
@@ -656,89 +903,461 @@ namespace PropertyManagementSystem.Controllers
             }
         }
         [HttpPost]
-        public IActionResult UpdateReservationStatus(int ReservationId, string action, string Remarks, int _facilityId, int _roomId, int ReservationDetailId)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelReservation(
+            int ReservationId,
+            string HeaderRowVersion,
+            string? Remarks)
         {
-            Console.WriteLine("Reservation Id: " + ReservationId);
+            var reservation = await _context.ReservationHeaders.FirstOrDefaultAsync(header =>
+                header.ReservationId == ReservationId && header.ReservationType == "GH");
+            if (reservation == null) return NotFound();
 
-            var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
-            var empName = _context.Employees.FirstOrDefault(e => e.UserId == User.FindFirstValue(ClaimTypes.NameIdentifier));
-
-            if (reservation == null || empName == null)
+            var authorization = await _authorization.AuthorizeAsync(
+                User, reservation, ReservationOperation.Cancel);
+            if (!authorization.Succeeded)
             {
-                return BadRequest("Invalid reservation or employee.");
+                return authorization.Failure == ReservationAuthorizationFailure.Forbidden
+                    ? Forbid()
+                    : RedirectCancellationFailure(
+                        reservation.GUID,
+                        "This reservation can no longer be cancelled in its current state.");
             }
 
-            if (action == "Approve")
+            if (reservation.Status == ReservationStatuses.Cancelled)
             {
-                if (reservation.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
-                {
-                    reservation.Status = "FOR ADMIN APPROVER'S APPROVAL";
-                }
-                else if (reservation.Status == "FOR ADMIN APPROVER'S APPROVAL")
-                {
-                    
-
-                    reservation.Status = "FOR ADMIN MANAGER'S APPROVAL";
-                    reservation.ApprovedBy = empName.Fullname;
-
-                    TempData["AlertMessage"] = "Room details assigned successfully!";
-                    TempData["AlertSubMessage"] = "Rooms are assigned to reservation";
-                    TempData["AlertType"] = "success";
-                }
-                else if (reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                {
-
-                    TempData["AlertMessage"] = "Approved!";
-                    TempData["AlertSubMessage"] = "Reservation has been approved";
-                    TempData["AlertType"] = "success";
-                    reservation.Status = "APPROVED";
-                    reservation.ApprovedBy = empName.Fullname;
-                }
-            }
-            else if (action == "Reject")
-            {
-                reservation.Status = "DISAPPROVED";
-                reservation.Remarks = Remarks;
-                reservation.ApprovedBy = empName.Fullname;
-            }
-            else if(action == "Assign")
-            {
-                var reDetails = _context.ReservationDetails.Where(detail => detail.ReservationDetailId == ReservationDetailId);
-                reDetails.FirstOrDefault().FacilityId = _facilityId;
-                reDetails.FirstOrDefault().RoomId = _roomId;
-
-                _context.SaveChanges();
+                TempData["AlertMessage"] = "Reservation already cancelled";
+                TempData["AlertSubMessage"] = "No additional changes were made.";
+                TempData["AlertType"] = "warning";
                 return RedirectToAction("ViewReservationDetails", new { id = reservation.GUID });
             }
-            else if (action == "Revert")
+
+            var firstStart = await _context.ReservationDetails
+                .Where(detail => detail.ReservationId == ReservationId && detail.StartDate.HasValue)
+                .MinAsync(detail => detail.StartDate);
+            if (firstStart.HasValue && firstStart.Value < DateTime.Now.AddHours(1))
             {
-                if (reservation.Status == "FOR ADMIN MANAGER'S APPROVAL")
+                return RedirectCancellationFailure(
+                    reservation.GUID,
+                    "Online cancellation closes one hour before arrival. Contact the property administrator for assistance.");
+            }
+
+            try
+            {
+                _context.Entry(reservation).Property(item => item.RowVersion).OriginalValue =
+                    Convert.FromBase64String(HeaderRowVersion);
+                var previousStatus = reservation.Status;
+                reservation.Status = ReservationStatuses.Cancelled;
+                reservation.Remarks = string.IsNullOrWhiteSpace(Remarks)
+                    ? "Cancelled by requestor."
+                    : Remarks.Trim()[..Math.Min(Remarks.Trim().Length, 50)];
+                reservation.ApprovedBy = null;
+                await _equipmentAllocations.ReleaseReservationAsync(reservation.ReservationId);
+                await _context.SaveChangesAsync();
+                await _audit.AddAsync(
+                    reservation,
+                    User,
+                    "CANCEL",
+                    previousStatus,
+                    reservation.Status,
+                    reservation.Remarks);
+            }
+            catch (FormatException)
+            {
+                return RedirectCancellationFailure(
+                    reservation.GUID,
+                    "The reservation changed. Refresh the page and try again.");
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return RedirectCancellationFailure(
+                    reservation.GUID,
+                    "The reservation changed while cancellation was being processed. Refresh and try again.");
+            }
+
+            TempData["AlertMessage"] = "Reservation cancelled";
+            TempData["AlertSubMessage"] = "The assigned guesthouse rooms have been released.";
+            TempData["AlertType"] = "success";
+            return RedirectToAction("ReservationList", "Accommodation");
+        }
+
+        private IActionResult RedirectCancellationFailure(string? guid, string message)
+        {
+            TempData["AlertMessage"] = "Unable to cancel reservation";
+            TempData["AlertSubMessage"] = message;
+            TempData["AlertType"] = "warning";
+            return RedirectToAction("ViewReservationDetails", new { id = guid });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReassignGuestRoom(
+            int ReservationId,
+            int ReservationDetailId,
+            int RoomId,
+            int? ConflictingReservationDetailId,
+            string HeaderRowVersion,
+            string DetailRowVersion,
+            string? ConflictingDetailRowVersion)
+        {
+            var reservation = await _context.ReservationHeaders.FirstOrDefaultAsync(header =>
+                header.ReservationId == ReservationId && header.ReservationType == "GH");
+            var detail = await _context.ReservationDetails.FirstOrDefaultAsync(item =>
+                item.ReservationDetailId == ReservationDetailId && item.ReservationId == ReservationId);
+            var room = await _context.Rooms.AsNoTracking().FirstOrDefaultAsync(item => item.RoomId == RoomId);
+            if (reservation == null || detail == null || room == null) return NotFound();
+
+            var actor = await _authorization.GetActorAsync(User);
+            if (actor.ActiveRole != ReservationRoles.AdminManager) return Forbid();
+            if (reservation.Status != ReservationStatuses.AdminManagerApproval)
+                return RedirectRoomAssignmentFailure(reservation.GUID,
+                    "This reservation is no longer awaiting Admin Manager review.");
+            if (!detail.StartDate.HasValue || !detail.EndDate.HasValue)
+                return RedirectRoomAssignmentFailure(reservation.GUID,
+                    "The reservation schedule is incomplete.");
+
+            byte[] expectedHeaderVersion;
+            byte[] expectedDetailVersion;
+            try
+            {
+                expectedHeaderVersion = Convert.FromBase64String(HeaderRowVersion);
+                expectedDetailVersion = Convert.FromBase64String(DetailRowVersion);
+            }
+            catch (FormatException)
+            {
+                return RedirectRoomAssignmentFailure(reservation.GUID,
+                    "The reservation changed. Refresh and try again.");
+            }
+
+            var command = new ReservationAssignmentCommand(
+                new ReservationSlotRequest(
+                    reservation.ReservationId,
+                    detail.ReservationDetailId,
+                    room.FacilityId,
+                    room.RoomId,
+                    "GH",
+                    detail.StartDate.Value,
+                    detail.EndDate.Value,
+                    Math.Max(detail.NumberOfGuest, 1),
+                    ReservationRoomTypes.Guesthouse),
+                reservation.Status,
+                expectedHeaderVersion,
+                expectedDetailVersion);
+
+            ReservationCommitResult committed;
+            GuestRoomSwapResult? swap = null;
+            if (ConflictingReservationDetailId.HasValue)
+            {
+                byte[] expectedConflictVersion;
+                try
                 {
-                    return RedirectToAction("ReservationList", "Accommodation");
+                    expectedConflictVersion = Convert.FromBase64String(ConflictingDetailRowVersion ?? string.Empty);
                 }
-                    var reDetails = _context.ReservationDetails
-                                        .Where(detail => detail.ReservationId == ReservationId)
-                                        .ToList(); 
-
-                foreach (var detail in reDetails)
+                catch (FormatException)
                 {
-                    detail.FacilityId = 0;
-                    detail.RoomId = 0;
+                    return RedirectRoomAssignmentFailure(reservation.GUID,
+                        "The occupied-room information changed. Refresh and try again.");
                 }
 
-                _context.SaveChanges(); // Save changes after modifying records
+                swap = await _assignments.SwapGuestRoomAsync(new GuestRoomSwapCommand(
+                    command,
+                    ConflictingReservationDetailId.Value,
+                    expectedConflictVersion));
+                committed = swap.Commit;
+            }
+            else
+            {
+                committed = await _assignments.AssignAsync(command);
+            }
 
+            if (!committed.Succeeded)
+                return RedirectRoomAssignmentFailure(reservation.GUID, committed.Message);
+
+            if (swap?.ConflictingReservation != null && swap.ConflictingDetail != null)
+            {
+                await _audit.AddAsync(reservation, User, "SWAP_ASSIGNMENT", reservation.Status, reservation.Status,
+                    $"Guest detail {detail.ReservationDetailId} swapped with " +
+                    $"{swap.ConflictingReservation.ReservationCode ?? swap.ConflictingReservation.ReservationId.ToString()}." );
+                await _audit.AddAsync(swap.ConflictingReservation, User, "SWAP_ASSIGNMENT",
+                    swap.ConflictingReservation.Status, swap.ConflictingReservation.Status,
+                    $"Guest detail {swap.ConflictingDetail.ReservationDetailId} swapped with " +
+                    $"{reservation.ReservationCode ?? reservation.ReservationId.ToString()}." );
+                TempData["AlertMessage"] = "Rooms swapped successfully";
+                TempData["AlertSubMessage"] = "Both guest assignments were updated together. Review the assignments before final approval.";
+            }
+            else
+            {
+                await _audit.AddAsync(reservation, User, "REASSIGN", reservation.Status, reservation.Status,
+                    $"Guest detail {detail.ReservationDetailId} moved to room {room.RoomId}.");
+                TempData["AlertMessage"] = "Room reassigned successfully";
+                TempData["AlertSubMessage"] = "The new room is conflict-free. Review the assignment before final approval.";
+            }
+            TempData["AlertType"] = "success";
+            return RedirectToAction("ViewReservationDetails", new { id = reservation.GUID });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReturnGuesthouseForRescheduling(
+            int ReservationId,
+            string HeaderRowVersion)
+        {
+            var reservation = await _context.ReservationHeaders.FirstOrDefaultAsync(header =>
+                header.ReservationId == ReservationId && header.ReservationType == "GH");
+            if (reservation == null) return NotFound();
+
+            var actor = await _authorization.GetActorAsync(User);
+            if (actor.ActiveRole != ReservationRoles.AdminManager) return Forbid();
+            if (reservation.Status != ReservationStatuses.AdminManagerApproval)
+                return RedirectRoomAssignmentFailure(reservation.GUID,
+                    "This reservation is no longer awaiting Admin Manager review.");
+
+            try
+            {
+                _context.Entry(reservation).Property(item => item.RowVersion).OriginalValue =
+                    Convert.FromBase64String(HeaderRowVersion);
+                var previousStatus = reservation.Status;
+                reservation.Status = ReservationStatuses.ForRescheduling;
+                reservation.Remarks = "Room unavailable; please reschedule.";
+                reservation.ApprovedBy = actor.EmployeeName;
+                var details = await _context.ReservationDetails
+                    .Where(detail => detail.ReservationId == ReservationId)
+                    .ToListAsync();
+                foreach (var item in details)
+                {
+                    item.RoomId = null;
+                    item.FacilityId = null;
+                }
+                await _context.SaveChangesAsync();
+                await _audit.AddAsync(reservation, User, "RETURN_FOR_RESCHEDULING",
+                    previousStatus, reservation.Status, reservation.Remarks);
+            }
+            catch (FormatException)
+            {
+                return RedirectRoomAssignmentFailure(reservation.GUID,
+                    "The reservation changed. Refresh and try again.");
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return RedirectRoomAssignmentFailure(reservation.GUID,
+                    "The reservation changed while it was being processed. Refresh and try again.");
+            }
+
+            TempData["AlertMessage"] = "Returned for rescheduling";
+            TempData["AlertSubMessage"] = "The requestor can now select a new schedule and resubmit the request.";
+            TempData["AlertType"] = "warning";
+            return RedirectToAction("ReservationList", "Accommodation");
+        }
+
+        private IActionResult RedirectRoomAssignmentFailure(string? guid, string? message)
+        {
+            TempData["AlertMessage"] = "Room reassignment could not be completed";
+            TempData["AlertSubMessage"] = message ?? "Review the room assignments and try again.";
+            TempData["AlertType"] = "warning";
+            return RedirectToAction("ViewReservationDetails", new { id = guid });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateReservationStatus(
+            int ReservationId,
+            string action,
+            string Remarks,
+            int _facilityId,
+            int _roomId,
+            int ReservationDetailId,
+            List<GuestRoomAssignmentInput>? Assignments)
+        {
+            var reservation = _context.ReservationHeaders
+                .FirstOrDefault(r => r.ReservationId == ReservationId && r.ReservationType == "GH");
+            if (reservation == null) return NotFound();
+
+            var actor = await _authorization.GetActorAsync(User);
+            var previousStatus = reservation.Status;
+
+            var operation = action switch
+            {
+                "Approve" => ReservationOperation.Approve,
+                "Reject" => ReservationOperation.Reject,
+                _ => (ReservationOperation?)null
+            };
+            if (!operation.HasValue) return BadRequest("Invalid action.");
+
+            var overdueTransition = await _scheduleStatus.RefreshAsync(reservation, DateTime.Now);
+            if (overdueTransition != null)
+            {
+                TempData["AlertMessage"] = "This request is no longer eligible for approval.";
+                TempData["AlertSubMessage"] = overdueTransition.Message;
+                TempData["AlertType"] = "warning";
                 return RedirectToAction("ReservationList", "Accommodation");
             }
 
-            else
+            var authorization = await _authorization.AuthorizeAsync(User, reservation, operation.Value);
+            var failure = AuthorizationFailure(authorization);
+            if (failure != null) return failure;
+
+            if (action == "Reject" && string.IsNullOrWhiteSpace(Remarks))
             {
-                return BadRequest("Invalid action.");
+                return BadRequest("Remarks are required when rejecting a reservation.");
             }
 
-            _context.SaveChanges();
+            if (!await _processingPolicy.IsEligibleAsync(reservation, DateTime.Now))
+            {
+                return Conflict("Requests submitted after 4:00 PM can be processed on the next day.");
+            }
 
+            if (action == "Approve" &&
+                previousStatus is ReservationStatuses.AdminApproverApproval or ReservationStatuses.AdminManagerApproval)
+            {
+                IReadOnlyCollection<ReservationRoomAssignmentSelection>? softAssignments = null;
+                if (previousStatus is ReservationStatuses.AdminApproverApproval or ReservationStatuses.AdminManagerApproval)
+                {
+                    softAssignments = (Assignments ?? new List<GuestRoomAssignmentInput>())
+                        .Select(item => new ReservationRoomAssignmentSelection(
+                            item.ReservationDetailId,
+                            item.RoomId))
+                        .ToList();
+                }
+
+                var committed = await _assignments.ApproveAssignedReservationAsync(
+                    ReservationId,
+                    "GH",
+                    previousStatus,
+                    reservation.RowVersion.ToArray(),
+                    authorization.NextStatus!,
+                    actor.EmployeeName,
+                    softAssignments);
+                if (!committed.Succeeded)
+                {
+                    TempData["AlertMessage"] = "Room assignment unavailable";
+                    TempData["AlertSubMessage"] = committed.Failure == ReservationCommitFailure.Conflict
+                        ? $"{committed.Message} Select another available room, then try approving again."
+                        : committed.Message;
+                    TempData["AlertType"] = "warning";
+                    return RedirectToAction("ViewReservationDetails", new { id = reservation.GUID });
+                }
+                reservation = committed.Reservation!;
+
+                if (softAssignments != null)
+                {
+                    await _audit.AddAsync(
+                        reservation,
+                        User,
+                        "ASSIGN",
+                        previousStatus,
+                        reservation.Status,
+                        $"Assignments={string.Join(",", softAssignments.Select(item => $"{item.ReservationDetailId}:{item.RoomId}"))}");
+                }
+            }
+            else
+            {
+                reservation.Status = authorization.NextStatus;
+                reservation.ApprovedBy = actor.EmployeeName;
+                if (action == "Reject") reservation.Remarks = Remarks.Trim();
+
+                try
+                {
+                    _context.SaveChanges();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return Conflict("The reservation state changed. Refresh and try again.");
+                }
+            }
+            await _audit.AddAsync(
+                reservation,
+                User,
+                action == "Approve" ? "APPROVE" : "REJECT",
+                previousStatus,
+                reservation.Status);
+
+            TempData["AlertMessage"] = action == "Approve" ? "Approved!" : "Rejected";
+            TempData["AlertSubMessage"] = "Reservation status has been updated";
+            TempData["AlertType"] = action == "Approve" ? "success" : "warning";
             return RedirectToAction("ReservationList", "Accommodation");
+        }
+
+        private IActionResult? AuthorizationFailure(ReservationAuthorizationResult authorization)
+        {
+            if (authorization.Succeeded) return null;
+            return authorization.Failure == ReservationAuthorizationFailure.Forbidden
+                ? Forbid()
+                : Conflict("The reservation state changed. Refresh and try again.");
+        }
+
+        private IActionResult? CommitFailure(ReservationCommitResult result)
+        {
+            if (result.Succeeded) return null;
+            return result.Failure switch
+            {
+                ReservationCommitFailure.NotFound => NotFound(result.Message),
+                ReservationCommitFailure.Conflict => Conflict(result.Message),
+                _ => BadRequest(result.Message)
+            };
+        }
+
+        private async Task<List<string>?> NormalizeGuestCompaniesAsync(
+            IReadOnlyCollection<string> submittedCompanies,
+            IEnumerable<string?>? legacyCompanies = null)
+        {
+            var canonicalCompanies = await _context.Companies
+                .AsNoTracking()
+                .Where(company => company.Company != null && company.Company != "")
+                .Select(company => company.Company.Trim())
+                .ToListAsync();
+            var allowed = canonicalCompanies
+                .GroupBy(company => company, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+            allowed["N/A"] = "N/A";
+
+            var legacy = (legacyCompanies ?? Enumerable.Empty<string?>())
+                .Where(company => !string.IsNullOrWhiteSpace(company))
+                .Select(company => company!.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var normalized = new List<string>(submittedCompanies.Count);
+            foreach (var submitted in submittedCompanies)
+            {
+                var value = submitted?.Trim();
+                if (string.IsNullOrWhiteSpace(value)) return null;
+                if (allowed.TryGetValue(value, out var canonical))
+                {
+                    normalized.Add(canonical);
+                }
+                else if (legacy.Contains(value))
+                {
+                    normalized.Add(value);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return normalized;
+        }
+
+        private IActionResult GuestCompanyValidationFailure(string? guid, string message)
+        {
+            TempData["AlertMessage"] = "Review the guest company selections.";
+            TempData["AlertSubMessage"] = message;
+            TempData["AlertType"] = "warning";
+            return RedirectToAction("ViewReservationDetails", new { id = guid });
+        }
+
+        private static bool IsValidSqlSchedule(DateTime arrival, DateTime departure)
+        {
+            var minimum = new DateTime(1753, 1, 1);
+            var maximum = new DateTime(9999, 12, 31);
+            return arrival >= minimum && arrival <= maximum &&
+                departure >= minimum && departure <= maximum;
+        }
+
+        private IActionResult GuestScheduleValidationFailure(string? guid, string message)
+        {
+            TempData["AlertMessage"] = "Review the reservation schedule.";
+            TempData["AlertSubMessage"] = message;
+            TempData["AlertType"] = "warning";
+            return RedirectToAction("ViewReservationDetails", new { id = guid });
         }
     }
 }

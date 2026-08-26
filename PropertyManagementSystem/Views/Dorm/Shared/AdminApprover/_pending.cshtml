@@ -1,5 +1,6 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
-<div class="card-body">
+<partial name="~/Views/Dorm/Shared/_reservationDetails.cshtml" model="Model" />
+<div class="card-body legacy-module-summary" hidden>
     <div class="row align-items-start">
         <div class="col-2">
             <img src="@Url.Content("~/img/dorm-room.jpg")" alt="Accommodation" class="rounded img-fluid">
@@ -111,92 +112,11 @@
         </div>
     </div>
 </div>
-<div class="accordion" id="accordion-example">
-    <div class="accordion-item">
-        <h2 class="accordion-header" id="heading-1">
-            <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true">
-                DEPARTMENT HEAD REMARKS
-            </button>
-        </h2>
-        <div id="collapse-1" class="accordion-collapse collapse show" data-bs-parent="#accordion-example">
-            <div class="accordion-body pt-0">
-                <div class="card-body">
-                    <div class="row align-items-start">
-                        <div class="col-2">
-                        </div>
-                        <div class="col-9">
-                            <div class="row mt-3">
-                                <!-- Rest of the content remains the same -->
-                                <div class="col-lg-3 col-md-6 mb-4">
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title text-primary">Current Position</div>
-                                        <div class="datagrid-content">@Model.Position.PositionName</div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-md-6 mb-4">
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title text-primary">Employment Level</div>
-                                        <div class="datagrid-content">@Model.EmploymentLevel.Name</div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-md-6 mb-4">
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title text-primary">Is Critical on Operations?</div>
-                                        @if (Model.ReservationDetails.FirstOrDefault().isCritical == true)
-                                        {
-                                            <div class="datagrid-content">
-                                                <span class="status status-green">
-                                                    Yes
-                                                </span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <span class="status status-red">
-                                                No
-                                            </span>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-md-6 mb-4">
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title text-primary">Is On Call?</div>
-                                        @if (Model.ReservationDetails.FirstOrDefault().isOnCall == true)
-                                        {
-                                            <div class="datagrid-content">
-                                                <span class="status status-green">
-                                                    Yes
-                                                </span>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <span class="status status-red">
-                                                No
-                                            </span>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="col-lg-3 col-md-6 mb-4">
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title text-primary">Department Head Remarks</div>
-                                        <div class="datagrid-content">@Model.ReservationDetails.FirstOrDefault().DeptHeadRemarks</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</div>
 <form asp-action="UpdateReservationStatus" method="post">
     <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId">
     <input type="hidden" class="form-control" name="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" asp-for="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
     <div class="card-footer d-flex justify-content-between align-items-center">
-        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-link link-secondary">
+        <a href="@Url.Action("ReservationList", "Dorm")" class="btn btn-link link-secondary">
             Go Back
         </a>
         <div>

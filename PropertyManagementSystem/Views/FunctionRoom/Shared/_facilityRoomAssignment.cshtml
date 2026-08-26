@@ -1,0 +1,446 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@{
+    var detail = Model.ReservationDetails?.FirstOrDefault();
+    var isManagerReassignment = Model.ReservationHeader?.Status == "FOR ADMIN MANAGER'S APPROVAL";
+    var hasSavedAssignment = detail?.FacilityId.HasValue == true && detail.RoomId.HasValue;
+}
+
+@if (detail != null)
+{
+    <section class="card mt-3 guest-room-assignment facility-room-assignment"
+             aria-labelledby="facility-room-assignment-heading"
+             data-facility-room-assignment
+             data-reservation-detail-id="@detail.ReservationDetailId"
+             data-attendee-count="@detail.NumberOfGuest"
+             data-initial-facility="@(detail.FacilityId?.ToString() ?? string.Empty)"
+             data-initial-room="@(detail.RoomId?.ToString() ?? string.Empty)"
+             data-manager-reassignment="@isManagerReassignment.ToString().ToLowerInvariant()">
+        <div class="guest-room-assignment-header">
+            <div class="guest-room-assignment-title">
+                <span class="guest-room-assignment-icon" aria-hidden="true">
+                    <i class="ti ti-building-community"></i>
+                </span>
+                <div>
+                    <h3 id="facility-room-assignment-heading">@(isManagerReassignment ? "Review facility and room assignment" : "Plan facility and room assignment")</h3>
+                    <p>
+                        @(isManagerReassignment
+                            ? "The original assignment remains saved until final approval."
+                            : "Choose the facility and room that will be saved with approval.")
+                    </p>
+                </div>
+            </div>
+            <div class="guest-room-assignment-progress" aria-label="Assignment progress">
+                <div class="guest-room-assignment-progress-label">
+                    <span>Assignment progress</span>
+                    <strong data-function-progress-count>@(hasSavedAssignment ? "1 of 1" : "0 of 1")</strong>
+                </div>
+                <div class="progress progress-sm" role="progressbar" aria-valuenow="@(hasSavedAssignment ? 100 : 0)" aria-valuemin="0" aria-valuemax="100" data-function-progress>
+                    <div class="progress-bar bg-primary" style="width: @(hasSavedAssignment ? 100 : 0)%" data-function-progress-bar></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="guest-room-capacity-note">
+            <i class="ti ti-info-circle" aria-hidden="true"></i>
+            <div>
+                @if (isManagerReassignment)
+                {
+                    <strong>Original assignment remains protected.</strong>
+                    <span>Going back discards only your draft changes. Final approval saves any replacement.</span>
+                }
+                else
+                {
+                    <strong>This is a temporary selection.</strong>
+                    <span>The room and approval are validated and saved together. Going back does not reserve the room.</span>
+                }
+            </div>
+        </div>
+
+        <div class="guest-room-assignment-list">
+            <div class="guest-room-assignment-row @(hasSavedAssignment ? "is-assigned" : string.Empty)" data-function-assignment-row>
+                <div class="guest-room-person">
+                    <span class="guest-room-person-number" aria-hidden="true">1</span>
+                    <div class="guest-room-person-copy">
+                        <span class="guest-room-person-label">Reservation slot</span>
+                        <strong>@detail.NumberOfGuest attendee@(detail.NumberOfGuest == 1 ? string.Empty : "s")</strong>
+                    </div>
+                    <span class="guest-room-status @(hasSavedAssignment ? "is-complete" : "is-pending")" data-function-assignment-status>
+                        <i class="ti @(hasSavedAssignment ? "ti-circle-check" : "ti-clock")" aria-hidden="true"></i>
+                        <span>@(hasSavedAssignment ? "Selected" : "Waiting")</span>
+                    </span>
+                </div>
+
+                <div class="facility-room-choice-grid">
+                    <div class="guest-room-choice">
+                        <label class="form-label required" for="facilityAssignmentSelection">Facility</label>
+                        @(
+                            Html.Kendo().DropDownList()
+                                .Name("facilityAssignmentSelection")
+                                .DataTextField("FacilityName")
+                                .DataValueField("FacilityId")
+                                .Value(detail.FacilityId?.ToString())
+                                .DataSource(source => source.Read(read =>
+                                    read.Action("GetAvailableFacilities", "FunctionRoom", new { reservationDetailId = detail.ReservationDetailId })))
+                                .OptionLabel("Select a facility")
+                                .Events(events => events.Change("onFunctionFacilityChanged"))
+                                .HtmlAttributes(new { style = "width: 100%" })
+                        )
+                    </div>
+                    <div class="guest-room-choice">
+                        <label class="form-label required" for="roomAssignmentSelection">Function room</label>
+                        @(
+                            Html.Kendo().DropDownList()
+                                .Name("roomAssignmentSelection")
+                                .DataTextField("DisplayName")
+                                .DataValueField("RoomId")
+                                .Value(detail.RoomId?.ToString())
+                                .CascadeFrom("facilityAssignmentSelection")
+                                .DataSource(source => source.Read(read =>
+                                    read.Action("GetAvailableRooms", "FunctionRoom", new { reservationDetailId = detail.ReservationDetailId })
+                                        .Data("filterFunctionAssignmentRooms"))
+                                    .ServerFiltering(true))
+                                .OptionLabel("Select a room")
+                                .Events(events => events.Change("onFunctionAssignmentChanged").DataBound("onFunctionAssignmentChanged"))
+                                .HtmlAttributes(new { style = "width: 100%" })
+                        )
+                    </div>
+                    <div class="guest-room-field-message facility-room-assignment-message">
+                        Available rooms are listed first. Admin Managers may select an occupied room when a safe two-room swap is possible.
+                    </div>
+                    <div class="alert alert-info mt-2 mb-0 d-none"
+                         role="status"
+                         aria-live="polite"
+                         data-function-swap-warning></div>
+                    <div class="alert alert-warning mt-2 mb-0 d-none"
+                         role="alert"
+                         aria-live="polite"
+                         data-function-capacity-warning></div>
+                    <div class="reservation-included-equipment mt-2 d-none"
+                         data-included-equipment-preview
+                         aria-live="polite">
+                        <div class="reservation-included-equipment-title">
+                            <i class="ti ti-package" aria-hidden="true"></i>
+                            Included equipment
+                        </div>
+                        <div class="reservation-equipment-chips" data-included-equipment-items></div>
+                    </div>
+                </div>
+
+                <div class="guest-room-soft-state">
+                    <span><i class="ti ti-pencil" aria-hidden="true"></i>Draft selection</span>
+                    <small>@(isManagerReassignment ? "Original remains saved" : "Saved on approval")</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="card mt-1">
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("ReservationList", "FunctionRoom")"
+               class="btn btn-link link-secondary"
+               data-function-assignment-back>
+                Go Back
+            </a>
+            <div class="ms-auto">
+                <span class="text-warning me-3 @(hasSavedAssignment ? "d-none" : string.Empty)" data-function-assignment-warning>
+                    <i class="ti ti-alert-triangle me-1"></i>Select both a facility and room before approval.
+                </span>
+                <button type="button" class="btn btn-red" data-bs-toggle="modal" data-bs-target="#modal-function-reject-@detail.ReservationDetailId">
+                    <i class="ti ti-ban m-1"></i>Disapprove
+                </button>
+                <button type="button"
+                        class="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modal-function-approve-@detail.ReservationDetailId"
+                        data-function-approval-trigger
+                        disabled="@(!hasSavedAssignment)">
+                    <i class="ti ti-check m-1"></i>Approve
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="modal-function-approve-@detail.ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-info"></div>
+                <div class="modal-body text-center py-4">
+                    <i class="ti ti-building-check text-info function-assignment-modal-icon" aria-hidden="true"></i>
+                    <h3>Save assignment and approve?</h3>
+                    <div class="text-secondary">The selected facility and room will be checked again and saved with this approval.</div>
+                    <div class="alert alert-warning mt-3 mb-0 text-start d-none"
+                         role="alert"
+                         data-function-capacity-modal-warning></div>
+                    <div class="alert alert-info mt-3 mb-0 text-start d-none"
+                         role="alert"
+                         data-function-swap-modal-warning></div>
+                    <label class="form-check mt-3 text-start d-none" data-function-swap-confirm-wrap>
+                        <input class="form-check-input" type="checkbox" data-function-swap-confirm />
+                        <span class="form-check-label">I understand that approving will exchange the room assignments of both reservations.</span>
+                    </label>
+                </div>
+                <form asp-action="UpdateReservationStatus" method="post" data-function-approval-form>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="action" value="Approve" />
+                    <input type="hidden" name="ReservationId" value="@detail.ReservationId" />
+                    <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId" />
+                    <input type="hidden" name="EquipmentNeeded" value="@detail.EquipmentNeeded" />
+                    <input type="hidden" name="_facilityId" data-function-facility-field />
+                    <input type="hidden" name="_roomId" data-function-room-field />
+                    <input type="hidden" name="_swapWithReservationDetailId" data-function-swap-field />
+                    <div class="modal-footer">
+                        <div class="row w-100 g-2">
+                            <div class="col">
+                                <button type="button" class="btn w-100" data-bs-dismiss="modal">Go Back</button>
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="ti ti-check me-1"></i>Save and approve
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-blur fade" id="modal-function-reject-@detail.ReservationDetailId" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-status bg-danger"></div>
+                <div class="modal-body text-center py-4">
+                    <i class="ti ti-alert-triangle text-danger function-assignment-modal-icon" aria-hidden="true"></i>
+                    <h3>Disapprove reservation?</h3>
+                    <div class="text-secondary">Provide a reason for the requestor.</div>
+                </div>
+                <form asp-action="UpdateReservationStatus" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="action" value="Reject" />
+                    <input type="hidden" name="ReservationId" value="@detail.ReservationId" />
+                    <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId" />
+                    <div class="modal-body pt-0">
+                        <label class="form-label required" for="function-reject-remarks-@detail.ReservationDetailId">Remarks</label>
+                        <textarea class="form-control" id="function-reject-remarks-@detail.ReservationDetailId" rows="3" name="Remarks" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="row w-100 g-2">
+                            <div class="col">
+                                <button type="button" class="btn w-100" data-bs-dismiss="modal">Go Back</button>
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-danger w-100">Disapprove</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    function filterFunctionAssignmentRooms() {
+        var facility = $('#facilityAssignmentSelection').data('kendoDropDownList');
+        var root = document.querySelector('[data-facility-room-assignment]');
+        return {
+            facilityId: facility ? facility.value() : null,
+            reservationDetailId: root ? root.dataset.reservationDetailId : null
+        };
+    }
+
+    function onFunctionFacilityChanged() {
+        window.updateFunctionRoomAssignmentState?.();
+        window.refreshIncludedEquipmentPreview?.('facilityAssignmentSelection', 'roomAssignmentSelection');
+    }
+
+    function onFunctionAssignmentChanged() {
+        window.updateFunctionRoomAssignmentState?.();
+        window.refreshIncludedEquipmentPreview?.('facilityAssignmentSelection', 'roomAssignmentSelection');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var root = document.querySelector('[data-facility-room-assignment]');
+        if (!root) return;
+
+        var approveTrigger = document.querySelector('[data-function-approval-trigger]');
+        var warning = document.querySelector('[data-function-assignment-warning]');
+        var capacityWarning = root.querySelector('[data-function-capacity-warning]');
+        var capacityModalWarning = document.querySelector('[data-function-capacity-modal-warning]');
+        var swapWarning = root.querySelector('[data-function-swap-warning]');
+        var swapModalWarning = document.querySelector('[data-function-swap-modal-warning]');
+        var swapConfirmWrap = document.querySelector('[data-function-swap-confirm-wrap]');
+        var swapConfirm = document.querySelector('[data-function-swap-confirm]');
+        var progress = root.querySelector('[data-function-progress]');
+        var progressBar = root.querySelector('[data-function-progress-bar]');
+        var progressCount = root.querySelector('[data-function-progress-count]');
+        var row = root.querySelector('[data-function-assignment-row]');
+        var status = root.querySelector('[data-function-assignment-status]');
+        var approvalForm = document.querySelector('[data-function-approval-form]');
+        var facilityField = approvalForm?.querySelector('[data-function-facility-field]');
+        var roomField = approvalForm?.querySelector('[data-function-room-field]');
+        var swapField = approvalForm?.querySelector('[data-function-swap-field]');
+        var backLink = document.querySelector('[data-function-assignment-back]');
+        var initialFacility = root.dataset.initialFacility || '';
+        var initialRoom = root.dataset.initialRoom || '';
+        var isManagerReassignment = root.dataset.managerReassignment === 'true';
+        var isSubmitting = false;
+        var allowNavigation = false;
+
+        function widgets() {
+            return {
+                facility: $('#facilityAssignmentSelection').data('kendoDropDownList'),
+                room: $('#roomAssignmentSelection').data('kendoDropDownList')
+            };
+        }
+
+        function values() {
+            var current = widgets();
+            return {
+                facility: current.facility ? current.facility.value() : '',
+                room: current.room ? current.room.value() : ''
+            };
+        }
+
+        function isDirty() {
+            var current = values();
+            return current.facility !== initialFacility || current.room !== initialRoom;
+        }
+
+        function copyFields() {
+            var current = values();
+            var selectedRoom = widgets().room?.dataItem();
+            var isOccupied = Boolean(selectedRoom?.IsOccupied ?? selectedRoom?.isOccupied);
+            var canSwap = Boolean(selectedRoom?.CanSwap ?? selectedRoom?.canSwap);
+            var conflictDetailId = selectedRoom?.ConflictingReservationDetailId ??
+                selectedRoom?.conflictingReservationDetailId ?? '';
+            if (facilityField) facilityField.value = current.facility;
+            if (roomField) roomField.value = current.room;
+            if (swapField) swapField.value = isOccupied && canSwap ? conflictDetailId : '';
+        }
+
+        function selectedRoomState() {
+            var selectedRoom = widgets().room?.dataItem();
+            return {
+                selectedRoom: selectedRoom,
+                occupied: Boolean(selectedRoom?.IsOccupied ?? selectedRoom?.isOccupied),
+                canSwap: Boolean(selectedRoom?.CanSwap ?? selectedRoom?.canSwap),
+                description: selectedRoom?.ConflictDescription ?? selectedRoom?.conflictDescription ?? ''
+            };
+        }
+
+        function updateSwapWarning() {
+            var state = selectedRoomState();
+            var showSwap = state.occupied && state.canSwap;
+            var message = showSwap
+                ? state.description + '. Approval will move that reservation into this request\'s currently assigned room.'
+                : state.occupied
+                    ? (state.description || 'This occupied room cannot be swapped safely. Choose another room.')
+                    : '';
+            [swapWarning, swapModalWarning].forEach(function (element) {
+                if (!element) return;
+                element.textContent = message;
+                element.classList.toggle('d-none', !state.occupied);
+                element.classList.toggle('alert-info', showSwap);
+                element.classList.toggle('alert-danger', state.occupied && !state.canSwap);
+            });
+            swapConfirmWrap?.classList.toggle('d-none', !showSwap);
+            if (swapConfirm && !showSwap) swapConfirm.checked = false;
+            return !state.occupied || state.canSwap;
+        }
+
+        function updateCapacityWarning() {
+            var current = widgets();
+            var selectedRoom = current.room ? current.room.dataItem() : null;
+            var attendeeCount = Number(root.dataset.attendeeCount || 0);
+            var roomCapacity = Number(selectedRoom?.Capacity ?? selectedRoom?.capacity ?? 0);
+            var roomName = selectedRoom?.RoomName ?? selectedRoom?.roomName ?? 'the selected room';
+            var exceedsCapacity = Boolean(
+                selectedRoom && roomCapacity > 0 && attendeeCount > roomCapacity);
+            var message = exceedsCapacity
+                ? 'Capacity warning: This request has ' + attendeeCount +
+                  ' attendees, exceeding ' + roomName +
+                  '\'s capacity of ' + roomCapacity +
+                  '. You may still approve and assign this room.'
+                : '';
+
+            [capacityWarning, capacityModalWarning].forEach(function (element) {
+                if (!element) return;
+                element.textContent = message;
+                element.classList.toggle('d-none', !exceedsCapacity);
+            });
+        }
+
+        window.updateFunctionRoomAssignmentState = function () {
+            var current = values();
+            var complete = Boolean(current.facility && current.room) && updateSwapWarning();
+            if (approveTrigger) approveTrigger.disabled = !complete;
+            if (warning) warning.classList.toggle('d-none', complete);
+            if (progress) progress.setAttribute('aria-valuenow', complete ? '100' : '0');
+            if (progressBar) progressBar.style.width = complete ? '100%' : '0%';
+            if (progressCount) progressCount.textContent = complete ? '1 of 1' : '0 of 1';
+            if (row) row.classList.toggle('is-assigned', complete);
+            if (status) {
+                status.classList.toggle('is-complete', complete);
+                status.classList.toggle('is-pending', !complete);
+                status.innerHTML = complete
+                    ? '<i class="ti ti-circle-check" aria-hidden="true"></i><span>Selected</span>'
+                    : '<i class="ti ti-clock" aria-hidden="true"></i><span>Waiting</span>';
+            }
+            copyFields();
+            updateCapacityWarning();
+        };
+
+        approveTrigger?.addEventListener('click', copyFields);
+        approvalForm?.addEventListener('submit', function (event) {
+            var current = values();
+            if (!current.facility || !current.room) {
+                event.preventDefault();
+                window.updateFunctionRoomAssignmentState();
+                return;
+            }
+
+            var roomState = selectedRoomState();
+            if (roomState.occupied && (!roomState.canSwap || !swapConfirm?.checked)) {
+                event.preventDefault();
+                updateSwapWarning();
+                if (roomState.canSwap) swapConfirm?.focus();
+                return;
+            }
+
+            copyFields();
+            isSubmitting = true;
+            var button = approvalForm.querySelector('button[type="submit"]');
+            if (button) {
+                button.disabled = true;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Saving & approving...</span>';
+            }
+        });
+
+        backLink?.addEventListener('click', function (event) {
+            if (!isDirty()) return;
+            var message = isManagerReassignment
+                ? 'Discard your facility and room changes and keep the original saved assignment?'
+                : 'Your facility and room selection has not been saved. Leave and discard it?';
+            if (!window.confirm(message)) {
+                event.preventDefault();
+                return;
+            }
+            allowNavigation = true;
+        });
+
+        window.addEventListener('beforeunload', function (event) {
+            if (!isSubmitting && !allowNavigation && isDirty()) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+
+        window.setTimeout(function () {
+            window.updateFunctionRoomAssignmentState?.();
+            window.refreshIncludedEquipmentPreview?.('facilityAssignmentSelection', 'roomAssignmentSelection');
+        }, 0);
+    });
+</script>

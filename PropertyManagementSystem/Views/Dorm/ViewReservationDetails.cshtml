@@ -10,97 +10,119 @@
 @{
     var employee = await RoleService.GetUserName(User);
     var gfmsRoles = await RoleService.GetRolesAsync(User);
-    var activeRole = await RoleService.GetActiveRoleAsync(User);
+    var employeeName = employee?.Fullname ?? string.Empty;
+    var identityEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value
+        ?? User.FindFirst("email")?.Value
+        ?? User.Identity?.Name;
+    var isOwner = PropertyManagementSystem.Services.ReservationOwnership.IsOwner(
+        Model.ReservationHeader,
+        identityEmail,
+        employee?.Email);
 }
-<div class="page-wrapper">
+<div class="page-wrapper reservation-page reservation-detail-page unified-detail-view requestor-detail-view dorm-detail-view">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
                     <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        View Application
-                    </div>
+                    <div class="page-pretitle">View Application</div>
                     <h2 class="page-title">
                         Dorm and Housing
                     </h2>
+                    <div class="text-secondary mt-1">Review application details, approval status, and available actions.</div>
 
                 </div>
                 <!-- Page title actions -->
             </div>
         </div>
     </div>
+    <div class="container-xl">
+        <div class="reservation-detail-hero">
+            <div class="reservation-detail-hero-copy">
+                <span class="reservation-eyebrow">Application overview</span>
+                <h3>@Model.ReservationHeader.ReservationCode</h3>
+                <p>Dorm and housing application details, applicant profile, room assignment, and approval status.</p>
+            </div>
+            <div class="reservation-detail-hero-meta">
+                <div>
+                    <span>Date Filed</span>
+                    <strong>@(Model.ReservationHeader.DateFiled?.ToString("MMM d, yyyy h:mm tt") ?? "Not available")</strong>
+                </div>
+                <div>
+                    <span>Requestor</span>
+                    <strong>@Model.ReservationHeader.Requestor</strong>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
-            <div class="row row-cards">
+            <div class="reservation-detail-workspace @(isOwner && Model.ReservationHeader.Status != "DRAFT" ? "has-status-sidebar" : string.Empty)">
+                @if (isOwner && Model.ReservationHeader.Status != "DRAFT")
+                {
+                    <aside class="request-status-sidebar" aria-label="Request approval status">
+                        <partial name="~/Views/Shared/_RequestStatus.cshtml" model="Model" />
+                    </aside>
+                }
+                <main class="reservation-detail-main">
+                <div class="row row-cards">
                
                 <div class="col-lg-12">
-                    <div class="card">
+                    <div class="card reservation-form-card">
                         
-                        @if (User.IsInRole("GFMS.Requestor"))
+                        @if (isOwner)
                         {
                             @if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
                             {
                                 <partial name="Shared/_update" />
                             }
-                            else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "APPROVED")
+                            else if (Model.ReservationHeader.Status == "DRAFT" && !DormHousingApplicationFeature.IsEnabled)
                             {
-                                <partial name="Shared/_view" />
+                                <div class="card-body py-5 text-center">
+                                    <span class="avatar avatar-lg bg-blue-lt text-blue mb-3">
+                                        <i class="ti ti-clock" aria-hidden="true"></i>
+                                    </span>
+                                    <h3>Dorm and Housing applications are coming soon</h3>
+                                    <p class="text-secondary mb-4">This draft cannot be completed yet. Application filing will be enabled in a future release.</p>
+                                    <a href="@Url.Action("Index", "Home")" class="btn btn-primary">
+                                        Back to Home
+                                    </a>
+                                </div>
                             }
-                            else
+                            else if (Model.ReservationHeader.Status == "DRAFT")
                             {
                                 <partial name="Shared/_draft" />
                             }
-                        }
-                        else if (User.IsInRole("GFMS.Department Head"))
-                        {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL")
-                            {
-                                <partial name="Shared/DepartmentHead/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Approver == employee.Fullname)
+                            else
                             {
                                 <partial name="Shared/_view" />
                             }
                         }
-                        else if (User.IsInRole("GFMS.Admin Manager"))
+                        else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" &&
+                                 gfmsRoles.Contains("GFMS.Department Head"))
                         {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminManager/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
+                            <partial name="Shared/DepartmentHead/_pending" />
                         }
-                        else if (User.IsInRole("GFMS.Admin Approver"))
+                        else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" &&
+                                 gfmsRoles.Contains("GFMS.Admin Manager"))
                         {
-                            @if (Model.ReservationHeader.Requestor == employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL")
-                            {
-                                <partial name="Shared/AdminApprover/_pending" />
-                            }
-                            else if (Model.ReservationHeader.Requestor != employee.Fullname)
-                            {
-                                <partial name="Shared/_view" />
-                            }
+                            <partial name="Shared/AdminManager/_pending" />
+                        }
+                        else if (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" &&
+                                 gfmsRoles.Contains("GFMS.Admin Approver"))
+                        {
+                            <partial name="Shared/AdminApprover/_pending" />
+                        }
+                        else
+                        {
+                            <partial name="Shared/_view" />
                         }
                     </div>
                 </div>
+            </div>
+                </main>
             </div>
         </div>
     </div>

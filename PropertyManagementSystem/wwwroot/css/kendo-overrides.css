@@ -1,0 +1,65 @@
+/* Loaded after the Kendo theme so application grid styling remains consistent. */
+.k-grid {
+    --kendo-color-border: #e3e9f0;
+    --kendo-color-border-alt: #edf1f5;
+}
+
+.k-grid,
+.k-grid .k-grid-header,
+.k-grid .k-grid-header-wrap,
+.k-grid .k-grid-content,
+.k-grid .k-grid-content-locked,
+.k-grid .k-grid-header-locked,
+.k-grid .k-grid-toolbar,
+.k-grid .k-toolbar,
+.k-grid .k-grid-pager,
+.k-grid .k-pager {
+    border-color: #e3e9f0 !important;
+    box-shadow: none !important;
+}
+
+.k-grid .k-grid-header th,
+.k-grid .k-grid-header .k-header,
+.k-grid .k-table-th,
+.k-grid .k-grid-content td,
+.k-grid .k-table-td {
+    border-color: #e3e9f0 !important;
+    border-left: 1px solid #edf1f5 !important;
+    border-right: 0 !important;
+    border-inline-start: 1px solid #edf1f5 !important;
+    border-inline-end: 0 !important;
+    box-shadow: none !important;
+}
+
+.k-grid .k-grid-header th:first-child,
+.k-grid .k-grid-header .k-header:first-child,
+.k-grid .k-table-th:first-child,
+.k-grid .k-grid-content td:first-child,
+.k-grid .k-table-td:first-child {
+    border-left: 0 !important;
+    border-inline-start: 0 !important;
+}
+
+.k-grid .k-grid-header th,
+.k-grid .k-grid-header .k-header,
+.k-grid .k-table-th {
+    border-top-color: transparent !important;
+    border-bottom-color: #dce4ec !important;
+}
+
+.k-grid .k-grid-content tr,
+.k-grid .k-grid-content .k-table-row {
+    border-color: #e3e9f0 !important;
+    box-shadow: none !important;
+}
+
+.k-grid .k-grid-content tr > td,
+.k-grid .k-grid-content tr > .k-table-td {
+    border-top-color: transparent !important;
+    border-bottom-color: #edf1f5 !important;
+}
+
+.k-grid .k-grid-content tr:last-child > td,
+.k-grid .k-grid-content tr:last-child > .k-table-td {
+    border-bottom-color: transparent !important;
+}

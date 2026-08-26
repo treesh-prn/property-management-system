@@ -5,13 +5,22 @@
 }
 <div class="modal modal-blur fade" id="modal-newReservatoion" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
+        <div class="modal-content reservation-modal">
             <div class="modal-header">
-                <h5 class="modal-title">New Reservation</h5>
+                <div>
+                    <h5 class="modal-title">New Application</h5>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="fcFRM1" asp-controller="Dorm" asp-action="CreateReservation" method="post">
                 <div class="modal-body">
+                    <div class="reservation-modal-intro">
+                        <i class="ti ti-home-check"></i>
+                        <div>
+                            <strong>Start with applicant details</strong>
+                            <span>Confirm the employee profile and department before completing the housing application.</span>
+                        </div>
+                    </div>
                     <div class="row mb-3">
                         <div class="col-lg-6">
                             <label class="form-label required">Requestor Name</label>
@@ -23,7 +32,7 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label required">Company:</label>
+                        <label class="form-label required">Company</label>
                         @(Html.Kendo().DropDownList()
                             .Name("_company")
                             .DataTextField("Company")
@@ -60,7 +69,10 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="svbtn15" type="submit" class="btn btn btn-success ms-auto">Create</button>
+                    <button id="svbtn15" type="submit" class="btn btn-primary ms-auto">
+                        <i class="ti ti-arrow-right" aria-hidden="true"></i>
+                        Continue
+                    </button>
                 </div>
             </form>
         </div>

@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Security.Claims;
 using PropertyManagementSystem.Models;
 using Microsoft.AspNetCore.Identity;
+using PropertyManagementSystem.Services;
 namespace PropertyManagementSystem.Controllers
 {
     public class TokenController : Controller
@@ -14,14 +15,16 @@ namespace PropertyManagementSystem.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly IRoleService _roleService;
 
 
-        public TokenController(IHttpClientFactory httpClientFactory, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public TokenController(IHttpClientFactory httpClientFactory, SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, IConfiguration configuration, IRoleService roleService)
         {
             _httpClientFactory = httpClientFactory;
             _signInManager = signInManager;
             _userManager = userManager;
             _configuration = configuration;
+            _roleService = roleService;
         }
         public IActionResult Index()
         {
@@ -46,7 +49,13 @@ namespace PropertyManagementSystem.Controllers
 
                 var user = await _userManager.FindByEmailAsync(subject);
 
+                if (user == null)
+                {
+                    return Unauthorized();
+                }
+
                 // Sign in the user locally
+                await _roleService.SetDefaultActiveRoleAsync(user);
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
                 return RedirectToAction("Index", "Home");

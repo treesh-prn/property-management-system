@@ -1,6 +1,7 @@
 ﻿using MailKit.Net.Smtp;
 using MimeKit;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using PropertyManagementSystem.Models;
 
@@ -9,30 +10,42 @@ namespace PropertyManagementSystem.Services
     public class EmailService
     {
         private readonly IConfiguration _config;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration config)
+        public EmailService(IConfiguration config, ILogger<EmailService> logger)
         {
             _config = config;
+            _logger = logger;
         }
 
         string emailAdd = "trisha_paran@tecoindustrialpark.com";
 
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
+            var recipientEmail = _config["SmtpSettings:RecipientEmail"] ?? toEmail;
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(new MailboxAddress(_config["SmtpSettings:SenderName"], _config["SmtpSettings:SenderEmail"]));
-            emailMessage.To.Add(new MailboxAddress(toEmail, toEmail));
+            emailMessage.To.Add(new MailboxAddress(recipientEmail, recipientEmail));
             emailMessage.Subject = subject;
 
             var bodyBuilder = new BodyBuilder { HtmlBody = body };
             emailMessage.Body = bodyBuilder.ToMessageBody();
 
-            using (var client = new SmtpClient())
+            try
             {
+                using var client = new SmtpClient();
                 await client.ConnectAsync(_config["SmtpSettings:Server"], int.Parse(_config["SmtpSettings:Port"]), false);
                 await client.AuthenticateAsync(_config["SmtpSettings:Username"], _config["SmtpSettings:Password"]);
                 await client.SendAsync(emailMessage);
                 await client.DisconnectAsync(true);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Email delivery failed for subject {Subject} to {Recipient}. The originating operation will continue.",
+                    subject,
+                    recipientEmail);
             }
         }
 
@@ -139,6 +152,34 @@ namespace PropertyManagementSystem.Services
                 <p>Thank you,</p>
                 <p>Property Management System</p>";
             await SendEmailAsync(emailAdd, $"Reservation {reservationHeader.ReservationCode} has been disapproved", emailBody);
+        }
+
+        public async Task SendScheduleStatusNotification(
+            GFMS_ReservationHeader reservationHeader,
+            string statusMessage)
+        {
+            if (string.IsNullOrWhiteSpace(reservationHeader.RequestorEmail)) return;
+
+            var requestor = System.Net.WebUtility.HtmlEncode(
+                reservationHeader.Requestor ?? "Requestor");
+            var reservationCode = System.Net.WebUtility.HtmlEncode(
+                reservationHeader.ReservationCode ?? "Reservation request");
+            var message = System.Net.WebUtility.HtmlEncode(statusMessage);
+            var emailBody = $@"
+                <p>Hello <b>{requestor}</b>,</p>
+                <p>The status of <b>{reservationCode}</b> was updated automatically.</p>
+                <p>{message}</p>
+                <p>Please sign in to the Property Management System to review the request.</p>
+                <p>Thank you,<br/>Property Management System</p>";
+
+            var subject = reservationHeader.Status == ReservationStatuses.Expired
+                ? $"Reservation {reservationHeader.ReservationCode} has expired"
+                : $"Reservation {reservationHeader.ReservationCode} requires rescheduling";
+
+            await SendEmailAsync(
+                reservationHeader.RequestorEmail,
+                subject,
+                emailBody);
         }
     }
 }

@@ -12,6 +12,7 @@ namespace PropertyManagementSystem.Models
         public Gen_Position? Position { get; set; }
         public List<string> Equipments { get; set; }
         public HRIS_EmploymentLevel? EmploymentLevel { get; set; }
+        public string? ApplicantCivilStatus { get; set; }
         public List<GFMS_ReservationDetails>? ReservationDetails { get; set; }
         
 
@@ -57,6 +58,8 @@ namespace PropertyManagementSystem.Models
         public string? Purpose { get; set; }
         public string? EquipmentNeeded {  get; set; }
         public List<string>? EquipmentNames {  get; set; }
+        public List<ReservationEquipmentViewModel> IncludedEquipments { get; set; } = new();
+        public List<ReservationEquipmentViewModel> AdditionalEquipments { get; set; } = new();
 
         public int? ScheduleType {  get; set; }
 
@@ -71,7 +74,14 @@ namespace PropertyManagementSystem.Models
         public int ActiveGuestCount { get; set; }
         public int OccupiedRoomsCount { get; set; }
         public int AvailableRoomsCount { get; set; }
+        public int RoomCount { get; set; }
+        public int TotalCapacity { get; set; }
+        public int OccupiedCount { get; set; }
+        public bool isActive { get; set; }
         public IEnumerable<ReservationViewModel>? Reservations { get; set; }
+        public List<RoomAssignmentOption> AvailableRoomAssignments { get; set; } = new();
+        public Dictionary<int, List<RoomAssignmentOption>> AvailableRoomAssignmentsByDetail { get; set; } = new();
+        public Dictionary<int, List<OccupiedRoomAssignmentOption>> OccupiedRoomAssignmentsByDetail { get; set; } = new();
 
         //hours spent
         public double? HourSpent { get; set; }
@@ -82,5 +92,33 @@ namespace PropertyManagementSystem.Models
 
         //total booking for today
         public IEnumerable<dynamic> TodaysBookings { get; set; }
+    }
+
+    public sealed class RoomAssignmentOption
+    {
+        public int RoomId { get; set; }
+        public int FacilityId { get; set; }
+        public string FacilityName { get; set; } = string.Empty;
+        public string RoomName { get; set; } = string.Empty;
+        public int Capacity { get; set; }
+        public int RemainingCapacity { get; set; }
+    }
+
+    public sealed class GuestRoomAssignmentInput
+    {
+        public int ReservationDetailId { get; set; }
+        public int RoomId { get; set; }
+    }
+
+    public sealed class OccupiedRoomAssignmentOption
+    {
+        public int RoomId { get; set; }
+        public int FacilityId { get; set; }
+        public string FacilityName { get; set; } = string.Empty;
+        public string RoomName { get; set; } = string.Empty;
+        public int ConflictingReservationDetailId { get; set; }
+        public string ConflictingReservationCode { get; set; } = string.Empty;
+        public string ConflictingGuestName { get; set; } = string.Empty;
+        public string ConflictingDetailRowVersion { get; set; } = string.Empty;
     }
 }

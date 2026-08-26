@@ -2,13 +2,21 @@
 @inject PropertyManagementSystem.Services.IRoleService RoleService
 @{
     var employee = await RoleService.GetUserName(User);
+    var firstDetail = Model.ReservationDetails?.FirstOrDefault();
+    var applicantCivilStatus = DormHousingEligibilityPolicy.NormalizeCivilStatus(employee?.MaritalStatus);
+    var applicantCivilStatusLabel = DormHousingEligibilityPolicy.GetCivilStatusLabel(applicantCivilStatus);
+    var canApplyForHousing = DormHousingEligibilityPolicy.CanApplyForUnit(
+        applicantCivilStatus,
+        DormHousingEligibilityPolicy.HousingUnit);
 }
-<div class="card-header">
+<div class="card-header reservation-update-trigger-bar">
     <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-update">
-        Update Application
+        <i class="ti ti-pencil" aria-hidden="true"></i>
+        Edit Application
     </button>
 </div>
-<div class="card-body">
+<partial name="~/Views/Dorm/Shared/_reservationDetails.cshtml" model="Model" />
+<div class="card-body legacy-module-summary" hidden>
     <div class="row align-items-start">
         <div class="col-2">
             <img src="@Url.Content("~/img/dorm-room.jpg")" alt="Accommodation" class="rounded img-fluid">
@@ -68,7 +76,7 @@
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Contact Number</div>
-                        <div class="datagrid-content">+63 @Model.ReservationDetails.FirstOrDefault().ContactNumber</div>
+                        <div class="datagrid-content">@(string.IsNullOrWhiteSpace(firstDetail?.ContactNumber) ? "Not provided" : $"+63 {firstDetail.ContactNumber}")</div>
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-6 mb-4">
@@ -80,7 +88,7 @@
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Schedule Type</div>
-                        @if (Model.ReservationDetails.FirstOrDefault().ScheduleType == 0)
+                        @if (firstDetail?.ScheduleType == 0)
                         {
                             <div class="datagrid-content">Regular</div>
                         }
@@ -93,7 +101,7 @@
                 <div class="col-lg-3 col-md-6 mb-4">
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Applied Unit</div>
-                        @if (Model.ReservationDetails.FirstOrDefault().AppliedUnit == 0)
+                        @if (firstDetail?.AppliedUnit == 0)
                         {
                             <div class="datagrid-content">Dorm</div>
                         }
@@ -113,8 +121,8 @@
                     <div class="datagrid-item">
                         <div class="datagrid-title text-primary">Letter of Intent</div>
                         <div class="datagrid-content">
-                            <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
-                                @Model.ReservationDetails.FirstOrDefault().FileAttachment
+                            <a href="@firstDetail?.FileAttachment" target="_blank">
+                                @firstDetail?.FileAttachment
                             </a>
                         </div>
                     </div>
@@ -123,9 +131,9 @@
         </div>
     </div>
 </div>
-@if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
+@if (firstDetail?.FacilityId is int facilityId && facilityId != 0)
 {
-    <div class="accordion" id="accordion-example">
+    <div class="accordion legacy-module-details" id="accordion-example" hidden>
         <div class="accordion-item">
             <h2 class="accordion-header" id="heading-1">
                 <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true">
@@ -165,10 +173,10 @@
 
 <form asp-action="UpdateReservationStatus" method="post">
     @Html.AntiForgeryToken()
-    <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-    <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId">
+    <input type="hidden" name="ReservationDetailId" value="@firstDetail?.ReservationDetailId">
+    <input type="hidden" name="ReservationId" value="@firstDetail?.ReservationId">
     <div class="card-footer d-flex justify-content-between align-items-center">
-        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-link link-secondary">
+        <a href="@Url.Action("ReservationList", "Dorm")" class="btn btn-link link-secondary">
             Go Back
         </a>
         <div class="ms-auto">
@@ -189,16 +197,23 @@
 @foreach (var detail in Model.ReservationDetails)
 {
     <div class="modal modal-blur fade" id="modal-update" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-            <div class="modal-content">
+        <div class="modal-dialog modal-xl modal-dialog-centered update-workflow-dialog" role="document">
+            <div class="modal-content update-workflow-modal">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Reservation</h5>
+                    <div class="update-workflow-heading">
+                        <span class="update-workflow-icon" aria-hidden="true"><i class="ti ti-home-edit"></i></span>
+                        <div>
+                            <span class="reservation-eyebrow">Dorm and housing</span>
+                            <h5 class="modal-title">Edit Application</h5>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form asp-action="UpdateReservationDetails" asp-controller="Dorm" method="post">
+                <form asp-action="UpdateReservationDetails" asp-controller="Dorm" method="post" class="update-workflow-form">
                     <input type="hidden" name="reservationId" value="@Model.ReservationHeader.ReservationId">
+                    <input type="hidden" name="_civilStat" value="@applicantCivilStatus">
                     <input type="hidden" class="form-control" name="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" asp-for="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId">
-                    <div class="container container-lg mt-3">
+                    <div class="modal-body update-workflow-body">
                         <div id="dynamic-rows">
                             <div class="row">
                                 <div class="col-lg-12">
@@ -207,6 +222,14 @@
                                             <h3 class="card-title">Applicant Details</h3>
                                         </div>
                                         <div class="card-body">
+                                            <div class="alert @(canApplyForHousing ? "alert-success" : "alert-info") mb-3" role="status">
+                                                <strong>Civil status on your employee profile: @applicantCivilStatusLabel</strong>
+                                                <div class="mt-1">
+                                                    @(canApplyForHousing
+                                                        ? "You may apply for either Dorm or Housing."
+                                                        : "You may apply for Dorm. Housing is available only when your profile shows Married.")
+                                                </div>
+                                            </div>
                                             <div class="form-selectgroup-boxes row mb-3">
                                                 <div class="col-lg-6">
                                                     <label class="form-selectgroup-item">
@@ -217,19 +240,23 @@
                                                             </span>
                                                             <span class="form-selectgroup-label-content">
                                                                 <span class="form-selectgroup-title strong mb-1">Dorm</span>
+                                                                <span class="form-selectgroup-description">Available for Single and Married employees</span>
                                                             </span>
                                                         </span>
                                                     </label>
                                                 </div>
                                                 <div class="col-lg-6">
-                                                    <label class="form-selectgroup-item">
-                                                        <input type="radio" name="_unitApplied" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().AppliedUnit">
+                                                    <label class="form-selectgroup-item @(canApplyForHousing ? string.Empty : "opacity-50")">
+                                                        <input type="radio" name="_unitApplied" value="1" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().AppliedUnit" disabled="@(canApplyForHousing ? null : "disabled")">
                                                         <span class="form-selectgroup-label d-flex align-items-center p-3">
                                                             <span class="me-3">
                                                                 <span class="form-selectgroup-check"></span>
                                                             </span>
                                                             <span class="form-selectgroup-label-content">
                                                                 <span class="form-selectgroup-title strong mb-1">Housing</span>
+                                                                <span class="form-selectgroup-description">
+                                                                    @(canApplyForHousing ? "Available based on your Married status" : "Available only when civil status is Married")
+                                                                </span>
                                                             </span>
                                                         </span>
                                                     </label>
@@ -463,47 +490,13 @@
                                         </div>
                                         <div class="card-body">
                                             <label class="form-label">Civil Status</label>
-                                            <div class="form-selectgroup-boxes row mb-3">
-                                                <div class="col-lg-4">
-                                                    <label class="form-selectgroup-item">
-                                                        <input type="radio" name="_civilStat" value="SINGLE" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus">
-                                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                                            <span class="me-3">
-                                                                <span class="form-selectgroup-check"></span>
-                                                            </span>
-                                                            <span class="form-selectgroup-label-content">
-                                                                <span class="form-selectgroup-title strong mb-1">Single</span>
-                                                            </span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <label class="form-selectgroup-item">
-                                                        <input type="radio" name="_civilStat" value="MARRIED" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus">
-                                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                                            <span class="me-3">
-                                                                <span class="form-selectgroup-check"></span>
-                                                            </span>
-                                                            <span class="form-selectgroup-label-content">
-                                                                <span class="form-selectgroup-title strong mb-1">Married</span>
-
-                                                            </span>
-                                                        </span>
-                                                    </label>
-                                                </div>
-                                                <div class="col-lg-4">
-                                                    <label class="form-selectgroup-item">
-                                                        <input type="radio" name="_civilStat" value="WIDOWED" class="form-selectgroup-input" asp-for="@Model.ReservationDetails.FirstOrDefault().CivilStatus">
-                                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                                            <span class="me-3">
-                                                                <span class="form-selectgroup-check"></span>
-                                                            </span>
-                                                            <span class="form-selectgroup-label-content">
-                                                                <span class="form-selectgroup-title strong mb-1">Widowed</span>
-
-                                                            </span>
-                                                        </span>
-                                                    </label>
+                                            <div class="border rounded p-3 mb-3 bg-light">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="ti ti-id-badge-2 text-primary" aria-hidden="true"></i>
+                                                    <div>
+                                                        <strong>@applicantCivilStatusLabel</strong>
+                                                        <div class="text-secondary small">Retrieved from your employee profile and used to determine Housing eligibility.</div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div id="dynamic-rows-dependent-label">
@@ -595,6 +588,7 @@
                                                         )
                                                         .DropZone(".dropZoneElement")
                                                         .Events(e => e
+                                                        .Upload("onUpload")
                                                         .Success("onSuccess")
                                                         .Error("onError")
                                                         )
@@ -609,7 +603,7 @@
                                                     @if (!string.IsNullOrEmpty(Model.ReservationDetails.FirstOrDefault()?.FileAttachment))
                                                     {
                                                         <li>
-                                                            <a href="/uploads/@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank">
+                                                            <a href="@Model.ReservationDetails.FirstOrDefault().FileAttachment" target="_blank" rel="noopener noreferrer">
                                                                 @Model.ReservationDetails.FirstOrDefault().FileAttachment
                                                             </a>
                                                         </li>
@@ -622,16 +616,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer d-flex justify-content-between align-items-center">
-                        <a data-bs-dismiss="modal" class="btn btn-link link-secondary">
-                            Go Back
-                        </a>
+                    <div class="modal-footer update-workflow-footer">
+                        <button type="button" data-bs-dismiss="modal" class="btn btn-outline-secondary">
+                            Cancel
+                        </button>
                         <div class="ms-auto">
                             @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
                             {
                                 <button type="submit" class="btn btn-primary ms-auto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                                    Update
+                                    <i class="ti ti-device-floppy" aria-hidden="true"></i>
+                                    Save Changes
                                 </button>
                             }
                         </div>
@@ -678,7 +672,7 @@
                         </div>
                     </div>
                 </div>
-                <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId" />
+                <input type="hidden" name="ReservationId" value="@firstDetail?.ReservationId" />
             </form>
         </div>
     </div>

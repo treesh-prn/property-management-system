@@ -3,6 +3,7 @@ using System.Text;
 using PropertyManagementSystem.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using PropertyManagementSystem.Services;
 
 namespace PropertyManagementSystem.Middlewares
 {
@@ -27,6 +28,7 @@ namespace PropertyManagementSystem.Middlewares
             var signInManager = context.RequestServices.GetRequiredService<
                 SignInManager<ApplicationUser>
             >();
+            var roleService = context.RequestServices.GetRequiredService<IRoleService>();
 
             if (string.IsNullOrEmpty(token))
             {
@@ -69,6 +71,7 @@ namespace PropertyManagementSystem.Middlewares
                     var user = await userManager.FindByEmailAsync(email);
                     if (user != null)
                     {
+                        await roleService.SetDefaultActiveRoleAsync(user);
                         await signInManager.SignInAsync(user, isPersistent: false);
                     }
                 }

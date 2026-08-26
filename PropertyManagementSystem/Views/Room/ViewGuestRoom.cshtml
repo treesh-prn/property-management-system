@@ -2,8 +2,22 @@
 
 @{
     ViewData["Title"] = "Home Page";
+    var roomListAction = Model.RoomType switch
+    {
+        0 => "GuestRoom",
+        1 => "FunctionRoom",
+        2 => "DormRoom",
+        _ => "Index"
+    };
+    var roomListLabel = Model.RoomType switch
+    {
+        0 => "Guest Rooms",
+        1 => "Function Rooms",
+        2 => "Dorm Rooms",
+        _ => "Rooms"
+    };
 }
-<div class="page-wrapper">
+<div class="page-wrapper management-page management-detail-page">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -31,32 +45,7 @@
                             Dorm Room Details
                         </h2>
                     }
-                </div>
-                <!-- Page title actions -->
-                <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        @if (Model.RoomType.Equals(0))
-                        {
-                            <a href="@Url.Action("GuestRoom", "Room")" class="btn btn-primary bg-green">
-                                <i class="ti ti-arrow-left icon"></i>
-                                Go Back
-                            </a>
-                        }
-                        else if (Model.RoomType.Equals(1))
-                        {
-                            <a href="@Url.Action("FunctionRoom", "Room")" class="btn btn-primary bg-green">
-                                <i class="ti ti-arrow-left icon"></i>
-                                Go Back
-                            </a>
-                        }
-                        else if (Model.RoomType.Equals(2))
-                        {
-                            <a href="@Url.Action("DormRoom", "Room")" class="btn btn-primary bg-green">
-                                <i class="ti ti-arrow-left icon"></i>
-                                Go Back
-                            </a>
-                        }
-                    </div>
+                    <div class="text-secondary mt-1">Review room capacity, facility assignment, availability, and occupants.</div>
                 </div>
             </div>
         </div>
@@ -64,28 +53,28 @@
     <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
-            <div class="row row-cards">
+            <div class="row row-cards management-detail-layout">
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="card management-media-card">
                         <div class="card-header card-header-light">
                             <h3 class="card-title">@Model.FacilityName</h3>
                         </div>
                         @if (Model.RoomType.Equals(0))
                         {
-                            <img class="img-responsive2" src="@Url.Content("~/img/guest-room.jpg")">
+                            <img class="img-responsive2" src="@Url.Content("~/img/guest-room.jpg")" alt="Guest room preview">
                         }
                         else if (Model.RoomType.Equals(1))
                         {
-                            <img class="img-responsive2" src="@Url.Content("~/img/facility-room.jpg")">
+                            <img class="img-responsive2" src="@Url.Content("~/img/facility-room.jpg")" alt="Function room preview">
                         }
                         else if (Model.RoomType.Equals(2))
                         {
-                            <img class="img-responsive2" src="@Url.Content("~/img/dorm-room.jpg")">
+                            <img class="img-responsive2" src="@Url.Content("~/img/dorm-room.jpg")" alt="Dorm room preview">
                         }
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="card">
+                    <div class="card management-detail-card">
                         <div class="card-header">
                             <ul class="nav nav-tabs card-header-tabs">
                                 <li class="nav-item">
@@ -96,10 +85,15 @@
                                 <li class="nav-item">
                                     <a class="nav-link" data-bs-toggle="tab" href="#occupants">
                                         Occupants
+                                        @if (Model.Occupants.Count > 0)
+                                        {
+                                            <span class="badge bg-blue-lt ms-1" data-occupant-tab-count>@Model.Occupants.Count</span>
+                                        }
                                     </a>
                                 </li>
                                 <li class="nav-item ms-auto mb-1">
                                     <a id="editRoomButton" href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
+                                        <i class="ti ti-edit" aria-hidden="true"></i>
                                         Edit Room
                                     </a>
                                 </li>
@@ -107,7 +101,11 @@
                         </div>
                         <div class="card-body tab-content">
                             <div id="details" class="tab-pane fade show active">
-                                <div class="card-title">@Model.RoomName DETAILS</div>
+                                <div class="management-section-heading">
+                                    <span class="reservation-eyebrow">Room record</span>
+                                    <h3>@Model.RoomName</h3>
+                                    <p>@Model.FacilityName facility assignment and operating information.</p>
+                                </div>
                                 <div class="datagrid">
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Room Name</div>
@@ -209,20 +207,127 @@
                                 </div>
                             </div>
                             <div id="occupants" class="tab-pane fade">
-                                <div class="card-title">Content of tab #2</div>
-                                <p class="text-secondary">
-                                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci, alias aliquid distinctio dolorem expedita, fugiat hic magni molestiae molestias odit.
-                                </p>
+                                @if (Model.Occupants.Count == 0)
+                                {
+                                    <div class="management-empty-state">
+                                        <i class="ti ti-users" aria-hidden="true"></i>
+                                        <h3>No occupants to display</h3>
+                                        <p>Approved room assignments will appear here.</p>
+                                    </div>
+                                }
+                                else
+                                {
+                                    var now = DateTime.Now;
+                                    <div class="room-occupants-heading">
+                                        <div>
+                                            <span class="reservation-eyebrow">Approved assignments</span>
+                                            <h3>Occupants and stay schedule</h3>
+                                            <p>Current stays appear first, followed by upcoming and completed stays.</p>
+                                        </div>
+                                        <span class="badge bg-blue-lt" data-occupant-result-count>@Model.Occupants.Count @(Model.Occupants.Count == 1 ? "occupant" : "occupants")</span>
+                                    </div>
+                                    <div class="room-occupants-filter" data-occupant-filter>
+                                        <div class="room-occupants-filter-copy">
+                                            <label class="form-label" for="occupantStayMonth">Month and year</label>
+                                            <span>Show every guest whose stay overlaps the selected month.</span>
+                                        </div>
+                                        <div class="room-occupants-filter-controls">
+                                            <div class="input-icon">
+                                                <span class="input-icon-addon" aria-hidden="true"><i class="ti ti-calendar"></i></span>
+                                                <input id="occupantStayMonth" class="form-control" type="month" data-occupant-month-filter />
+                                            </div>
+                                            <button class="btn btn-outline-secondary" type="button" data-clear-occupant-month disabled>Clear</button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive room-occupants-table-wrap">
+                                        <table class="table table-vcenter room-occupants-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Occupant</th>
+                                                    <th>Arrival</th>
+                                                    <th>Departure</th>
+                                                    <th>Stay status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var occupant in Model.Occupants)
+                                                {
+                                                    var isCurrent = occupant.ArrivalDate <= now && occupant.DepartureDate >= now;
+                                                    var isUpcoming = occupant.ArrivalDate > now;
+                                                    <tr data-occupant-row
+                                                        data-arrival-date="@occupant.ArrivalDate.ToString("yyyy-MM-dd")"
+                                                        data-departure-date="@occupant.DepartureDate.ToString("yyyy-MM-dd")">
+                                                        <td>
+                                                            <div class="room-occupant-identity">
+                                                                <span class="room-occupant-avatar" aria-hidden="true">
+                                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <circle cx="12" cy="8" r="3"></circle>
+                                                                        <path d="M6.5 19v-1.5a5.5 5.5 0 0 1 11 0V19"></path>
+                                                                    </svg>
+                                                                </span>
+                                                                <div>
+                                                                    <strong>@occupant.OccupantName</strong>
+                                                                    <span>@(string.IsNullOrWhiteSpace(occupant.Company) ? "Company not provided" : occupant.Company)</span>
+                                                                    @if (!string.IsNullOrWhiteSpace(occupant.ReservationCode))
+                                                                    {
+                                                                        <small>@occupant.ReservationCode</small>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="room-stay-date">@occupant.ArrivalDate.ToString("MMM d, yyyy")</span>
+                                                            <small>@occupant.ArrivalDate.ToString("h:mm tt")</small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="room-stay-date">@occupant.DepartureDate.ToString("MMM d, yyyy")</span>
+                                                            <small>@occupant.DepartureDate.ToString("h:mm tt")</small>
+                                                        </td>
+                                                        <td>
+                                                            @if (isCurrent)
+                                                            {
+                                                                <span class="status status-green"><span class="status-dot status-dot-animated"></span>Currently staying</span>
+                                                            }
+                                                            else if (isUpcoming)
+                                                            {
+                                                                <span class="status status-blue"><span class="status-dot"></span>Upcoming</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="status status-secondary"><span class="status-dot"></span>Completed</span>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="management-empty-state room-occupants-filter-empty d-none" data-occupant-filter-empty>
+                                        <i class="ti ti-calendar-off" aria-hidden="true"></i>
+                                        <h3>No occupants in this month</h3>
+                                        <p>Choose another month or clear the filter to view all approved assignments.</p>
+                                    </div>
+                                }
                             </div>
+                        </div>
+                        <div class="card-footer d-print-none">
+                            <a href="@Url.Action(roomListAction, "Room")" class="btn btn-link link-secondary px-0">
+                                <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                                <span>Back to @roomListLabel</span>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
             @*<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>*@
             @*off canvas edit form*@
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+            <div class="offcanvas offcanvas-end management-offcanvas" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
                 <div class="offcanvas-header">
-                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
+                    <div>
+                        <span class="reservation-eyebrow">Room setup</span>
+                        <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
+                        <p>Update room assignment, capacity, rates, and status.</p>
+                    </div>
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
@@ -232,3 +337,48 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const monthInput = document.querySelector("[data-occupant-month-filter]");
+            if (!monthInput) return;
+
+            const rows = Array.from(document.querySelectorAll("[data-occupant-row]"));
+            const clearButton = document.querySelector("[data-clear-occupant-month]");
+            const emptyState = document.querySelector("[data-occupant-filter-empty]");
+            const table = document.querySelector(".room-occupants-table-wrap");
+            const resultCount = document.querySelector("[data-occupant-result-count]");
+            const tabCount = document.querySelector("[data-occupant-tab-count]");
+
+            function applyOccupantMonthFilter() {
+                const selectedMonth = monthInput.value;
+                let visibleCount = 0;
+
+                rows.forEach(function (row) {
+                    const arrivalMonth = row.dataset.arrivalDate.substring(0, 7);
+                    const departureMonth = row.dataset.departureDate.substring(0, 7);
+                    const isVisible = !selectedMonth ||
+                        (arrivalMonth <= selectedMonth && departureMonth >= selectedMonth);
+                    row.classList.toggle("d-none", !isVisible);
+                    if (isVisible) visibleCount++;
+                });
+
+                clearButton.disabled = !selectedMonth;
+                table.classList.toggle("d-none", visibleCount === 0);
+                emptyState.classList.toggle("d-none", visibleCount !== 0);
+
+                const label = visibleCount === 1 ? "occupant" : "occupants";
+                resultCount.textContent = visibleCount + " " + label;
+                tabCount.textContent = visibleCount;
+            }
+
+            monthInput.addEventListener("change", applyOccupantMonthFilter);
+            clearButton.addEventListener("click", function () {
+                monthInput.value = "";
+                applyOccupantMonthFilter();
+                monthInput.focus();
+            });
+        });
+    </script>
+}

@@ -7,9 +7,9 @@
 }
 @{
     ViewData["Title"] = "Home Page";
-
+    var hasLocationLinks = Model.LocationLinks.Count > 0;
 }
-<div class="page-wrapper">
+<div class="page-wrapper management-page management-detail-page">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -22,29 +22,7 @@
                     <h2 class="page-title">
                         Equipment Details
                     </h2>
-                </div>
-                <!-- Page title actions -->
-                <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        <a href="@Url.Action("Index", "Equipment")" class="btn btn-primary bg-green">
-                            <i class="ti ti-arrow-left icon"></i>
-                            Go Back
-                        </a>
-                        @*   <span class="d-none d-sm-inline">
-                        <a href="#" class="btn">
-                        New view
-                        </a>
-                        </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        Create new report
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        </a> *@
-                    </div>
+                    <div class="text-secondary mt-1">Review equipment availability, rates, assignment, and operating status.</div>
                 </div>
             </div>
         </div>
@@ -52,32 +30,30 @@
     <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
-            <div class="row row-cards">
+            <div class="row row-cards management-detail-layout">
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="card management-media-card">
                         <div class="card-header card-header-light">
                             <h3 class="card-title">@Model.EquipmentName</h3>
                         </div>
                         @*<div class="img-responsive img-responsive-16x9 card-img-top" style="background-image: url(/img/guest-room.jpg)"></div>*@
-                        <img class="img-responsive2" src="@Url.Content("~/img/equipment.jpg")">
+                        <img class="img-responsive2" src="@Url.Content("~/img/equipment.jpg")" alt="Equipment preview">
                         @*<div class="card-body p-0">
                         Lorem Ipsum Dolor Sit Amet
                         </div>*@
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="card">
-                        <div class="card">
+                    <div class="card management-detail-card">
                             <div class="card-header">
                                 <div>
-                                    <h3 class="card-title">
-                                        @Model.EquipmentName
-                                    </h3>
-                                    <p class="card-subtitle">
-                                    </p>
+                                    <span class="reservation-eyebrow">Equipment record</span>
+                                    <h3 class="card-title">@Model.EquipmentName</h3>
+                                    <p class="card-subtitle">Inventory, pricing, and assignment information.</p>
                                 </div>
                                 <div class="card-actions">
                                     <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
+                                        <i class="ti ti-edit" aria-hidden="true"></i>
                                         Edit Equipment
                                     </a>
                                 </div>
@@ -151,7 +127,7 @@
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Facility Equipment?</div>
                                         <div class="datagrid-content">
-                                            @if (Model.isFacilityEquipment.Equals(false))
+                                            @if (Model.isFacilityEquipment != true && !hasLocationLinks)
                                             {
                                                 <span class="status status-red">
                                                     No
@@ -167,7 +143,11 @@
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Facility</div>
-                                        @if (Model.FacilityId == null)
+                                        @if (hasLocationLinks)
+                                        {
+                                            <div class="datagrid-content">@string.Join(", ", Model.LocationLinks.Select(link => link.FacilityName).Distinct())</div>
+                                        }
+                                        else if (Model.FacilityId == null)
                                         {
                                             <div class="datagrid-content">-</div>
                                         }
@@ -178,7 +158,16 @@
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Room</div>
-                                        @if (Model.RoomId == null)
+                                        @if (hasLocationLinks)
+                                        {
+                                            var linkedRooms = Model.LocationLinks
+                                                .Where(link => !string.IsNullOrWhiteSpace(link.RoomName))
+                                                .Select(link => link.RoomName)
+                                                .Distinct()
+                                                .ToList();
+                                            <div class="datagrid-content">@(linkedRooms.Count == 0 ? "All rooms" : string.Join(", ", linkedRooms))</div>
+                                        }
+                                        else if (Model.RoomId == null)
                                         {
                                             <div class="datagrid-content">-</div>
                                         }
@@ -187,19 +176,49 @@
                                             <div class="datagrid-content">@Model.RoomName</div>
                                         }
                                     </div>
+                                    @if (hasLocationLinks || Model.isFacilityEquipment == true)
+                                    {
+                                        <div class="datagrid-item datagrid-item-wide">
+                                            <div class="datagrid-title">Location Links</div>
+                                            <div class="datagrid-content">
+                                                @if (Model.LocationLinks.Count > 0)
+                                                {
+                                                    <div class="reservation-equipment-chips">
+                                                        @foreach (var link in Model.LocationLinks)
+                                                        {
+                                                            <span class="badge @(link.LinkType == "INCLUDED" ? "bg-blue-lt" : "bg-secondary-lt")">
+                                                                @link.DefaultQuantity× @link.FacilityName@(string.IsNullOrWhiteSpace(link.RoomName) ? "" : $" / {link.RoomName}") · @(link.LinkType == "INCLUDED" ? "Included" : "Add-on")
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span>@Model.FacilityName @(string.IsNullOrWhiteSpace(Model.RoomName) ? "" : $"/ {Model.RoomName}")</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
                             </div>
-                        </div>
-                        <div class="card-body p-0">
-                        </div>
+                            <div class="card-footer d-print-none">
+                                <a href="@Url.Action("Index", "Equipment")" class="btn btn-link link-secondary px-0">
+                                    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                                    <span>Back to Equipment</span>
+                                </a>
+                            </div>
                     </div>
                 </div>
             </div>
             @*<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>*@
             @*off canvas edit form*@
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+            <div class="offcanvas offcanvas-end management-offcanvas" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
                 <div class="offcanvas-header">
-                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
+                    <div>
+                        <span class="reservation-eyebrow">Equipment setup</span>
+                        <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Equipment</h2>
+                        <p>Update inventory, pricing, and assignment information.</p>
+                    </div>
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">

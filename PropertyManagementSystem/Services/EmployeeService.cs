@@ -23,6 +23,23 @@ namespace PropertyManagementSystem.Services
                 return (null, null);
             }
 
+            if (currentUser?.ReportingTo != null)
+            {
+                var reportingManager = await _context.Employees
+                    .Where(employee => employee.GUID == currentUser.ReportingTo.Value)
+                    .Select(employee => new
+                    {
+                        employee.Email,
+                        FullName = employee.Firstname + " " + employee.Lastname
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (reportingManager != null && !string.IsNullOrWhiteSpace(reportingManager.Email))
+                {
+                    return (reportingManager.Email, reportingManager.FullName);
+                }
+            }
+
            var dept = await(from d in _context.Departments
                             where d.Id == departmentId
                             select new

@@ -29,7 +29,7 @@
             m.Field(f => f.FacilityId);
             m.Field(f => f.RoomName);
         })
-        .Read("ViewReservation", "FunctionRoom")
+        .Read(read => read.Action("GetFunctionRoomDashboardReservations", "Home").Type(HttpVerbs.Get))
         .Update("ViewReservationDetails", "FunctionRoom")
         .Destroy(destroy => destroy.Action("DeleteReservationDetail", "FunctionRoom"))
         )

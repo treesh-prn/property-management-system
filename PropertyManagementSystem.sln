@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PropertyManagementSystem", 
 EndProject
 Project("{F14B399A-7131-4C87-9E4B-1186C45EF12D}") = "PMSReport", "PMSReport\PMSReport.rptproj", "{01BC642E-0C29-4321-B3F7-D1974FA29D20}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PropertyManagementSystem.Tests", "PropertyManagementSystem.Tests\PropertyManagementSystem.Tests.csproj", "{C9F73E8A-2E95-4D06-BB4C-4E4AEFA1050D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,12 @@ Global
 		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Release|Any CPU.ActiveCfg = Release
 		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Release|Any CPU.Build.0 = Release
 		{01BC642E-0C29-4321-B3F7-D1974FA29D20}.Release|Any CPU.Deploy.0 = Release
+		{C9F73E8A-2E95-4D06-BB4C-4E4AEFA1050D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9F73E8A-2E95-4D06-BB4C-4E4AEFA1050D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9F73E8A-2E95-4D06-BB4C-4E4AEFA1050D}.DebugLocal|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9F73E8A-2E95-4D06-BB4C-4E4AEFA1050D}.DebugLocal|Any CPU.Build.0 = Debug|Any CPU
+		{C9F73E8A-2E95-4D06-BB4C-4E4AEFA1050D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9F73E8A-2E95-4D06-BB4C-4E4AEFA1050D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,5 +15,15 @@
         public double? CostPerWeek { get; set; }
         public double? CostPerMonth { get; set; }
         public bool? isPerHead { get; set; }
+        public List<RoomOccupantViewModel> Occupants { get; set; } = new();
+    }
+
+    public class RoomOccupantViewModel
+    {
+        public string OccupantName { get; set; } = string.Empty;
+        public string? Company { get; set; }
+        public string? ReservationCode { get; set; }
+        public DateTime ArrivalDate { get; set; }
+        public DateTime DepartureDate { get; set; }
     }
 }

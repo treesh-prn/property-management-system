@@ -8,6 +8,7 @@ using PropertyManagementSystem.Models;
 using System.IO;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using PropertyManagementSystem.Services;
 
 namespace PropertyManagementSystem.Controllers
 {
@@ -15,11 +16,21 @@ namespace PropertyManagementSystem.Controllers
     public class GlobalController : Controller
     {
         private readonly DAL _context;
+        private readonly IReservationAuthorizationService _authorization;
+        private readonly IReservationAuditService _audit;
+        private readonly IReservationEquipmentAllocationService _equipmentAllocations;
 
-        public GlobalController(DAL context)
+        public GlobalController(
+            DAL context,
+            IReservationAuthorizationService authorization,
+            IReservationAuditService audit,
+            IReservationEquipmentAllocationService equipmentAllocations)
         {
 
             _context = context;
+            _authorization = authorization;
+            _audit = audit;
+            _equipmentAllocations = equipmentAllocations;
 
         }
         public IActionResult Index()
@@ -75,7 +86,46 @@ namespace PropertyManagementSystem.Controllers
             return Json(rooms);
         }
 
-        public IActionResult GetFacility(int ReservationDetailId)
+        public IActionResult GetFunctionRoomFacilities()
+        {
+            var facilities = _context.Facilities
+                .AsNoTracking()
+                .Where(facility => facility.isActive == true &&
+                    facility.FacilityClassification == "FUNCTION ROOM")
+                .OrderBy(facility => facility.FacilityName)
+                .Select(facility => new
+                {
+                    facility.FacilityId,
+                    facility.FacilityName
+                })
+                .ToList();
+
+            return Json(facilities);
+        }
+
+        public IActionResult GetFunctionRooms(int facilityId)
+        {
+            var rooms = _context.Rooms
+                .AsNoTracking()
+                .Where(room => room.FacilityId == facilityId &&
+                    room.RoomType == ReservationRoomTypes.FunctionRoom &&
+                    room.isActive &&
+                    _context.Facilities.Any(facility =>
+                        facility.FacilityId == room.FacilityId &&
+                        facility.isActive == true &&
+                        facility.FacilityClassification == "FUNCTION ROOM"))
+                .OrderBy(room => room.RoomName)
+                .Select(room => new
+                {
+                    room.RoomId,
+                    room.RoomName
+                })
+                .ToList();
+
+            return Json(rooms);
+        }
+
+        public async Task<IActionResult> GetFacility(int ReservationDetailId)
         {
             Console.WriteLine("ReservationDetailId:" + ReservationDetailId);
             var reservation = _context.ReservationDetails
@@ -85,6 +135,11 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound();
             }
+            var header = GetHeaderForDetail(reservation);
+            if (header == null || header.ReservationType != "FN") return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Assign);
+            var denied = AuthorizationFailure(access);
+            if (denied != null) return denied;
 
             var startDate = reservation.StartDate;
             var endDate = reservation.EndDate;
@@ -123,7 +178,7 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(facilities);
         }
-        public IActionResult GetRoom(int? facilityId, int reservationDetailId)
+        public async Task<IActionResult> GetRoom(int? facilityId, int reservationDetailId)
         {
             Console.WriteLine("FacilityId: " + facilityId);
             Console.WriteLine("Reservation Id: " + reservationDetailId);
@@ -134,6 +189,11 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound();
             }
+            var header = GetHeaderForDetail(reservation);
+            if (header == null || header.ReservationType != "FN") return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Assign);
+            var denied = AuthorizationFailure(access);
+            if (denied != null) return denied;
 
             var startDate = reservation.StartDate;
             var endDate = reservation.EndDate;
@@ -163,7 +223,7 @@ namespace PropertyManagementSystem.Controllers
             return Json(rooms);
         }
 
-        public IActionResult GetGH(int ReservationDetailId)
+        public async Task<IActionResult> GetGH(int ReservationDetailId)
         {
             var reservation = _context.ReservationDetails
                 .FirstOrDefault(r => r.ReservationDetailId == ReservationDetailId);
@@ -172,6 +232,11 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound();
             }
+            var header = GetHeaderForDetail(reservation);
+            if (header == null || header.ReservationType != "GH") return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Assign);
+            var denied = AuthorizationFailure(access);
+            if (denied != null) return denied;
 
             var startDate = reservation.StartDate;
             var endDate = reservation.EndDate;
@@ -234,7 +299,7 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(facilities);
         }
-        public IActionResult GetGHRoom(int? facilityId, int reservationDetailId)
+        public async Task<IActionResult> GetGHRoom(int? facilityId, int reservationDetailId)
         {
             Console.WriteLine(facilityId);
             Console.WriteLine(reservationDetailId);
@@ -246,6 +311,11 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound();
             }
+            var header = GetHeaderForDetail(reservation);
+            if (header == null || header.ReservationType != "GH") return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Assign);
+            var denied = AuthorizationFailure(access);
+            if (denied != null) return denied;
 
             var startDate = reservation.StartDate;
             var endDate = reservation.EndDate;
@@ -296,7 +366,7 @@ namespace PropertyManagementSystem.Controllers
             return Json(rooms);
         }
 
-        public IActionResult GetDRM(int reservationDetailId)
+        public async Task<IActionResult> GetDRM(int reservationDetailId)
         {
             var reservation = _context.ReservationDetails
                 .FirstOrDefault(r => r.ReservationDetailId == reservationDetailId);
@@ -305,6 +375,11 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound();
             }
+            var header = GetHeaderForDetail(reservation);
+            if (header == null || header.ReservationType != "DRM") return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Assign);
+            var denied = AuthorizationFailure(access);
+            if (denied != null) return denied;
 
             var startDate = reservation.StartDate;
             var endDate = reservation.EndDate;
@@ -351,7 +426,7 @@ namespace PropertyManagementSystem.Controllers
             return Json(facilities);
         }
 
-        public IActionResult GetDRMRoom(int? facilityId, int reservationDetailId)
+        public async Task<IActionResult> GetDRMRoom(int? facilityId, int reservationDetailId)
         {
             Console.WriteLine(facilityId);
             Console.WriteLine(reservationDetailId);
@@ -363,6 +438,11 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound();
             }
+            var header = GetHeaderForDetail(reservation);
+            if (header == null || header.ReservationType != "DRM") return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Assign);
+            var denied = AuthorizationFailure(access);
+            if (denied != null) return denied;
 
             var startDate = reservation.StartDate;
             var endDate = reservation.EndDate;
@@ -413,77 +493,103 @@ namespace PropertyManagementSystem.Controllers
             return Json(rooms);
         }
         [HttpGet]
-        public IActionResult GetEquipmentFNAssign(int facilityId, int roomId)
+        public async Task<IActionResult> GetEquipmentFNAssign(int facilityId, int roomId)
         {
-            var equipment = _context.Equipments
-                .Where(e => e.FacilityId == facilityId && e.RoomId == roomId && e.isActive == true)
-                .Select(e => new { e.Id })
+            var actor = await _authorization.GetActorAsync(User);
+            if (actor.ActiveRole is not ReservationRoles.AdminApprover and
+                not ReservationRoles.AdminManager)
+            {
+                return Forbid();
+            }
+            var equipment = _context.FacilityEquipmentLinks
+                .AsNoTracking()
+                .Where(link => link.IsActive &&
+                    link.LinkType == EquipmentLinkTypes.Included &&
+                    link.FacilityId == facilityId &&
+                    (!link.RoomId.HasValue || link.RoomId == roomId))
+                .Join(_context.Equipments.AsNoTracking().Where(item => item.isActive != false),
+                    link => link.EquipmentId,
+                    item => item.Id,
+                    (link, item) => new
+                    {
+                        item.Id,
+                        item.EquipmentName,
+                        link.DefaultQuantity,
+                        Source = link.RoomId.HasValue ? "Room" : "Facility"
+                    })
+                .Distinct()
+                .OrderBy(item => item.EquipmentName)
                 .ToList();
 
             return Json(equipment);
         }
-        public ActionResult GetEquipments(DateTime startDate, DateTime endDate)
+        public ActionResult GetEquipments(
+            DateTime startDate,
+            DateTime endDate,
+            int? facilityId = null,
+            int? roomId = null)
         {
-            // Fetch all equipment data
-            List<GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable()
-                .Where(eq => eq.isFacilityEquipment == false).ToList();
-            List<equipmentList> _eqList = new List<equipmentList>();
-
-            foreach (var item in _Equipments)
-            {
-                // Check if the equipment is currently reserved
-                bool isReserved = _context.ReservationDetails
-                    .Any(r => r.EquipmentNeeded.Contains(item.Id.ToString())
-                              && r.StartDate <= DateTime.Now
-                              && r.EndDate >= DateTime.Now);
-
-                // Add equipment to the list with reservation status
-                _eqList.Add(new equipmentList
+            var addOnIds = _context.FacilityEquipmentLinks.AsNoTracking()
+                .Where(link => facilityId.HasValue && link.IsActive &&
+                    link.LinkType == EquipmentLinkTypes.AddOn &&
+                    link.FacilityId == facilityId.Value &&
+                    (!roomId.HasValue || !link.RoomId.HasValue || link.RoomId == roomId.Value))
+                .Select(link => link.EquipmentId);
+            var includedIds = _context.FacilityEquipmentLinks.AsNoTracking()
+                .Where(link => link.IsActive && link.LinkType == EquipmentLinkTypes.Included)
+                .Select(link => link.EquipmentId);
+            var equipments = _context.Equipments
+                .AsNoTracking()
+                .Where(eq => eq.isActive == true)
+                .Where(eq => !includedIds.Contains(eq.Id) || addOnIds.Contains(eq.Id))
+                .OrderBy(eq => eq.EquipmentName)
+                .Select(eq => new equipmentList
                 {
-                    Id = item.Id,
-                    EquipmentName = item.EquipmentName,
-                });
-            }
+                    Id = eq.Id,
+                    EquipmentName = eq.EquipmentName ?? string.Empty
+                })
+                .ToList();
 
-            return Json(_eqList);
+            return Json(equipments);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CancelReservation(int ReservationId, string Remarks, string reservationType)
+        public async Task<IActionResult> CancelReservation(int ReservationId, string Remarks, string reservationType)
         {
-            Console.WriteLine("RESERVATION TYPE:" + reservationType);
             var reservation = _context.ReservationHeaders.FirstOrDefault(r => r.ReservationId == ReservationId);
             if (reservation == null)
             {
                 return NotFound();
             }
-            else
+
+            var access = await _authorization.AuthorizeAsync(
+                User, reservation, ReservationOperation.Cancel);
+            var denied = AuthorizationFailure(access);
+            if (denied != null) return denied;
+
+            var previousStatus = reservation.Status;
+            reservation.Status = ReservationStatuses.Cancelled;
+            reservation.Remarks = Remarks;
+            try
             {
-                if (reservationType == "FN")
-                {
-                    reservation.Status = "CANCELLED";
-                    reservation.Remarks = Remarks;
-                    _context.SaveChanges();
-
-
-                    return RedirectToAction("ReservationList", "FunctionRoom");
-                }
-                else if (reservationType == "GH")
-                {
-                    reservation.Status = "CANCELLED";
-                    reservation.Remarks = Remarks;
-                    _context.SaveChanges();
-
-
-                    return RedirectToAction("ReservationList", "Accommodation");
-                }
-                else
-                {
-                    return RedirectToAction("Index", "Home");
-                }
+                await _equipmentAllocations.ReleaseReservationAsync(reservation.ReservationId);
+                _context.SaveChanges();
             }
+            catch (DbUpdateConcurrencyException)
+            {
+                return Conflict("The reservation state changed. Refresh and try again.");
+            }
+            await _audit.AddAsync(
+                reservation, User, "CANCEL", previousStatus, reservation.Status);
 
+            return reservation.ReservationType switch
+            {
+                "FN" => RedirectToAction("ReservationList", "FunctionRoom"),
+                "GH" => RedirectToAction("ReservationList", "Accommodation"),
+                "DRM" => RedirectToAction("ReservationList", "Dorm"),
+                _ => RedirectToAction("Index", "Home")
+            };
         }
         public ActionResult getDormList([DataSourceRequest] DataSourceRequest request)
         {
@@ -494,10 +600,28 @@ namespace PropertyManagementSystem.Controllers
                 FacilityName = _Facility.FacilityName,
                 FacilityClassification = _Facility.FacilityClassification,
                 FacilityLocation = _Facility.FacilityLocation,
-                isActive = _Facility.isActive
+                isActive = _Facility.isActive,
+                RoomCount = _context.Rooms.Count(room => room.FacilityId == _Facility.FacilityId && room.RoomType == 2),
+                TotalCapacity = _context.Rooms
+                    .Where(room => room.FacilityId == _Facility.FacilityId && room.RoomType == 2)
+                    .Sum(room => (int?)room.Capacity) ?? 0,
+                OccupiedCount = _context.ReservationDetails
+                    .Join(_context.ReservationHeaders, rd => rd.ReservationId, rh => rh.ReservationId, (rd, rh) => new { rd, rh })
+                    .Count(x => x.rd.FacilityId == _Facility.FacilityId && x.rh.ReservationType == "DRM" && x.rh.Status == "APPROVED")
             });
             return Json(result);
 
+        }
+
+        private GFMS_ReservationHeader? GetHeaderForDetail(GFMS_ReservationDetails detail) =>
+            _context.ReservationHeaders.FirstOrDefault(h => h.ReservationId == detail.ReservationId);
+
+        private IActionResult? AuthorizationFailure(ReservationAuthorizationResult authorization)
+        {
+            if (authorization.Succeeded) return null;
+            return authorization.Failure == ReservationAuthorizationFailure.Forbidden
+                ? Forbid()
+                : Conflict("The reservation state changed. Refresh and try again.");
         }
     }
 }

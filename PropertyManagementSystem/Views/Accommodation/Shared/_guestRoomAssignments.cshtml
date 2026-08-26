@@ -1,0 +1,471 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@{
+    var details = Model.ReservationDetails ?? new List<PropertyManagementSystem.Models.GFMS_ReservationDetails>();
+    var selectedCount = details.Count(detail => detail.RoomId.HasValue);
+    var assignmentPercent = details.Count == 0
+        ? 0
+        : (int)Math.Round((double)selectedCount / details.Count * 100);
+    var isManagerReassignment = Model.ReservationHeader?.Status == "FOR ADMIN MANAGER'S APPROVAL";
+}
+
+<section class="card mt-3 guest-room-assignment"
+         aria-labelledby="guest-room-assignment-heading"
+         data-guest-room-assignment
+         data-manager-reassignment="@isManagerReassignment.ToString().ToLowerInvariant()">
+    <div class="guest-room-assignment-header">
+        <div class="guest-room-assignment-title">
+            <span class="guest-room-assignment-icon" aria-hidden="true">
+                <i class="ti ti-bed"></i>
+            </span>
+            <div>
+                <h3 id="guest-room-assignment-heading">@(isManagerReassignment ? "Review guest room assignments" : "Plan guest room assignments")</h3>
+                <p>
+                    @if (isManagerReassignment)
+                    {
+                        <span>Original assignments are saved. Any changes remain temporary until final approval.</span>
+                    }
+                    else
+                    {
+                        <span>Select a room for every guest. Nothing is saved until you approve.</span>
+                    }
+                </p>
+            </div>
+        </div>
+        <div class="guest-room-assignment-progress" aria-label="@selectedCount of @details.Count guests selected">
+            <div class="guest-room-assignment-progress-label">
+                <span>Guests with a room</span>
+                <strong data-assignment-progress-count>@selectedCount of @details.Count</strong>
+            </div>
+            <div class="progress progress-sm" role="progressbar" aria-valuenow="@assignmentPercent" aria-valuemin="0" aria-valuemax="100" data-assignment-progress>
+                <div class="progress-bar bg-primary" style="width: @assignmentPercent%" data-assignment-progress-bar></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="guest-room-capacity-note">
+        <i class="ti ti-info-circle" aria-hidden="true"></i>
+        <div>
+            @if (isManagerReassignment)
+            {
+                <strong>Original room assignments remain protected.</strong>
+                <span>Going back discards only your unsaved changes and keeps the original assignments.</span>
+            }
+            else
+            {
+                <strong>These are temporary selections.</strong>
+                <span>Approve saves all room assignments together. Going back or refreshing discards unsaved changes.</span>
+            }
+        </div>
+    </div>
+
+    <div class="guest-room-assignment-list">
+        @for (var index = 0; index < details.Count; index++)
+        {
+            var detail = details[index];
+            var availableRooms = Model.AvailableRoomAssignmentsByDetail.TryGetValue(
+                detail.ReservationDetailId, out var roomOptions)
+                ? roomOptions
+                : new List<PropertyManagementSystem.Models.RoomAssignmentOption>();
+            var occupiedRooms = Model.OccupiedRoomAssignmentsByDetail.TryGetValue(
+                detail.ReservationDetailId, out var occupiedOptions)
+                ? occupiedOptions
+                : new List<PropertyManagementSystem.Models.OccupiedRoomAssignmentOption>();
+            var hasSelection = detail.RoomId.HasValue;
+            var hasAvailableRoom = availableRooms.Count > 0;
+            var availableAlternatives = availableRooms
+                .Where(room => room.RoomId != detail.RoomId)
+                .ToList();
+
+            <div class="guest-room-assignment-row @(hasSelection ? "is-assigned" : string.Empty)"
+                 data-assignment-row>
+                <div class="guest-room-person">
+                    <span class="guest-room-person-number" aria-hidden="true">@(index + 1)</span>
+                    <div class="guest-room-person-copy">
+                        <span class="guest-room-person-label">Guest @(index + 1)</span>
+                        <strong>@(string.IsNullOrWhiteSpace(detail.GuestName) ? "Unnamed guest" : detail.GuestName)</strong>
+                    </div>
+                    <span class="guest-room-status @(hasSelection ? "is-complete" : "is-pending")" data-assignment-status>
+                        <i class="ti @(hasSelection ? "ti-circle-check" : "ti-clock")" aria-hidden="true"></i>
+                        <span>@(hasSelection ? "Selected" : "Waiting")</span>
+                    </span>
+                </div>
+
+                <div class="guest-room-choice">
+                @if (isManagerReassignment && hasSelection)
+                {
+                    var currentOption = availableRooms.FirstOrDefault(room => room.RoomId == detail.RoomId);
+                    var currentRoomName = detail.Room?.RoomName ?? currentOption?.RoomName ?? "Assigned room";
+                    var currentFacilityName = detail.Facility?.FacilityName ?? currentOption?.FacilityName ?? "Guesthouse";
+                    <select class="visually-hidden"
+                            aria-hidden="true"
+                            tabindex="-1"
+                            data-room-selection
+                            data-detail-id="@detail.ReservationDetailId"
+                            data-occupants="@Math.Max(detail.NumberOfGuest, 1)">
+                        <option value="@detail.RoomId" selected
+                                data-base-available="@(currentOption?.RemainingCapacity ?? Math.Max(detail.NumberOfGuest, 1))"
+                                data-room-label="@currentFacilityName - @currentRoomName">@currentRoomName</option>
+                    </select>
+                    <div class="guest-room-current-assignment">
+                        <div>
+                            <span>Current assignment</span>
+                            <strong>@currentFacilityName — @currentRoomName</strong>
+                        </div>
+                        <button class="btn btn-outline-primary" type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#reassign-room-@detail.ReservationDetailId"
+                                aria-expanded="false"
+                                aria-controls="reassign-room-@detail.ReservationDetailId">
+                            <i class="ti ti-switch-horizontal" aria-hidden="true"></i>
+                            Reassign Room
+                        </button>
+                    </div>
+                    <div class="collapse guest-room-reassignment-panel" id="reassign-room-@detail.ReservationDetailId">
+                        <form asp-action="ReassignGuestRoom" method="post" data-room-reassignment-form>
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId" />
+                            <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId" />
+                            <input type="hidden" name="HeaderRowVersion" value="@Convert.ToBase64String(Model.ReservationHeader.RowVersion)" />
+                            <input type="hidden" name="DetailRowVersion" value="@Convert.ToBase64String(detail.RowVersion)" />
+                            <input type="hidden" name="RoomId" data-reassignment-room />
+                            <input type="hidden" name="ConflictingReservationDetailId" data-reassignment-conflict />
+                            <input type="hidden" name="ConflictingDetailRowVersion" data-reassignment-conflict-version />
+
+                            <fieldset>
+                                <legend>Choose a destination</legend>
+                                @foreach (var room in availableAlternatives)
+                                {
+                                    <label class="guest-room-reassignment-option is-available">
+                                        <input type="radio"
+                                               name="reassignment-choice-@detail.ReservationDetailId"
+                                               data-room-id="@room.RoomId"
+                                               data-conflict-id=""
+                                               data-conflict-version="" />
+                                        <span>
+                                            <strong>@room.FacilityName — @room.RoomName</strong>
+                                            <small>@room.RemainingCapacity available · conflict-free move</small>
+                                        </span>
+                                        <span class="badge bg-green-lt">Available</span>
+                                    </label>
+                                }
+                                @foreach (var room in occupiedRooms)
+                                {
+                                    <label class="guest-room-reassignment-option is-occupied">
+                                        <input type="radio"
+                                               name="reassignment-choice-@detail.ReservationDetailId"
+                                               data-room-id="@room.RoomId"
+                                               data-conflict-id="@room.ConflictingReservationDetailId"
+                                               data-conflict-version="@room.ConflictingDetailRowVersion" />
+                                        <span>
+                                            <strong>@room.FacilityName — @room.RoomName</strong>
+                                            <small>Occupied by @room.ConflictingReservationCode · @room.ConflictingGuestName</small>
+                                        </span>
+                                        <span class="badge bg-yellow-lt">Swap required</span>
+                                    </label>
+                                }
+                            </fieldset>
+
+                            @if (availableAlternatives.Count == 0)
+                            {
+                                <div class="guest-room-no-availability">
+                                    <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                                    No conflict-free rooms are available.
+                                </div>
+                            }
+                            <div class="guest-room-reassignment-actions">
+                                <button type="submit" class="btn btn-primary" data-reassignment-submit disabled>
+                                    Select a room
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#reassign-room-@detail.ReservationDetailId">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <label class="form-label" for="room-@detail.ReservationDetailId">Guesthouse room</label>
+                    <select class="form-select"
+                            id="room-@detail.ReservationDetailId"
+                            data-room-selection
+                            data-detail-id="@detail.ReservationDetailId"
+                            data-occupants="@Math.Max(detail.NumberOfGuest, 1)"
+                            name="room-selection-@detail.ReservationDetailId"
+                            disabled="@(!hasAvailableRoom)">
+                        <option value="">Select a room</option>
+                        @foreach (var room in availableRooms)
+                        {
+                            var roomLabel = $"{room.FacilityName} - {room.RoomName} | {room.RemainingCapacity} {(room.RemainingCapacity == 1 ? "slot" : "slots")} available";
+                            if (detail.RoomId == room.RoomId)
+                            {
+                                <option value="@room.RoomId"
+                                        selected
+                                        data-base-available="@room.RemainingCapacity"
+                                        data-room-label="@room.FacilityName - @room.RoomName">@roomLabel</option>
+                            }
+                            else
+                            {
+                                <option value="@room.RoomId"
+                                        data-base-available="@room.RemainingCapacity"
+                                        data-room-label="@room.FacilityName - @room.RoomName">@roomLabel</option>
+                            }
+                        }
+                    </select>
+                    @if (!hasAvailableRoom)
+                    {
+                        <div class="guest-room-field-message is-error">
+                            <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                            No room has enough capacity for these dates.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="guest-room-field-message">
+                            Availability is verified again when approval is submitted.
+                        </div>
+                        <div class="guest-room-field-message is-error d-none" data-capacity-message>
+                            <i class="ti ti-alert-circle" aria-hidden="true"></i>
+                            This room is over its available capacity.
+                        </div>
+                    }
+                }
+                </div>
+
+                <div class="guest-room-soft-state">
+                    <span><i class="ti ti-pencil" aria-hidden="true"></i>Draft selection</span>
+                    <small>@(isManagerReassignment ? "Original remains saved" : "Saved on approval")</small>
+                </div>
+            </div>
+        }
+    </div>
+    @if (isManagerReassignment)
+    {
+        <div class="guest-room-reschedule-action">
+            <div>
+                <strong>No workable room swap?</strong>
+                <span>Return the request so the requestor can select a different schedule.</span>
+            </div>
+            <form asp-action="ReturnGuesthouseForRescheduling" method="post"
+                  onsubmit="return window.confirm('Return this request for rescheduling? Saved room assignments will be cleared.');">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId" />
+                <input type="hidden" name="HeaderRowVersion" value="@Convert.ToBase64String(Model.ReservationHeader.RowVersion)" />
+                <button type="submit" class="btn btn-outline-warning">
+                    <i class="ti ti-calendar-repeat" aria-hidden="true"></i>
+                    Return for Rescheduling
+                </button>
+            </form>
+        </div>
+    }
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var root = document.querySelector('[data-guest-room-assignment]');
+        if (!root) return;
+
+        var selects = Array.from(root.querySelectorAll('[data-room-selection]'));
+        var progressCount = root.querySelector('[data-assignment-progress-count]');
+        var progress = root.querySelector('[data-assignment-progress]');
+        var progressBar = root.querySelector('[data-assignment-progress-bar]');
+        var approveTrigger = document.querySelector('[data-assignment-approval-trigger]');
+        var approvalWarning = document.querySelector('[data-assignment-approval-warning]');
+        var approvalForm = document.querySelector('[data-guest-room-approval-form]');
+        var assignmentFields = approvalForm ? approvalForm.querySelector('[data-assignment-fields]') : null;
+        var backLink = document.querySelector('[data-assignment-back-link]');
+        var initialValues = selects.map(function (select) { return select.value; });
+        var isManagerReassignment = root.dataset.managerReassignment === 'true';
+        var isSubmitting = false;
+        var allowNavigation = false;
+
+        root.querySelectorAll('[data-room-reassignment-form]').forEach(function (form) {
+            var roomField = form.querySelector('[data-reassignment-room]');
+            var conflictField = form.querySelector('[data-reassignment-conflict]');
+            var conflictVersionField = form.querySelector('[data-reassignment-conflict-version]');
+            var submit = form.querySelector('[data-reassignment-submit]');
+            form.querySelectorAll('input[type="radio"]').forEach(function (choice) {
+                choice.addEventListener('change', function () {
+                    roomField.value = choice.dataset.roomId || '';
+                    conflictField.value = choice.dataset.conflictId || '';
+                    conflictVersionField.value = choice.dataset.conflictVersion || '';
+                    submit.disabled = !roomField.value;
+                    submit.innerHTML = choice.dataset.conflictId
+                        ? '<i class="ti ti-switch-horizontal" aria-hidden="true"></i> Swap Rooms'
+                        : '<i class="ti ti-arrow-right" aria-hidden="true"></i> Move Room';
+                });
+            });
+            form.addEventListener('submit', function () {
+                submit.disabled = true;
+                submit.setAttribute('aria-busy', 'true');
+                submit.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Saving...';
+            });
+        });
+
+        function isDirty() {
+            return selects.some(function (select, index) {
+                return select.value !== initialValues[index];
+            });
+        }
+
+        function updateRow(select) {
+            var row = select.closest('[data-assignment-row]');
+            var status = row ? row.querySelector('[data-assignment-status]') : null;
+            var selected = Boolean(select.value);
+            if (!row || !status) return;
+
+            row.classList.toggle('is-assigned', selected);
+            status.classList.toggle('is-complete', selected);
+            status.classList.toggle('is-pending', !selected);
+            status.innerHTML = selected
+                ? '<i class="ti ti-circle-check" aria-hidden="true"></i><span>Selected</span>'
+                : '<i class="ti ti-clock" aria-hidden="true"></i><span>Waiting</span>';
+        }
+
+        function updateRoomAvailability() {
+            var selectedByRoom = {};
+            var baseByRoom = {};
+
+            selects.forEach(function (select) {
+                Array.from(select.options).forEach(function (option) {
+                    if (!option.value || option.dataset.baseAvailable === undefined) return;
+                    baseByRoom[option.value] = Number(option.dataset.baseAvailable);
+                });
+
+                if (!select.value) return;
+                selectedByRoom[select.value] = (selectedByRoom[select.value] || 0) +
+                    Number(select.dataset.occupants || 1);
+            });
+
+            var overAssignedRooms = {};
+            Object.keys(selectedByRoom).forEach(function (roomId) {
+                if (selectedByRoom[roomId] > (baseByRoom[roomId] || 0)) {
+                    overAssignedRooms[roomId] = true;
+                }
+            });
+
+            selects.forEach(function (select) {
+                var occupants = Number(select.dataset.occupants || 1);
+                Array.from(select.options).forEach(function (option) {
+                    if (!option.value || option.dataset.baseAvailable === undefined) return;
+
+                    var baseAvailable = Number(option.dataset.baseAvailable);
+                    var plannedOccupants = selectedByRoom[option.value] || 0;
+                    var remainingAfterPlan = Math.max(baseAvailable - plannedOccupants, 0);
+                    var isCurrentSelection = select.value === option.value;
+                    option.disabled = !isCurrentSelection &&
+                        (baseAvailable - plannedOccupants < occupants);
+                    option.textContent = option.dataset.roomLabel + ' | ' + remainingAfterPlan +
+                        (remainingAfterPlan === 1 ? ' slot remaining' : ' slots remaining');
+                });
+
+                var row = select.closest('[data-assignment-row]');
+                var capacityMessage = row ? row.querySelector('[data-capacity-message]') : null;
+                var isOverAssigned = Boolean(select.value && overAssignedRooms[select.value]);
+                select.classList.toggle('is-invalid', isOverAssigned);
+                if (capacityMessage) capacityMessage.classList.toggle('d-none', !isOverAssigned);
+            });
+
+            return Object.keys(overAssignedRooms).length > 0;
+        }
+
+        function updateProgress() {
+            var selected = selects.filter(function (select) { return Boolean(select.value); }).length;
+            var total = selects.length;
+            var percent = total === 0 ? 0 : Math.round(selected / total * 100);
+            var overAssigned = updateRoomAvailability();
+            var complete = total > 0 && selected === total && !overAssigned;
+
+            selects.forEach(updateRow);
+            if (progressCount) progressCount.textContent = selected + ' of ' + total;
+            if (progress) progress.setAttribute('aria-valuenow', percent.toString());
+            if (progressBar) progressBar.style.width = percent + '%';
+            if (approveTrigger) approveTrigger.disabled = !complete;
+            if (approvalWarning) {
+                approvalWarning.classList.toggle('d-none', complete);
+                if (!complete) {
+                    approvalWarning.innerHTML = overAssigned
+                        ? '<i class="ti ti-alert-triangle me-1"></i>Room capacity exceeded. Choose another room.'
+                        : '<i class="ti ti-alert-triangle me-1"></i>Select a room for every guest before approval.';
+                }
+            }
+        }
+
+        function writeAssignmentFields() {
+            if (!assignmentFields) return;
+            assignmentFields.innerHTML = '';
+            selects.forEach(function (select, index) {
+                if (!select.value) return;
+
+                var detailField = document.createElement('input');
+                detailField.type = 'hidden';
+                detailField.name = 'Assignments[' + index + '].ReservationDetailId';
+                detailField.value = select.dataset.detailId;
+                assignmentFields.appendChild(detailField);
+
+                var roomField = document.createElement('input');
+                roomField.type = 'hidden';
+                roomField.name = 'Assignments[' + index + '].RoomId';
+                roomField.value = select.value;
+                assignmentFields.appendChild(roomField);
+            });
+        }
+
+        selects.forEach(function (select) {
+            select.addEventListener('change', updateProgress);
+        });
+
+        if (approveTrigger) {
+            approveTrigger.addEventListener('click', writeAssignmentFields);
+        }
+
+        if (approvalForm) {
+            approvalForm.addEventListener('submit', function (event) {
+                var complete = selects.length > 0 &&
+                    selects.every(function (select) { return Boolean(select.value); }) &&
+                    !updateRoomAvailability();
+                if (!complete) {
+                    event.preventDefault();
+                    updateProgress();
+                    return;
+                }
+
+                writeAssignmentFields();
+                isSubmitting = true;
+                var button = approvalForm.querySelector('button[type="submit"]');
+                if (button) {
+                    button.disabled = true;
+                    button.setAttribute('aria-busy', 'true');
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Saving & approving...</span>';
+                }
+            });
+        }
+
+        if (backLink) {
+            backLink.addEventListener('click', function (event) {
+                if (isDirty()) {
+                    var confirmationMessage = isManagerReassignment
+                        ? 'Discard your room changes and keep the original saved assignments?'
+                        : 'Your room selections have not been saved. Leave this page and discard them?';
+                    if (!window.confirm(confirmationMessage)) {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    allowNavigation = true;
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', function (event) {
+            if (!isSubmitting && !allowNavigation && isDirty()) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        });
+
+        updateProgress();
+    });
+</script>

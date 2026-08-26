@@ -1,0 +1,80 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@inject PropertyManagementSystem.Services.IReservationAuthorizationService ReservationAuthorization
+@{
+    var status = Model.ReservationHeader?.Status?.Trim().ToUpperInvariant() ?? "DRAFT";
+    var departmentHeadBypassed = Model.ReservationHeader != null &&
+        await ReservationAuthorization.ShouldBypassDepartmentHeadAsync(Model.ReservationHeader) &&
+        status != "DRAFT" && status != "FOR DEPARTMENT HEAD'S APPROVAL";
+    var isCancelled = status == "CANCELLED" || status == "DELETED" || status == "EXPIRED";
+    var isRejected = status == "DISAPPROVED" || status == "REJECTED";
+    var currentStep = status switch
+    {
+        "FOR DEPARTMENT HEAD'S APPROVAL" => 1,
+        "FOR ADMIN APPROVER'S APPROVAL" => 2,
+        "FOR ADMIN MANAGER'S APPROVAL" => 3,
+        "APPROVED" => 4,
+        _ => 0
+    };
+    var message = status switch
+    {
+        "DRAFT" => "This draft has not been submitted. Complete the required information, review it, and submit when ready.",
+        "FOR DEPARTMENT HEAD'S APPROVAL" => "Your request is waiting for Department Head approval. No action is required from you.",
+        "FOR ADMIN APPROVER'S APPROVAL" => departmentHeadBypassed
+            ? "Department Head review was not required because the assigned approver is also an Admin Manager. Your request is waiting for independent Admin Approver review."
+            : "Department Head review is complete. Your request is waiting for Admin Approver review.",
+        "FOR ADMIN MANAGER'S APPROVAL" => "Admin Approver review is complete. Your request is waiting for final Admin Manager approval.",
+        "APPROVED" => "Your request has been approved. Review the assigned facility or room information below.",
+        "CANCELLED" => "This request was cancelled and is now read-only.",
+        "DELETED" => "This request was deleted and is now read-only.",
+        "DISAPPROVED" => "This request was not approved. Review the approver remarks below.",
+        "REJECTED" => "This request was rejected. Review the approver remarks below.",
+        "FOR RESCHEDULING" => "The original start time has passed. Choose a future schedule and resubmit the request for approval.",
+        "EXPIRED" => "The reservation period ended before approval was completed. This request is read-only and remains available in history.",
+        _ => "Review the current request status and details below."
+    };
+    var tone = isCancelled || isRejected ? "danger" : status == "APPROVED" ? "success" : status == "DRAFT" ? "neutral" : "warning";
+    var steps = new[] { "Draft", "Department Head", "Admin Approver", "Admin Manager", "Approved" };
+    var remarks = Model.ReservationHeader?.Remarks?.Trim();
+    var reviewedBy = Model.ReservationHeader?.ApprovedBy?.Trim();
+}
+
+<section class="request-status-panel request-status-@tone" aria-labelledby="request-status-heading">
+    <div class="request-status-message">
+        <span class="request-status-icon" aria-hidden="true">
+            <i class="ti @(tone == "success" ? "ti-circle-check" : tone == "danger" ? "ti-alert-circle" : tone == "warning" ? "ti-clock" : "ti-file-description")"></i>
+        </span>
+        <div>
+            <h3 id="request-status-heading">Current status</h3>
+            <p>@message</p>
+        </div>
+    </div>
+    @if (isRejected)
+    {
+        <div class="request-status-remarks" aria-label="Approver remarks">
+            <div class="request-status-remarks-heading">
+                <i class="ti ti-message-exclamation" aria-hidden="true"></i>
+                <strong>Approver remarks</strong>
+            </div>
+            <p>@(string.IsNullOrWhiteSpace(remarks) ? "No remarks were provided." : remarks)</p>
+            @if (!string.IsNullOrWhiteSpace(reviewedBy))
+            {
+                <small>Reviewed by @reviewedBy</small>
+            }
+        </div>
+    }
+    @if (!isCancelled && !isRejected)
+    {
+        <ol class="request-progress" aria-label="Approval progress">
+            @for (var index = 0; index < steps.Length; index++)
+            {
+                var state = departmentHeadBypassed && index == 1
+                    ? "bypassed"
+                    : index < currentStep ? "complete" : index == currentStep ? "current" : "upcoming";
+                <li class="request-progress-step @state" aria-current="@(state == "current" ? "step" : null)">
+                    <span class="request-progress-marker" aria-hidden="true">@(state == "complete" ? "✓" : (index + 1).ToString())</span>
+                    <span>@steps[index]@(state == "bypassed" ? " — Not required" : string.Empty)</span>
+                </li>
+            }
+        </ol>
+    }
+</section>

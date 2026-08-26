@@ -1,145 +1,186 @@
-﻿using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using PropertyManagementSystem.Data;
+using PropertyManagementSystem.Attributes;
 using PropertyManagementSystem.Models;
-using System.Collections;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Authorization;
+using PropertyManagementSystem.Services;
 
 namespace PropertyManagementSystem.Controllers
 {
     [Authorize]
+    [ActiveRoleAuthorize("GFMS.System Admin", "GFMS.Admin Approver", "GFMS.Admin Manager")]
     public class EquipmentController : Controller
     {
-        private readonly DAL _context;
+        private readonly EquipmentService _equipmentService;
+        private readonly ILogger<EquipmentController> _logger;
+        private readonly ISetupReservationGuard _reservationGuard;
 
-        public EquipmentController(DAL context)
+        public EquipmentController(
+            EquipmentService equipmentService,
+            ILogger<EquipmentController> logger,
+            ISetupReservationGuard reservationGuard)
         {
-            _context = context;
+            _equipmentService = equipmentService;
+            _logger = logger;
+            _reservationGuard = reservationGuard;
         }
+
         public IActionResult Index()
         {
             return View();
         }
 
+        [HttpGet]
         public ActionResult getEquipments([DataSourceRequest] DataSourceRequest request)
         {
-            List <GFMS_Equipments> _Equipments = _context.Equipments.AsQueryable().ToList();
-            DataSourceResult result = _Equipments.ToDataSourceResult(request, _Equipments => new
-            {
-                Id = _Equipments.Id,
-                EquipmentName = _Equipments.EquipmentName,
-                EquipmentQty = _Equipments.EquipmentQty,
-                PurchaseCost = _Equipments.PurchaseCost,
-                WholeDayCost = _Equipments.WholeDayCost,
-                HalfDayCost = _Equipments.HalfDayCost,
-                Remarks = _Equipments.Remarks,
-                isActive = _Equipments.isActive,
-            });
-            return Json(result);
+            return Json(_equipmentService.GetEquipments(request));
         }
-        public ActionResult newEquipments(string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive, int _facilityId, int _roomId, bool _isFacilityEquipment)
+
+        [HttpPost]
+        public ActionResult newEquipments(EquipmentRequest request)
         {
-            GFMS_Equipments equipments = new GFMS_Equipments()
+            var validationMessage = ValidateEquipmentRequest(request)
+                ?? _equipmentService.ValidateLocation(request);
+            if (validationMessage != null)
             {
-                EquipmentName = _name,
-                EquipmentQty = _quantity,
-                PurchaseCost = _purCost,
-                HalfDayCost = _halfCost,
-                WholeDayCost = _wholeCost,
-                Remarks = _remarks,
-                isActive = _isActive,
-                FacilityId = _facilityId,
-                RoomId = _roomId,
-                isFacilityEquipment = _isFacilityEquipment
-
-
-            };
-            _context.Equipments.Add(equipments);
-            _context.SaveChanges();
+                SetToast("Equipment details are invalid", validationMessage, "warning");
+                return RedirectToAction("Index", "Equipment");
+            }
+            try
+            {
+                _equipmentService.CreateEquipment(request);
+                SetToast(
+                    "Equipment created",
+                    $"{request._name} is now available in the equipment inventory.",
+                    "success");
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(exception, "Failed to create equipment {EquipmentName}.", request._name);
+                SetToast(
+                    "Equipment could not be created",
+                    "Review the equipment details and try again.",
+                    "error");
+            }
             return RedirectToAction("Index", "Equipment");
         }
 
         public IActionResult ViewEquipment(int Id)
         {
-            var equipmentDetail = _context.Equipments.FirstOrDefault(e => e.Id == Id);
-            var facilityDetail = _context.Facilities.FirstOrDefault(f => f.FacilityId == equipmentDetail.FacilityId);
-            var roomDetail = _context.Rooms.FirstOrDefault(r => r.RoomId == equipmentDetail.RoomId);
-
-            if (equipmentDetail == null)
+            var equipment = _equipmentService.GetEquipment(Id);
+            if (equipment == null)
             {
                 return NotFound();
             }
 
-            var equipmentViewModel = new EquipmentViewModel
-            {
-                Id = equipmentDetail.Id,
-                EquipmentName = equipmentDetail.EquipmentName,
-                EquipmentQty = equipmentDetail.EquipmentQty,
-                PurchaseCost = equipmentDetail.PurchaseCost,
-                WholeDayCost = equipmentDetail.WholeDayCost,
-                HalfDayCost = equipmentDetail.HalfDayCost,
-                Remarks = equipmentDetail.Remarks,
-                isActive = equipmentDetail.isActive,
-                FacilityId = equipmentDetail.FacilityId,
-                RoomId = equipmentDetail.RoomId,
-                isFacilityEquipment = equipmentDetail.isFacilityEquipment,
-                FacilityName = facilityDetail?.FacilityName,
-                RoomName = roomDetail?.RoomName
-            };
-
-            return View(equipmentViewModel);
+            return View(equipment);
         }
 
-        /*Update*/
-        public IActionResult EditEquipment(int Id, string _name, int _quantity, double _purCost, double _halfCost, double _wholeCost, string _remarks, bool _isActive, bool _isFacilityEquipment)
+        [HttpPost]
+        public IActionResult EditEquipment(EditEquipmentRequest request)
         {
-            var equipment = _context.Equipments.FirstOrDefault(e => e.Id == Id);
-            if (equipment == null)
+            var validationMessage = ValidateEquipmentRequest(request)
+                ?? _equipmentService.ValidateLocation(request);
+            if (validationMessage != null)
             {
-                return NotFound("Equipment not found");
+                SetToast("Equipment details are invalid", validationMessage, "warning");
+                return RedirectToAction("ViewEquipment", "Equipment", new { Id = request.Id });
             }
-
-            equipment.EquipmentName = _name;
-            equipment.EquipmentQty = _quantity;
-            equipment.PurchaseCost = _purCost;
-            equipment.HalfDayCost = _halfCost;
-            equipment.WholeDayCost = _wholeCost;
-            equipment.Remarks = _remarks;
-            equipment.isActive = _isActive;
-            equipment.isFacilityEquipment = _isFacilityEquipment;
             try
             {
-                _context.Equipments.Update(equipment);
-                _context.SaveChanges();
-            }
-            catch (DbUpdateException ex)
-            {
-                Console.WriteLine($"An error occurred while updating changes: {ex.Message}");
-                if (ex.InnerException != null)
+                var existing = _equipmentService.GetEquipment(request.Id);
+                if (existing?.isActive != false && !request._isActive)
                 {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                    var blockingCount = _reservationGuard.CountBlockingReservationsForEquipment(
+                        request.Id, DateTime.Now);
+                    if (blockingCount > 0)
+                    {
+                        SetToast(
+                            "Equipment cannot be made inactive",
+                            $"{existing?.EquipmentName ?? "This equipment"} is assigned to {blockingCount} pending, ongoing, or upcoming reservation{(blockingCount == 1 ? string.Empty : "s")}. Reassign or complete them first.",
+                            "warning");
+                        return RedirectToAction("ViewEquipment", "Equipment", new { Id = request.Id });
+                    }
                 }
-                throw;
+
+                if (!_equipmentService.UpdateEquipment(request))
+                {
+                    SetToast("Equipment not found", "The selected equipment may have already been removed.", "error");
+                    return RedirectToAction("Index", "Equipment");
+                }
+
+                SetToast(
+                    "Equipment updated",
+                    $"Changes to {request._name} were saved successfully.",
+                    "success");
             }
-            string redirectUrl = Url.Action("ViewEquipment", "Equipment", new { Id = Id });
-            return Redirect(redirectUrl);
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(exception, "Failed to update equipment {EquipmentId}.", request.Id);
+                SetToast(
+                    "Equipment could not be updated",
+                    "The changes were not saved. Review the details and try again.",
+                    "error");
+            }
+
+            return RedirectToAction("ViewEquipment", "Equipment", new { Id = request.Id });
         }
-        /*Delete*/
 
         [HttpPost]
         public IActionResult DeleteEquipment(int Id)
         {
-            GFMS_Equipments equipments= _context.Equipments.Find(Id);
-            if (equipments == null)
+            var equipment = _equipmentService.GetEquipment(Id);
+            if (equipment == null)
             {
-                return NotFound();
+                SetToast("Equipment not found", "The selected equipment may have already been removed.", "error");
+                return RedirectToAction("Index", "Equipment");
             }
-            _context.Equipments.Remove(equipments);
-            _context.SaveChanges();
+
+            try
+            {
+                _equipmentService.DeleteEquipment(Id);
+                SetToast(
+                    "Equipment deleted",
+                    $"{equipment.EquipmentName} was removed from the equipment inventory.",
+                    "success");
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(exception, "Failed to delete equipment {EquipmentId}.", Id);
+                SetToast(
+                    "Equipment could not be deleted",
+                    "This equipment may still be linked to a facility, room, or reservation.",
+                    "error");
+            }
+
             return RedirectToAction("Index", "Equipment");
+        }
+
+        private void SetToast(string title, string message, string type)
+        {
+            TempData["ToastTitle"] = title;
+            TempData["ToastMessage"] = message;
+            TempData["ToastType"] = type;
+        }
+
+        private static string? ValidateEquipmentRequest(EquipmentRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(request._name))
+                return "Enter an equipment name.";
+            if (request._quantity < 1 || request._quantity > 100000)
+                return "Quantity must be between 1 and 100,000.";
+            if (request._purCost < 0 || request._halfCost < 0 || request._wholeCost < 0)
+                return "Equipment costs cannot be negative.";
+            if (request._preserveLocationLinks || !request._isFacilityEquipment)
+                return null;
+            if (!request._facilityId.HasValue || request._facilityId.Value <= 0)
+                return "Select a facility for linked equipment.";
+            if (request._defaultQuantity < 1 || request._defaultQuantity > request._quantity)
+                return "Default linked quantity must be between 1 and the inventory quantity.";
+            if (request._linkType is not EquipmentLinkTypes.Included and not EquipmentLinkTypes.AddOn)
+                return "Choose a valid reservation behavior.";
+            return null;
         }
     }
 }

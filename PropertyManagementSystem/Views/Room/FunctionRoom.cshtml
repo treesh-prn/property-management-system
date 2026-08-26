@@ -2,7 +2,7 @@
     ViewData["Title"] = "Home Page";
 
 }
-<div class="page-wrapper">
+<div class="page-wrapper management-page management-list-page">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -13,8 +13,9 @@
                         Room
                     </div>
                     <h2 class="page-title">
-                        FUNCTION ROOM
+                        Function Rooms
                     </h2>
+                    <div class="text-secondary mt-1">Manage meeting spaces, capacities, availability, and facility assignments.</div>
                 </div>
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
@@ -43,9 +44,13 @@
         <div class="container-xl">
             <div class="row row-deck row-cards">
                 <div class="col-lg-12 col-md-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title"></h3>
+                    <div class="card management-list-card">
+                        <div class="card-header management-card-header">
+                            <div>
+                                <span class="reservation-eyebrow">Room directory</span>
+                                <h3 class="card-title">Function rooms</h3>
+                                <p class="card-subtitle">Search, review, and maintain function room records.</p>
+                            </div>
                             <div class="card-actions">
                                 <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
                                     <i class="ti ti-home-plus icon"></i>
@@ -57,48 +62,45 @@
                             @(
                                 Html.Kendo().Grid<PropertyManagementSystem.Models.GFMS_Rooms>()
                                 .Name("roomGrid")
-                                .ToolBar(tools => tools.Excel())
+                                .HtmlAttributes(new { @class = "management-grid setup-grid" })
                                 .Excel(excel => excel
                                 .FileName("Rooms.xlsx")
                                 .AllPages(true))
                                 .Columns(columns =>
                                 {
                                     columns.Bound(c => c.RoomId).Visible(false).Exportable(false);
-                                    columns.ForeignKey(c => c.FacilityId, ds => ds.Read(r => r.Action("getFNList", "Facility")), "FacilityId", "FacilityName").Title("Facility").Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
-                                    columns.Bound(c => c.RoomName);
-                                    columns.Bound(c => c.Capacity);
-                                    columns.Bound(c => c.isActive).Hidden(true).ClientTemplate(
+                                    columns.ForeignKey(c => c.FacilityId, ds => ds.Read(r => r.Action("getFNList", "Facility")), "FacilityId", "FacilityName").Title("Facility").Width(280).Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
+                                    columns.Bound(c => c.RoomName).Title("Room").Width(280);
+                                    columns.Bound(c => c.Capacity).Width(130);
+                                    columns.Bound(c => c.isActive).ClientTemplate(
                                     "# if(isActive) { #" +
-                                    "<span class='status status-teal''><span class='status-dot status-dot-animated'></span>Active</span>" +
+                                    "<span class='status status-teal'><span class='status-dot'></span>Active</span>" +
                                     "# } else { #" +
-                                    "<span class='status status-red''><span class='status-dot status-dot-animated'></span>Inactive</span>" +
+                                    "<span class='status status-red'><span class='status-dot'></span>Inactive</span>" +
                                     "# } #"
-                                    ).Title("Active").Width(200);
+                                    ).Title("Status").Width(130);
                                     columns.Command(command =>
                                     {
                                         command.Custom("view")
-                                    .Text("<i class='ti ti-eye'></i>View")
+                                    .Text("<i class='ti ti-eye'></i> View")
                                     .Click("onViewClick")
-                                    .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
-                                        command.Custom("delete")
-                                    .Text("<i class='ti ti-trash'></i> Delete")
-                                    .Click("onDeleteClick")
-                                    .HtmlAttributes(new { @class = "k-button k-grid-delete k-button-sm k-rounded-md k-button-solid k-button-solid-danger delete-button" });
+                                    .HtmlAttributes(new { @class = "k-button k-grid-View setup-action setup-action-view" });
                                     })
                                     .Title("Actions")
+                                    .Width(140)
                                     .Exportable(false);
                                 })
-                                .Pageable()
-                                .Scrollable()
                                 .ToolBar(toolbar =>
                                 {
+                                    toolbar.Excel();
                                     toolbar.Search();
                                 })
+                                .Pageable()
+                                .Scrollable(scrollable => scrollable.Height("auto"))
                                 .DataSource(dataSource => dataSource
                                 .Ajax()
-                                .Group(group => group.Add(c => c.FacilityId))
-                                .Model(model => model.Id(p => p.FacilityId))
-                                .Read(read => read.Action("getFNRooms", "Room"))
+                                .Model(model => model.Id(p => p.RoomId))
+                                .Read(read => read.Action("getFNRooms", "Room").Type(HttpVerbs.Get))
                                 .PageSize(50)
                                 )
                                 )
@@ -112,12 +114,17 @@
 </div>
 @*off canvas edit form*@
 <form id="fcFRM1" asp-controller="Room" asp-action="newFNRoom" enctype="multipart/form-data" method="post">
-<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+<div class="offcanvas offcanvas-end management-offcanvas" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
     <div class="offcanvas-header">
-        <h2 class="offcanvas-title" id="offcanvasEndLabel">New Function Room</h2>
+        <div>
+            <span class="reservation-eyebrow">Room setup</span>
+            <h2 class="offcanvas-title" id="offcanvasEndLabel">New Function Room</h2>
+            <p>Add a meeting space and define its facility, capacity, and status.</p>
+        </div>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body">
+            <div class="management-form-section-title">Room information</div>
        
             <div class="mb-3">
                 <label class="form-label required">Room Name </label>
@@ -163,9 +170,25 @@
             </div>
             <div class="mb-3">
                 <label class="form-label required">Capacity</label>
-                <input class="form-control" name="_capacity" type="number" required="required">
+                <input class="form-control" name="_capacity" type="number" min="1" max="1000" step="1" inputmode="numeric" required="required" aria-describedby="function-room-capacity-help">
+                <div id="function-room-capacity-help" class="form-hint">Enter a whole number from 1 to 1,000.</div>
             </div>
-            <div class="mb-3 d-flex align-items-center">
+            <div class="management-form-section-title">Rates <span class="text-secondary">Optional</span></div>
+            <div class="mb-3">
+                <label class="form-label" for="functionRoomCostPerDay">Cost Per Day <span class="text-secondary">Optional</span></label>
+                <input id="functionRoomCostPerDay" class="form-control" name="_costPerDay" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="functionRoomCostPerWeek">Cost Per Week <span class="text-secondary">Optional</span></label>
+                <input id="functionRoomCostPerWeek" class="form-control" name="_costPerWeek" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="functionRoomCostPerMonth">Cost Per Month <span class="text-secondary">Optional</span></label>
+                <input id="functionRoomCostPerMonth" class="form-control" name="_costPerMonth" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00">
+                <div class="form-hint">Leave rate fields blank when no standard room charge applies.</div>
+            </div>
+            <div class="management-form-section-title">Availability</div>
+            <div class="management-toggle-row">
                 <label for="isActiveCheckbox" class="form-label me-auto">Is Active</label>
                 <div class="form-check form-switch">
                     <input class="form-check-input" id="switch" name="_isActive" type="checkbox" value="true" checked>

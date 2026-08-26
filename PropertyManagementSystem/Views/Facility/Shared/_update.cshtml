@@ -1,6 +1,7 @@
 ﻿@model PropertyManagementSystem.Models.GFMS_Facility;
-<form asp-action="EditFacility" asp-controller="Facility" method="post">
+<form asp-action="EditFacility" asp-controller="Facility" method="post" class="management-update-form facility-offcanvas-form">
     <input type="hidden" name="_facilityId" asp-for="FacilityId" />
+    <div class="management-form-section-title">Facility information</div>
     <div class="mb-3">
         <label class="form-label required">Facility Name </label>
         <input class="form-control" name="_facilityName" type="text" required="required" asp-for="FacilityName">
@@ -47,7 +48,8 @@
             .HtmlAttributes(new { style = "width: 100%" })
             )
     </div>
-    <label class="row">
+    <div class="management-form-section-title">Availability</div>
+    <label class="management-toggle-row">
         <span class="col form-label">Is Active</span>
         <span class="col-auto">
             <label class="form-check form-check-single form-switch">
@@ -55,7 +57,7 @@
             </label>
         </span>
     </label>
-    <div class="mb-3 text-end">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+    <div class="management-form-actions">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes</button>
     </div>
 </form>

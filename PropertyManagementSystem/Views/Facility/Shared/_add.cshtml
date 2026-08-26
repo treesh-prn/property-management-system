@@ -1,4 +1,5 @@
 ﻿<form id="fcFRM1" asp-controller="Facility" asp-action="newFacility" enctype="multipart/form-data" method="post">
+        <div class="management-form-section-title">Facility information</div>
         <div class="mb-3">
             <label class="form-label required">Facility Name </label>
             <input class="form-control" name="_name" type="text" required="required">
@@ -44,13 +45,14 @@
                 .HtmlAttributes(new { style = "width: 100%" })
                 )
         </div>
-        <div class="mb-3 d-flex align-items-center">
+        <div class="management-form-section-title">Availability</div>
+        <div class="management-toggle-row">
             <label for="isActiveCheckbox" class="form-label me-auto">Is Active</label>
             <div class="form-check form-switch">
                 <input class="form-check-input" id="isActiveCheckbox" name="_isActive" type="checkbox" value="true" checked>
             </div>
         </div>
-        <div class="mb-3 text-end">
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+        <div class="management-form-actions">
+            <button type="submit" class="btn btn-primary"><i class="ti ti-plus" aria-hidden="true"></i> Add Facility</button>
         </div>
 </form>

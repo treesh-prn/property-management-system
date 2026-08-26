@@ -1,0 +1,133 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@{
+    var details = Model.ReservationDetails?.ToList() ?? new List<PropertyManagementSystem.Models.GFMS_ReservationDetails>();
+    var detail = details.FirstOrDefault();
+    var scheduleType = detail?.ScheduleType switch
+    {
+        0 => "Regular",
+        1 => "Swing",
+        2 => "Graveyard",
+        _ => "Not provided"
+    };
+    var appliedUnit = detail?.AppliedUnit == null ? "Not provided" : detail.AppliedUnit == 0 ? "Dorm" : "Housing";
+    var contactNumber = string.IsNullOrWhiteSpace(detail?.ContactNumber) ? "Not provided" : $"+63 {detail.ContactNumber}";
+    var dependentCount = details.Count(item => !string.IsNullOrWhiteSpace(item.DependentName));
+    var hasDepartmentHeadReview = detail != null &&
+        (detail.isCritical.HasValue || detail.isOnCall.HasValue || !string.IsNullOrWhiteSpace(detail.DeptHeadRemarks));
+    var criticalOperations = detail?.isCritical == null ? "Not provided" : detail.isCritical == true ? "Yes" : "No";
+    var onCall = detail?.isOnCall == null ? "Not provided" : detail.isOnCall == true ? "Yes" : "No";
+}
+
+<section class="module-reservation-details accommodation-reservation-details" aria-labelledby="dorm-details-heading">
+    <header class="accommodation-details-header">
+        <div class="accommodation-details-icon" aria-hidden="true"><i class="ti ti-home"></i></div>
+        <div>
+            <h3 id="dorm-details-heading">Application details</h3>
+            <p>Applicant profile, housing preferences, and room assignment.</p>
+        </div>
+        <span class="accommodation-guest-count">@appliedUnit</span>
+    </header>
+
+    @if (detail != null)
+    {
+        <div class="accommodation-detail-section">
+            <h4>Applicant and housing information</h4>
+            <dl class="module-detail-grid dorm-detail-grid">
+                <div class="module-detail-item">
+                    <dt>Email</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.ReservationHeader.RequestorEmail) ? "Not provided" : Model.ReservationHeader.RequestorEmail)</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Department</dt>
+                    <dd>@(Model.Department?.DepartmentCode ?? "Not provided")</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Contact number</dt>
+                    <dd>@contactNumber</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Schedule type</dt>
+                    <dd>@scheduleType</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Applied unit</dt>
+                    <dd>@appliedUnit</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Dependents</dt>
+                    <dd>@dependentCount</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Facility</dt>
+                    <dd>@(Model.Facility?.FacilityName ?? detail.Facility?.FacilityName ?? "For assignment")</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Room</dt>
+                    <dd>@(Model.Room?.RoomName ?? detail.Room?.RoomName ?? "For assignment")</dd>
+                </div>
+                <div class="module-detail-item module-detail-item-wide">
+                    <dt>Letter of intent</dt>
+                    <dd>
+                        @if (!string.IsNullOrWhiteSpace(detail.FileAttachment))
+                        {
+                            <a href="@detail.FileAttachment" target="_blank" rel="noopener noreferrer"><i class="ti ti-paperclip" aria-hidden="true"></i> View attachment</a>
+                        }
+                        else
+                        {
+                            <span>Not provided</span>
+                        }
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        @if (Model.IncludedEquipments.Count > 0 || Model.AdditionalEquipments.Count > 0)
+        {
+            <div class="accommodation-detail-section">
+                <h4>Equipment assignment</h4>
+                <div class="reservation-equipment-chips">
+                    @foreach (var item in Model.IncludedEquipments.Concat(Model.AdditionalEquipments))
+                    {
+                        <span class="badge @(item.IsAutomatic ? "bg-blue-lt" : "bg-secondary-lt")">@item.Quantity× @item.EquipmentName</span>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (hasDepartmentHeadReview)
+        {
+            <div class="accommodation-detail-section department-head-review-section">
+                <h4>Department Head Remarks</h4>
+                <dl class="module-detail-grid department-head-review-grid">
+                    <div class="module-detail-item">
+                        <dt>Current position</dt>
+                        <dd>@(Model.Position?.PositionName ?? "Not provided")</dd>
+                    </div>
+                    <div class="module-detail-item">
+                        <dt>Employment level</dt>
+                        <dd>@(Model.EmploymentLevel?.Name ?? "Not provided")</dd>
+                    </div>
+                    <div class="module-detail-item">
+                        <dt>Critical to operations</dt>
+                        <dd>@criticalOperations</dd>
+                    </div>
+                    <div class="module-detail-item">
+                        <dt>On call</dt>
+                        <dd>@onCall</dd>
+                    </div>
+                    <div class="module-detail-item module-detail-item-wide department-head-remarks-value">
+                        <dt>Remarks</dt>
+                        <dd>@(string.IsNullOrWhiteSpace(detail?.DeptHeadRemarks) ? "No remarks provided" : detail.DeptHeadRemarks)</dd>
+                    </div>
+                </dl>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="accommodation-details-empty">
+            <i class="ti ti-home-off" aria-hidden="true"></i>
+            <div><strong>No application details available</strong><span>Housing information has not been added yet.</span></div>
+        </div>
+    }
+</section>

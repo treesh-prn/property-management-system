@@ -1,8 +1,9 @@
 ﻿@model PropertyManagementSystem.Models.RoomViewModel;
-<form asp-action="EditGHRoom" asp-controller="Room" method="post">
+<form asp-action="EditGHRoom" asp-controller="Room" method="post" class="management-update-form">
     <input type="hidden" name="_roomId" asp-for="RoomId" />
     <input type="hidden" name="_roomType" asp-for="RoomType" />
 
+    <div class="management-form-section-title">Room information</div>
     <div class="mb-3">
         <label class="form-label required">Room Name </label>
         <input class="form-control" name="_roomName" type="text" required="required" asp-for="RoomName">
@@ -37,21 +38,24 @@
     </div>
     <div class="mb-3">
         <label class="form-label required">Capacity</label>
-        <input class="form-control" name="_capacity" type="number" required="required" asp-for="Capacity">
+        <input class="form-control" name="_capacity" type="number" min="1" max="1000" step="1" inputmode="numeric" required="required" asp-for="Capacity" aria-describedby="edit-room-capacity-help">
+        <div id="edit-room-capacity-help" class="form-hint">Enter a whole number from 1 to 1,000.</div>
     </div>
     <div class="mb-3">
-        <label class="form-label required">Cost Per Day</label>
-        <input class="form-control" name="_costPerDay" type="number" step="0.01" asp-for="CostPerDay">
+        <label class="form-label">Cost Per Day <span class="text-secondary">Optional</span></label>
+        <input class="form-control" name="_costPerDay" type="number" min="0" step="0.01" inputmode="decimal" asp-for="CostPerDay">
     </div>
     <div class="mb-3">
-        <label class="form-label required">Cost Per Week</label>
-        <input class="form-control" name="_costPerWeek" type="number"  asp-for="CostPerWeek">
+        <label class="form-label">Cost Per Week <span class="text-secondary">Optional</span></label>
+        <input class="form-control" name="_costPerWeek" type="number" min="0" step="0.01" inputmode="decimal" asp-for="CostPerWeek">
     </div>
     <div class="mb-3">
-        <label class="form-label required">Cost Per Month</label>
-        <input class="form-control" name="_costPerMonth" type="number" asp-for="CostPerMonth">
+        <label class="form-label">Cost Per Month <span class="text-secondary">Optional</span></label>
+        <input class="form-control" name="_costPerMonth" type="number" min="0" step="0.01" inputmode="decimal" asp-for="CostPerMonth">
+        <div class="form-hint">Leave rate fields blank when no standard room charge applies.</div>
     </div>
-    <label class="row">
+    <div class="management-form-section-title">Availability</div>
+    <label class="management-toggle-row">
         <span class="col form-label">Is Active</span>
         <span class="col-auto">
             <label class="form-check form-check-single form-switch">
@@ -59,7 +63,7 @@
             </label>
         </span>
     </label>
-    <div class="mb-3 text-end">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+    <div class="management-form-actions">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes</button>
     </div>
 </form>

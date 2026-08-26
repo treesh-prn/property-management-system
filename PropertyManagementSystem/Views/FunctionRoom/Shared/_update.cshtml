@@ -8,14 +8,16 @@
     {
         if (Model.ReservationDetails.FirstOrDefault()?.StartDate >= DateTime.Now.AddHours(1))
         {
-        <div class="card-header">
+        <div class="card-header reservation-update-trigger-bar">
             <button type="button" class="btn btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#modal-update">
-                Update Reservation
+                <i class="ti ti-pencil" aria-hidden="true"></i>
+                Edit Reservation
             </button>
         </div>
         }
     }    
-<div class="card-body">
+<partial name="~/Views/FunctionRoom/Shared/_reservationDetails.cshtml" model="Model" />
+<div class="card-body legacy-module-summary" hidden>
     <div class="row align-items-start">
         <div class="col-2">
             <img src="@Url.Content("~/img/facility-room.jpg")" alt="Accommodation" class="rounded img-fluid">
@@ -93,7 +95,7 @@
 </div>
 @if (Model.ReservationDetails.FirstOrDefault().ReservationId != 0)
 {
-    <div class="accordion" id="accordion-example">
+    <div class="accordion legacy-module-details" id="accordion-example" hidden>
         <div class="accordion-item">
             <h2 class="accordion-header" id="heading-1">
                 <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true">
@@ -141,7 +143,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
+                                    @if ((Model.ReservationDetails.FirstOrDefault()?.FacilityId ?? 0) != 0 && Model.Facility != null && Model.Room != null)
                                     {
                                         <div class="col-lg-3 col-md-6 mb-4">
                                             <div class="datagrid-item">
@@ -203,16 +205,22 @@
 @foreach (var detail in Model.ReservationDetails)
 {
     <div class="modal modal-blur fade" id="modal-update" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
-            <div class="modal-content">
+        <div class="modal-dialog modal-xl modal-dialog-centered update-workflow-dialog" role="document">
+            <div class="modal-content update-workflow-modal">
                 <div class="modal-header">
-                    <h5 class="modal-title">Edit Reservation</h5>
+                    <div class="update-workflow-heading">
+                        <span class="update-workflow-icon" aria-hidden="true"><i class="ti ti-building-community"></i></span>
+                        <div>
+                            <span class="reservation-eyebrow">Function room reservation</span>
+                            <h5 class="modal-title">Edit Reservation</h5>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form asp-action="EditReservationDetails" asp-controller="FunctionRoom" method="post">
+                <form asp-action="EditReservationDetails" asp-controller="FunctionRoom" method="post" class="update-workflow-form">
                     <input type="hidden" name="ReservationDetailId" value="@detail.ReservationDetailId">
                     <input type="hidden" name="ReservationId" value="@detail.ReservationId">
-                    <div class="container container-lg mt-3">
+                    <div class="modal-body update-workflow-body">
                         <div id="dynamic-rows">
                             <div class="row">
                                 <div class="col-lg-12 mb-3">
@@ -230,32 +238,32 @@
                                                     <span class="input-group-text">
                                                         +63
                                                     </span>
-                                                    <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" value="@detail.ContactNumber">
+                                                    <input type="tel" class="form-control" name="_contactNumber" placeholder="Mobile Number" minlength="10" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" value="@detail.ContactNumber">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <label class="form-label">Duration of Stay</label>
+                                    <div class="reservation-section-title"><i class="ti ti-calendar-time" aria-hidden="true"></i>Reservation schedule</div>
                                     <div class="row mb-3">
                                         <div class="col-lg-6">
-                                            <label class="form-label">Start Date</label>
+                                            <label class="form-label">Start Date and Time</label>
                                             @(
                                                 Html.Kendo().DateTimePicker()
                                                 .Name("StartDate")
                                                 .Value(detail.StartDate)
                                                 .DateInput(true)
-                                                .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                                .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                .Format("MM/dd/yyyy hh:mm tt")
+                                                .ParseFormats(new string[] { "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                                 )
                                         </div>
                                         <div class="col-lg-6">
-                                            <label class="form-label">End Date</label>
+                                            <label class="form-label">End Date and Time</label>
                                             @(
                                                 Html.Kendo().DateTimePicker()
                                                 .Name("EndDate")
                                                 .Value(detail.EndDate)
-                                                .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                                .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                                .Format("MM/dd/yyyy hh:mm tt")
+                                                .ParseFormats(new string[] { "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
 
                                                 )
                                         </div>
@@ -299,17 +307,17 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer d-flex justify-content-between align-items-center">
-                        <a data-bs-dismiss="modal" class="btn btn-link link-secondary">
-                            Go Back
-                        </a>
+                    <div class="modal-footer update-workflow-footer">
+                        <button type="button" data-bs-dismiss="modal" class="btn btn-outline-secondary">
+                            Cancel
+                        </button>
                         <div class="ms-auto">
                             @if (Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED" && Model.ReservationHeader.Status != "APPROVED")
                             {
 
                                 <button type="submit" class="btn btn-primary ms-auto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                                    Update
+                                    <i class="ti ti-device-floppy" aria-hidden="true"></i>
+                                    Save Changes
                                 </button>
                             }
                         </div>

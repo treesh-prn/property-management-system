@@ -1,27 +1,28 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+    var isRequestorView = activeRole == "GFMS.Requestor";
 }
-<div class="page-wrapper">
+<div class="page-wrapper reservation-page">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
                     <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        Reservation
-                    </div>
+                    <div class="page-pretitle">Reservation</div>
                     <h2 class="page-title">
-                        DORM and HOUSING
+                        Dorm and Housing Applications
                     </h2>
+                    <div class="text-secondary mt-1">Review existing requests and their approval status.</div>
                 </div>
                 <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
-                            <i class="ti ti-plus"></i>
-                            Create New Application
-                        </a>
+                        <button type="button" class="btn btn-secondary" disabled aria-disabled="true" title="Dorm and Housing applications are coming soon">
+                            <i class="ti ti-lock"></i>
+                            Coming soon
+                        </button>
                     </div>
                 </div>
             </div>
@@ -30,17 +31,37 @@
     <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
+            <div class="alert alert-info" role="status">
+                <i class="ti ti-info-circle me-2" aria-hidden="true"></i>
+                <strong>Dorm and Housing applications are coming soon.</strong>
+                New applications are temporarily unavailable. Existing requests remain visible below.
+            </div>
             <div class="row row-deck row-cards">
                 <div class="col-lg-12 col-md-12">
-                    <div class="card">
-                       @(Html.Kendo().TabStrip()
+                    <div class="card reservation-list-card">
+                        <div class="card-header reservation-list-heading">
+                            <div>
+                                <span class="reservation-eyebrow">@(isRequestorView ? "My requests" : "Application workspace")</span>
+                                <h3 class="card-title">Dorm and housing applications</h3>
+                                <p class="card-subtitle">@(isRequestorView ? "Continue a draft or track approval progress." : "Review pending approvals or open your submitted applications.")</p>
+                            </div>
+                        </div>
+                        @if (isRequestorView)
+                        {
+                            <div class="card-body">
+                                <partial name="Shared/_myReservation" />
+                            </div>
+                        }
+                        else
+                        {
+                        @(Html.Kendo().TabStrip()
                                 .Name("tabstrip")
                                 .Animation(animation =>
                                 animation.Open(effect =>
                                 effect.Fade(FadeDirection.In)))
                                 .Items(tabstrip =>
                                 {
-                                if (!User.IsInRole("GFMS.Requestor"))
+                                if (!isRequestorView)
                                 {
                                     tabstrip.Add().Text("Reservation Request")
                                     .Encoded(false)
@@ -69,6 +90,7 @@
                                 }       
                                 })
                             )
+                        }
                     </div>
                 </div>
             </div>
@@ -76,7 +98,6 @@
     </div>
 </div>
 
-<partial name="Shared/_newReservation" />
 @*DELETE MODAL*@
 <div class="modal modal-blur fade" id="modal-danger" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
@@ -111,3 +132,4 @@
     </div>
 </div>
 @*END DELETE MODAL*@
+@inject PropertyManagementSystem.Services.IRoleService RoleService

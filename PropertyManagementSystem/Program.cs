@@ -7,13 +7,18 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using PropertyManagementSystem.Attributes;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 var domain =  builder.Configuration["Domain"];
 
 // Add framework services.
 builder.Services
-    .AddControllersWithViews()
+    .AddControllersWithViews(options =>
+    {
+        options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+    })
     // Maintain property names during serialization. See:
     // https://github.com/aspnet/Announcements/issues/194
     .AddNewtonsoftJson(options => options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver());
@@ -40,9 +45,24 @@ builder.Services.AddHttpClient();
 builder.Services.AddRazorPages();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<EquipmentService>();
+builder.Services.AddScoped<IFacilityEquipmentLinkService, FacilityEquipmentLinkService>();
+builder.Services.AddScoped<IReservationEquipmentAllocationService, ReservationEquipmentAllocationService>();
+builder.Services.AddScoped<FunctionRoomReservationService>();
+builder.Services.AddScoped<IReservationAuthorizationService, ReservationAuthorizationService>();
+builder.Services.AddScoped<IReservationAuditService, ReservationAuditService>();
+builder.Services.AddScoped<IReservationAssignmentService, ReservationAssignmentService>();
+builder.Services.AddScoped<IReservationCodeService, ReservationCodeService>();
+builder.Services.AddScoped<IReservationProcessingPolicy, ReservationProcessingPolicy>();
+builder.Services.AddScoped<IReservationScheduleStatusService, ReservationScheduleStatusService>();
+builder.Services.AddScoped<ISetupReservationGuard, SetupReservationGuard>();
+builder.Services.AddHostedService<ReservationScheduleStatusWorker>();
 builder.Services.AddScoped<EmployeeService>();
+builder.Services.AddScoped<ReportServices>();
+builder.Services.AddSingleton<CompanyChargesPdfService>();
+builder.Services.AddSingleton<OccupancyPdfService>();
+builder.Services.AddSingleton<ExcelReportService>();
 builder.Services.AddScoped<SsrsService>();
-builder.Services.AddControllersWithViews();
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
@@ -88,7 +108,7 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(@"C:\Keys\")) // Ensure same key directory as app1
     .SetApplicationName("SharedCookieApp");
 
-builder.Services.AddSingleton<IAuthorizationHandler, ActiveRoleHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ActiveRoleHandler>();
 builder.Services.AddSingleton<IAuthorizationPolicyProvider, CustomAuthorizationPolicyProvider>();
 
 
@@ -113,6 +133,18 @@ else
 
 
 app.UseHttpsRedirection();
+app.UseStatusCodePagesWithReExecute("/Error/{0}");
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        context.Response.Headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; connect-src 'self' https:; font-src 'self' data: https:; frame-ancestors 'self';";
+        return Task.CompletedTask;
+    });
+    await next();
+});
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -129,12 +161,6 @@ app.MapControllerRoute(
     pattern: "Accommodation/ReservationDetails/{Id}",
     defaults: new { controller = "Accommodation", action = "ReservationDetails" }
 );
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Report}/{action=GenerateReport}/{_startDate?}/{_endDate?}/{_preparedBy?}");
-
-app.UseDeveloperExceptionPage();
 
 app.MapRazorPages();
 

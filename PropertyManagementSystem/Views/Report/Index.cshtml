@@ -1,77 +1,182 @@
-﻿@using System.Globalization
-@model IEnumerable<PropertyManagementSystem.Models.ReservationReport>
+@model PropertyManagementSystem.Models.OccupancyReportRequest
 
+@{
+    ViewData["Title"] = "Occupancy Report";
+    var reportError = ViewData["ReportError"] as string;
+}
 
-<div class="page-wrapper">
-    <!-- Page header -->
-    <div class="page-header d-print-none">
-        <div class="container-xl">
-            <div class="row g-2 align-items-center">
-                <div class="col">
-                    <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        REPORTS
+<div class="page-wrapper report-workspace">
+    <div class="container-xl">
+        <header class="report-page-heading">
+            <div class="report-heading-main">
+                <span class="report-heading-icon"><i class="ti ti-calendar-stats" aria-hidden="true"></i></span>
+                <div>
+                    <div class="page-pretitle">REPORTING WORKSPACE</div>
+                    <h1>Reservation Occupancy</h1>
+                    <p>Review approved room usage, occupants, and stay schedules for a selected period.</p>
+                </div>
+            </div>
+            <div class="report-output-badges" aria-label="Available report formats">
+                <span class="report-heading-badge"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> PDF</span>
+                <span class="report-heading-badge report-heading-badge-excel"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel</span>
+            </div>
+        </header>
+
+        <nav class="report-type-navigation" aria-label="Report types">
+            <a asp-controller="Report" asp-action="MonthlyChargesReport">
+                <i class="ti ti-receipt-2" aria-hidden="true"></i>
+                Charges
+            </a>
+            <a class="active" asp-controller="Report" asp-action="Index" aria-current="page">
+                <i class="ti ti-calendar-stats" aria-hidden="true"></i>
+                Occupancy
+            </a>
+        </nav>
+
+        @if (!string.IsNullOrWhiteSpace(reportError))
+        {
+            <div class="report-message report-message-error" role="alert">
+                <span class="report-message-icon"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span>
+                <div>
+                    <strong>Report could not be generated</strong>
+                    <p>@reportError</p>
+                    <small>Your filter values were preserved. Review them and try again.</small>
+                </div>
+            </div>
+        }
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-xl-8">
+                <section class="card report-filter-card" aria-labelledby="occupancy-filter-heading">
+                    <div class="card-header">
+                        <span class="report-card-icon"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i></span>
+                        <div>
+                            <h2 class="card-title" id="occupancy-filter-heading">Report filters</h2>
+                            <p>Select a reservation type and a period of up to 31 days.</p>
+                        </div>
                     </div>
-                    <h2 class="page-title">
-                        WEEKLY OCCUPANCY
-                    </h2>
-                </div>
-                <!-- Page title actions -->
-                <div class="col-auto ms-auto d-print-none">
-                </div>
+                    <div class="card-body">
+                        <form id="occupancyReportForm"
+                              method="get"
+                              asp-action="GenerateWeeklyOccupancy"
+                              target="_blank"
+                              rel="noopener"
+                              novalidate>
+                            <div asp-validation-summary="ModelOnly" class="report-validation-summary" role="alert"></div>
+
+                            <div class="report-form-grid">
+                                <div class="report-field">
+                                    <label for="_startDate" class="form-label required">Start date</label>
+                                    @(Html.Kendo().DatePicker()
+                                        .Name("_startDate")
+                                        .Value(Model.StartDate)
+                                        .Format("MMM dd, yyyy")
+                                        .ParseFormats(new[] { "MMM dd, yyyy", "yyyy-MM-dd", "yyyy/MM/dd" })
+                                        .HtmlAttributes(new { id = "_startDate", style = "width:100%;", required = "required" }))
+                                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                                    <small>First date included in the occupancy window.</small>
+                                </div>
+
+                                <div class="report-field">
+                                    <label for="_endDate" class="form-label required">End date</label>
+                                    @(Html.Kendo().DatePicker()
+                                        .Name("_endDate")
+                                        .Value(Model.EndDate)
+                                        .Format("MMM dd, yyyy")
+                                        .ParseFormats(new[] { "MMM dd, yyyy", "yyyy-MM-dd", "yyyy/MM/dd" })
+                                        .HtmlAttributes(new { id = "_endDate", style = "width:100%;", required = "required" }))
+                                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                                    <small>Must be on or after the start date and within 31 days.</small>
+                                </div>
+
+                                <div class="report-field report-field-full">
+                                    <label for="_facility" class="form-label required">Reservation type</label>
+                                    @(Html.Kendo().DropDownList()
+                                        .Name("_facility")
+                                        .OptionLabel("Select a reservation type")
+                                        .DataTextField("Text")
+                                        .DataValueField("Value")
+                                        .Value(Model.ReservationType)
+                                        .BindTo(new List<SelectListItem>
+                                        {
+                                            new() { Text = "Function Room", Value = "FN" },
+                                            new() { Text = "Guesthouse", Value = "GH" },
+                                            new() { Text = "Dorm and Housing", Value = "DRM" }
+                                        })
+                                        .HtmlAttributes(new { id = "_facility", style = "width:100%;", required = "required" }))
+                                    <span asp-validation-for="ReservationType" class="text-danger"></span>
+                                    <small>Only reservations belonging to the selected module are included.</small>
+                                </div>
+                            </div>
+
+                            <div class="report-form-actions">
+                                <div class="report-output-note">
+                                    <i class="ti ti-external-link" aria-hidden="true"></i>
+                                    Preview opens a PDF. Download as PDF or Excel using the same report data.
+                                </div>
+                                <div class="report-action-buttons">
+                                    <button type="submit" name="download" value="false" class="btn btn-outline-primary">
+                                        <i class="ti ti-eye" aria-hidden="true"></i>
+                                        Preview report
+                                    </button>
+                                    <button type="submit" name="download" value="true" class="btn btn-primary">
+                                        <i class="ti ti-download" aria-hidden="true"></i>
+                                        Download PDF
+                                    </button>
+                                    <button type="submit" name="format" value="excel" class="btn btn-success">
+                                        <i class="ti ti-file-spreadsheet" aria-hidden="true"></i>
+                                        Export Excel
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <aside class="card report-help-card" aria-labelledby="occupancy-includes-heading">
+                    <div class="card-body">
+                        <span class="report-help-icon"><i class="ti ti-building-community" aria-hidden="true"></i></span>
+                        <h2 id="occupancy-includes-heading">What this report shows</h2>
+                        <ul>
+                            <li>Reservations overlapping the selected period</li>
+                            <li>Assigned facilities and rooms</li>
+                            <li>Arrival/start and departure/end schedules</li>
+                            <li>Occupancy data grouped by reservation type</li>
+                        </ul>
+                        <div class="report-help-tip">
+                            <strong>Recommended</strong>
+                            <span>Use a 7-day range for weekly operations and a full month only when needed.</span>
+                        </div>
+                    </div>
+                </aside>
             </div>
         </div>
-        <div class="container-xl mt-4">
-            <div class="card">
-                <div class="card-body">
-                    <form id="filterForm" class="row g-3" method="get" asp-action="GenerateWeelyOccupancy">
-                        <!-- Start Date Field -->
-                        <div class="col-lg-3">
-                            <label for="_startDate" class="form-label">Start Date</label>
-                            @(Html.Kendo().DatePicker()
-                                .Name("_startDate")
-                                .Value(DateTime.Today)
-                                .Format("yyyy/MM/dd")
-                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
-                                .HtmlAttributes(new { id = "_startDate", style = "width: 100%;" })
-                                )
-                        </div>
-
-                        <!-- End Date Field -->
-                        <div class="col-lg-3">
-                            <label for="_endDate" class="form-label">End Date</label>
-                            @(Html.Kendo().DatePicker()
-                                .Name("_endDate")
-                                .Value(DateTime.Today)
-                                .Format("yyyy/MM/dd")
-                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
-                                .HtmlAttributes(new { id = "_endDate", style = "width: 100%;" })
-                                )
-                        </div>
-
-                        <!-- Facility/Guesthouse Dropdown -->
-                        <div class="col-lg-3">
-                            <label for="_facility" class="form-label">Select Type</label>
-                            @(Html.Kendo().DropDownList()
-                                .Name("_facility")
-                                .OptionLabel("Select Type")
-                                .DataTextField("Text")
-                                .DataValueField("Value")
-                                .BindTo(new List<SelectListItem> {
-                            new SelectListItem { Text = "Facility", Value = "FN" },
-                            new SelectListItem { Text = "Guesthouse", Value = "GH" }
-                            })
-                                .HtmlAttributes(new { id = "_facility", style = "width: 100%;" })
-                                )
-                        </div>
-                        <!-- Submit Button -->
-                        <div class="col-lg-3 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-primary">Generate Report</button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-        </div>
-
     </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('occupancyReportForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function (event) {
+            var start = $('#_startDate').data('kendoDatePicker')?.value();
+            var end = $('#_endDate').data('kendoDatePicker')?.value();
+            if (start && end && end < start) {
+                event.preventDefault();
+                window.showToast?.('End date must be on or after the start date.', 'danger');
+                return;
+            }
+
+            if (start && end) {
+                var rangeDays = Math.floor((end - start) / 86400000) + 1;
+                if (rangeDays > 31) {
+                    event.preventDefault();
+                    window.showToast?.('Occupancy reports are limited to 31 days.', 'danger');
+                }
+            }
+        });
+    });
+</script>

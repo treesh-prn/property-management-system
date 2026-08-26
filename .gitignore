@@ -364,3 +364,9 @@ FodyWeavers.xsd
 
 #Rider IDE files
 .idea/
+
+# Local agent artifacts, logs, documentation, and test output
+/.agents/
+/logs/
+/docs/
+/test-results/

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using PropertyManagementSystem.Models;
 
 namespace PropertyManagementSystem.Attributes
 {
@@ -28,21 +30,28 @@ namespace PropertyManagementSystem.Attributes
 
     public class ActiveRoleHandler : AuthorizationHandler<ActiveRoleRequirement>
     {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, ActiveRoleRequirement requirement)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public ActiveRoleHandler(UserManager<ApplicationUser> userManager)
         {
-            if (context.User.HasClaim(c => c.Type == "GFMS.Active Role"))
+            _userManager = userManager;
+        }
+
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, ActiveRoleRequirement requirement)
+        {
+            var applicationUser = await _userManager.GetUserAsync(context.User);
+            var activeRole = context.User.FindFirst("GFMS.Active Role")?.Value;
+
+            if (applicationUser != null && !string.IsNullOrWhiteSpace(activeRole))
             {
-                var activeRole = context.User.FindFirst(c => c.Type == "GFMS.Active Role").Value;
+                var assignedRoles = await _userManager.GetRolesAsync(applicationUser);
 
-                Console.WriteLine(activeRole.ToString());
-
-                if (requirement.AllowedRoles.Contains(activeRole))
+                if (assignedRoles.Contains(activeRole, StringComparer.Ordinal) &&
+                    requirement.AllowedRoles.Contains(activeRole, StringComparer.Ordinal))
                 {
                     context.Succeed(requirement);
                 }
             }
-
-            return Task.CompletedTask;
         }
     }
 

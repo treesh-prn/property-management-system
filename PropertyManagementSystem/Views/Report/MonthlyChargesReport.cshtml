@@ -1,72 +1,171 @@
-﻿@using System.Globalization
-@model IEnumerable<PropertyManagementSystem.Models.ReservationReport>
+@model PropertyManagementSystem.Models.CompanyChargesReportRequest
 
+@{
+    ViewData["Title"] = "Company and Department Charges";
+    var reportError = ViewData["ReportError"] as string;
+}
 
-<div class="page-wrapper">
-    <!-- Page header -->
-    <div class="page-header d-print-none">
-        <div class="container-xl">
-            <div class="row g-2 align-items-center">
-                <div class="col">
-                    <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        REPORTS
+<div class="page-wrapper report-workspace">
+    <div class="container-xl">
+        <header class="report-page-heading">
+            <div class="report-heading-main">
+                <span class="report-heading-icon"><i class="ti ti-report-money" aria-hidden="true"></i></span>
+                <div>
+                    <div class="page-pretitle">REPORTING WORKSPACE</div>
+                    <h1>Company and Department Charges</h1>
+                    <p>Generate an itemized billing summary by company, department, room, and equipment.</p>
+                </div>
+            </div>
+            <div class="report-output-badges" aria-label="Available report formats">
+                <span class="report-heading-badge"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> PDF</span>
+                <span class="report-heading-badge report-heading-badge-excel"><i class="ti ti-file-spreadsheet" aria-hidden="true"></i> Excel</span>
+            </div>
+        </header>
+
+        <nav class="report-type-navigation" aria-label="Report types">
+            <a class="active" asp-controller="Report" asp-action="MonthlyChargesReport" aria-current="page">
+                <i class="ti ti-receipt-2" aria-hidden="true"></i>
+                Charges
+            </a>
+            <a asp-controller="Report" asp-action="Index">
+                <i class="ti ti-calendar-stats" aria-hidden="true"></i>
+                Occupancy
+            </a>
+        </nav>
+
+        @if (!string.IsNullOrWhiteSpace(reportError))
+        {
+            <div class="report-message report-message-error" role="alert">
+                <span class="report-message-icon"><i class="ti ti-alert-triangle" aria-hidden="true"></i></span>
+                <div>
+                    <strong>Report could not be generated</strong>
+                    <p>@reportError</p>
+                    <small>Your filter values were preserved. Review them and try again.</small>
+                </div>
+            </div>
+        }
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-xl-8">
+                <section class="card report-filter-card" aria-labelledby="charges-filter-heading">
+                    <div class="card-header">
+                        <span class="report-card-icon"><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i></span>
+                        <div>
+                            <h2 class="card-title" id="charges-filter-heading">Report filters</h2>
+                            <p>Select the scope that should be included in the billing report.</p>
+                        </div>
                     </div>
-                    <h2 class="page-title">
-                        COMPANY AND DEPARTMENT CHARGES
-                    </h2>
-                </div>
-                <!-- Page title actions -->
-                <div class="col-auto ms-auto d-print-none">
-                </div>
+                    <div class="card-body">
+                        <form id="companyChargesReportForm"
+                              method="get"
+                              asp-action="GenerateReport"
+                              target="_blank"
+                              rel="noopener"
+                              novalidate>
+                            <div asp-validation-summary="ModelOnly" class="report-validation-summary" role="alert"></div>
+
+                            <div class="report-form-grid">
+                                <div class="report-field">
+                                    <label for="_startDate" class="form-label required">Start date</label>
+                                    @(Html.Kendo().DatePicker()
+                                        .Name("_startDate")
+                                        .Value(Model.StartDate)
+                                        .Format("MMM dd, yyyy")
+                                        .ParseFormats(new[] { "MMM dd, yyyy", "yyyy-MM-dd", "yyyy/MM/dd" })
+                                        .HtmlAttributes(new { id = "_startDate", style = "width:100%;", required = "required", aria_describedby = "startDateHelp" }))
+                                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                                    <small id="startDateHelp">First date included in the report.</small>
+                                </div>
+
+                                <div class="report-field">
+                                    <label for="_endDate" class="form-label required">End date</label>
+                                    @(Html.Kendo().DatePicker()
+                                        .Name("_endDate")
+                                        .Value(Model.EndDate)
+                                        .Format("MMM dd, yyyy")
+                                        .ParseFormats(new[] { "MMM dd, yyyy", "yyyy-MM-dd", "yyyy/MM/dd" })
+                                        .HtmlAttributes(new { id = "_endDate", style = "width:100%;", required = "required", aria_describedby = "endDateHelp" }))
+                                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                                    <small id="endDateHelp">Must be on or after the start date.</small>
+                                </div>
+
+                                <div class="report-field report-field-wide">
+                                    <label for="_preparedBy" class="form-label required">Prepared by</label>
+                                    <div class="input-icon">
+                                        <span class="input-icon-addon"><i class="ti ti-user-check" aria-hidden="true"></i></span>
+                                        <input type="text"
+                                               id="_preparedBy"
+                                               name="_preparedBy"
+                                               class="form-control"
+                                               value="@Model.PreparedBy"
+                                               maxlength="100"
+                                               autocomplete="name"
+                                               required />
+                                    </div>
+                                    <span asp-validation-for="PreparedBy" class="text-danger"></span>
+                                    <small>This name appears in the report’s prepared-by section.</small>
+                                </div>
+                            </div>
+
+                            <div class="report-form-actions">
+                                <div class="report-output-note">
+                                    <i class="ti ti-external-link" aria-hidden="true"></i>
+                                    Preview opens a PDF. Download as PDF or Excel using the same report data.
+                                </div>
+                                <div class="report-action-buttons">
+                                    <button type="submit" name="download" value="false" class="btn btn-outline-primary">
+                                        <i class="ti ti-eye" aria-hidden="true"></i>
+                                        Preview report
+                                    </button>
+                                    <button type="submit" name="download" value="true" class="btn btn-primary">
+                                        <i class="ti ti-download" aria-hidden="true"></i>
+                                        Download PDF
+                                    </button>
+                                    <button type="submit" name="format" value="excel" class="btn btn-success">
+                                        <i class="ti ti-file-spreadsheet" aria-hidden="true"></i>
+                                        Export Excel
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <aside class="card report-help-card" aria-labelledby="charges-includes-heading">
+                    <div class="card-body">
+                        <span class="report-help-icon"><i class="ti ti-report-money" aria-hidden="true"></i></span>
+                        <h2 id="charges-includes-heading">What this report includes</h2>
+                        <ul>
+                            <li>Company and department charge allocation</li>
+                            <li>Room usage and applicable room charges</li>
+                            <li>Assigned equipment and equipment charges</li>
+                            <li>Reporting period and prepared-by information</li>
+                        </ul>
+                        <div class="report-help-tip">
+                            <strong>Tip</strong>
+                            <span>The PDF uses the same stored-procedure rows for preview and download.</span>
+                        </div>
+                    </div>
+                </aside>
             </div>
         </div>
-        <div class="container-xl mt-4">
-            <div class="card">
-                <div class="card-body">
-                    <form id="filterForm" class="row g-3" method="get" asp-action="GenerateReport">
-                        <!-- Start Date Field -->
-                        <div class="col-lg-3">
-                            <label for="_startDate" class="form-label">Start Date</label>
-                            @(Html.Kendo().DatePicker()
-                                .Name("_startDate")
-                                .Value(DateTime.Today)
-                                .Format("yyyy/MM/dd")
-                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
-                                .HtmlAttributes(new { id = "_startDate", style = "width: 100%;" })
-                                )
-                        </div>
-
-                        <!-- End Date Field -->
-                        <div class="col-lg-3">
-                            <label for="_endDate" class="form-label">End Date</label>
-                            @(Html.Kendo().DatePicker()
-                                .Name("_endDate")
-                                .Value(DateTime.Today)
-                                .Format("yyyy/MM/dd")
-                                .ParseFormats(new string[] { "yyyy/MM/dd", "yyyy-MM-dd" })
-                                .HtmlAttributes(new { id = "_endDate", style = "width: 100%;" })
-                                )
-                        </div>
-
-                        <!-- Prepared By Field -->
-                        <div class="col-lg-3">
-                            <label for="_preparedBy" class="form-label">Prepared By</label>
-                            <input type="text"
-                                   id="_preparedBy"
-                                   name="_preparedBy"
-                                   class="form-control"
-                                   placeholder="Enter Name"
-                                   style="font-size: 15px; font-weight: normal; border-color: var(--tblr-muted); opacity: .8;" />
-                        </div>
-                        <!-- Submit Button -->
-                        <div class="col-lg-3 d-flex align-items-end justify-content-end">
-                            <button type="submit" class="btn btn-primary">Generate Report</button>
-                        </div>
-                    </form>
-
-                </div>
-            </div>
-        </div>
-
+    </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('companyChargesReportForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function (event) {
+            var start = $('#_startDate').data('kendoDatePicker')?.value();
+            var end = $('#_endDate').data('kendoDatePicker')?.value();
+            if (start && end && end < start) {
+                event.preventDefault();
+                window.showToast?.('End date must be on or after the start date.', 'danger');
+            }
+        });
+    });
+</script>

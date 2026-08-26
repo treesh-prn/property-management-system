@@ -1,5 +1,6 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
-<div class="card-body">
+<partial name="~/Views/FunctionRoom/Shared/_reservationDetails.cshtml" model="Model" />
+<div class="card-body legacy-module-summary" hidden>
     <div class="row align-items-start">
         <div class="col-2">
             <img src="@Url.Content("~/img/facility-room.jpg")" alt="Accommodation" class="rounded img-fluid">
@@ -77,7 +78,7 @@
 </div>
 @if (Model.ReservationDetails.FirstOrDefault().ReservationId != 0)
 {
-    <div class="accordion" id="accordion-example">
+    <div class="accordion legacy-module-details" id="accordion-example" hidden>
         <div class="accordion-item">
             <h2 class="accordion-header" id="heading-1">
                 <button class="accordion-button " type="button" data-bs-toggle="collapse" data-bs-target="#collapse-1" aria-expanded="true">
@@ -133,7 +134,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @if (Model.ReservationDetails.FirstOrDefault().FacilityId != 0)
+                                    @if ((Model.ReservationDetails.FirstOrDefault()?.FacilityId ?? 0) != 0 && Model.Facility != null && Model.Room != null)
                                     {
                                         <div class="col-lg-3 col-md-6 mb-4">
                                             <div class="datagrid-item">
@@ -244,6 +245,7 @@
                         </div>
                     </div>
                 </div>
+                <input type="hidden" name="ReservationDetailId" value="@Model.ReservationDetails.FirstOrDefault().ReservationDetailId" />
                 <input type="hidden" name="ReservationId" value="@Model.ReservationDetails.FirstOrDefault().ReservationId" />
             </form>
         </div>

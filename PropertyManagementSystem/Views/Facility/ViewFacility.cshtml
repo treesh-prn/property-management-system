@@ -7,9 +7,12 @@
 }
 @{
     ViewData["Title"] = "Home Page";
-
+    var linkedEquipment = ((IReadOnlyList<PropertyManagementSystem.Models.FacilityEquipmentLinkOption>)(ViewBag.EquipmentLinkOptions
+        ?? new List<PropertyManagementSystem.Models.FacilityEquipmentLinkOption>()))
+        .Where(option => option.Selected)
+        .ToList();
 }
-<div class="page-wrapper">
+<div class="page-wrapper management-page management-detail-page">
     <!-- Page header -->
     <div class="page-header d-print-none">
         <div class="container-xl">
@@ -22,29 +25,7 @@
                     <h2 class="page-title">
                         Facility Details
                     </h2>
-                </div>
-                <!-- Page title actions -->
-                <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        <a href="@Url.Action("Index", "Facility")" class="btn btn-primary bg-green">
-                            <i class="ti ti-arrow-left icon"></i>
-                            Go Back
-                        </a>
-                        @*   <span class="d-none d-sm-inline">
-                        <a href="#" class="btn">
-                        New view
-                        </a>
-                        </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        Create new report
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create new report">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                        </a> *@
-                    </div>
+                    <div class="text-secondary mt-1">Review facility classification, location, and operating status.</div>
                 </div>
             </div>
         </div>
@@ -52,33 +33,31 @@
     <!-- Page body -->
     <div class="page-body">
         <div class="container-xl">
-            <div class="row row-cards">
+            <div class="row row-cards management-detail-layout">
                 <div class="col-md-3">
-                    <div class="card">
+                    <div class="card management-media-card">
                         <div class="card-header card-header-light">
                             <h3 class="card-title">@Model.FacilityName</h3>
                         </div>
                         @*<div class="img-responsive img-responsive-16x9 card-img-top" style="background-image: url(/img/guest-room.jpg)"></div>*@
-                        <img class="img-responsive2" src="@Url.Content("~/img/guest-room.jpg")">
+                        <img class="img-responsive2" src="@Url.Content("~/img/facility-room.jpg")" alt="@Model.FacilityName facility preview">
                         @*<div class="card-body p-0">
                         Lorem Ipsum Dolor Sit Amet
                         </div>*@
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="card">
-                        <div class="card">
+                    <div class="card management-detail-card">
                             <div class="card-header">
                                 <div>
-                                    <h3 class="card-title">
-                                        @Model.FacilityName
-                                    </h3>
-                                    <p class="card-subtitle">
-                                    </p>
+                                    <span class="reservation-eyebrow">Facility record</span>
+                                    <h3 class="card-title">@Model.FacilityName</h3>
+                                    <p class="card-subtitle">Classification, location, and operating information.</p>
                                 </div>
                                 <div class="card-actions">
                                     <a href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
-                                        Edit Room
+                                        <i class="ti ti-edit" aria-hidden="true"></i>
+                                        Edit Facility
                                     </a>
                                 </div>
                             </div>
@@ -127,36 +106,49 @@
                                             }
                                         </div>
                                     </div>
-                                    <div class="datagrid-item hide">
-                                        <div class="datagrid-title">Checkbox</div>
+                                    <div class="datagrid-item datagrid-item-wide">
+                                        <div class="datagrid-title">Linked Equipment</div>
                                         <div class="datagrid-content">
-                                            <label class="form-check">
-                                                <input class="form-check-input" type="checkbox" checked>
-                                                <span class="form-check-label">Click me</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="datagrid-item">
-                                        <div class="datagrid-title">Icon</div>
-                                        <div class="datagrid-content">
-                                            <!-- Download SVG icon from http://tabler-icons.io/i/check -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon text-green" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 12l5 5l10 -10" /></svg>
-                                            Checked
+                                            @if (linkedEquipment.Count == 0)
+                                            {
+                                                <span class="text-secondary">No equipment linked</span>
+                                            }
+                                            else
+                                            {
+                                                <div class="reservation-equipment-chips">
+                                                    @foreach (var item in linkedEquipment)
+                                                    {
+                                                        var behavior = item.LinkType == PropertyManagementSystem.Models.EquipmentLinkTypes.Included
+                                                            ? "Included"
+                                                            : "Add-on";
+                                                        <span class="badge @(item.LinkType == PropertyManagementSystem.Models.EquipmentLinkTypes.Included ? "bg-blue-lt" : "bg-secondary-lt")">
+                                                            @item.DefaultQuantity× @item.EquipmentName · @behavior
+                                                        </span>
+                                                    }
+                                                </div>
+                                            }
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="card-body p-0">
-                        </div>
+                            <div class="card-footer d-print-none">
+                                <a href="@Url.Action("Index", "Facility")" class="btn btn-link link-secondary px-0">
+                                    <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                                    <span>Back to Facilities</span>
+                                </a>
+                            </div>
                     </div>
                 </div>
             </div>
             @*<button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight">Toggle right offcanvas</button>*@
             @*off canvas edit form*@
-            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
+            <div class="offcanvas offcanvas-end management-offcanvas" tabindex="-1" id="offcanvasEnd" aria-labelledby="offcanvasEndLabel">
                 <div class="offcanvas-header">
-                    <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Room</h2>
+                    <div>
+                        <span class="reservation-eyebrow">Facility setup</span>
+                        <h2 class="offcanvas-title" id="offcanvasEndLabel">Edit Facility</h2>
+                        <p>Update the facility classification, location, and status.</p>
+                    </div>
                     <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">

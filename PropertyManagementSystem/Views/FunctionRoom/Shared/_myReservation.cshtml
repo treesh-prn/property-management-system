@@ -1,55 +1,61 @@
 ﻿
-    @(
+@{
+    var currentYear = DateTime.Today.Year;
+    var reservationYears = (ViewData["ReservationYears"] as IEnumerable<int> ?? Array.Empty<int>())
+        .Distinct()
+        .OrderByDescending(year => year)
+        .ToList();
+    var defaultYear = reservationYears.Contains(currentYear)
+        ? currentYear
+        : reservationYears.FirstOrDefault();
+}
+
+<div class="reservation-history-filter">
+    <div>
+        <label class="form-label mb-1" for="functionReservationYear">Schedule year</label>
+        <div class="form-hint">Only years containing your reservations are listed. Requests requiring rescheduling are always shown.</div>
+    </div>
+    <select id="functionReservationYear" class="form-select reservation-year-select"
+            data-reservation-year-filter data-grid-id="reservationGrid2" data-storage-key="function-room">
+        @foreach (var year in reservationYears)
+        {
+            <option value="@year" selected="@(year == defaultYear ? "selected" : null)">@year</option>
+        }
+        <option value="0" selected="@(reservationYears.Count == 0 ? "selected" : null)">All years</option>
+    </select>
+</div>
+
+@(
         Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
         .Name("reservationGrid2")
-        .ToolBar(tools => tools.Excel())
-        .Excel(excel => excel
-        .FileName("Reservations.xlsx")
-        .AllPages(true))
+        .HtmlAttributes(new { @class = "reservation-request-grid" })
         .Columns(columns =>
         {
             columns.Bound(c => c.ReservationId).Visible(false).Exportable(false);
             columns.Bound(c => c.ReservationDetailId).Visible(false).Exportable(false);
-            columns.Bound(c => c.ReservationCode);
-            columns.ForeignKey(c => c.ChargeToCompany, ds => ds.Read(r => r.Action("getCompanies", "Global")), "Id", "CompanyCode")
-            .Title("Charge To Company")
-            .Filterable(ftb => ftb.Cell(cell => cell.ShowOperators(false)));
-            columns.Bound(c => c.DepartmentName);
-            columns.Bound(c => c.Requestor);
+            columns.Bound(c => c.ReservationCode).Title("Request Number").Width("55%");
             columns.Bound(c => c.RequestorEmail).Hidden(true);
-            columns.Bound(c => c.Status).ClientTemplate(
-            "<div class='datagrid-content'>" +
-            "# if (Status === 'PENDING' || Status === 'DRAFT') { #" +
-            "<span class='status status-blue'><span class='status-dot'></span><strong>#: Status #</strong></span>" +
-            "# } else if (Status === \"FOR DEPARTMENT HEAD'S APPROVAL\" || Status === \"FOR ADMIN APPROVER'S APPROVAL\" || Status === \"FOR ADMIN MANAGER'S APPROVAL\" || Status === \"APPROVED\") { #" +
-            "<span class='status status-green'><span class='status-dot'></span><strong><strong> #: Status # </strong></strong></span>" +
-            "# } else if (Status === 'CANCELLED' || Status === 'DISAPPROVED' || Status === 'DELETED') { #" +
-            "<span class='status status-red'><span class='status-dot'></span><strong> #: Status # </strong></span>" +
-            "# } else { #" +
-            "<span>#: Status #</span>" +
-            "# } #" +
-            "</div>"
-            ).Title("Status").Width(350);
+            columns.Bound(c => c.Status).ClientTemplate("#= reservationStatusTemplate(Status) #").Title("Status").Width(250);
             columns.Command(command =>
             {
                 command.Custom("view")
-            .Text("<i class='ti ti-eye'></i>View")
+            .Text("<i class='ti ti-eye' aria-hidden='true'></i>View")
             .Click("onViewClickReservationList")
             .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
 
                 command.Custom("delete")
-            .Text("<i class='ti ti-trash'></i>Delete")
+            .Text("<i class='ti ti-trash' aria-hidden='true'></i>Delete")
             .Click("onDeleteClickReservation")
-            .HtmlAttributes(new { @class = "k-button k-grid-Delete", style = "display: none;" });
+            .HtmlAttributes(new { @class = "k-button k-grid-Delete has-label", style = "display: none;", title = "Delete request", aria_label = "Delete request" });
             })
             .Title("Actions")
-            .Width(300)
+            .Width(270)
             .Exportable(false);
         })
         .NoRecords()
-        .Groupable()
-        .Filterable()
-        .Scrollable()
+        .Sortable()
+        .Pageable()
+        .Scrollable(s => s.Height("auto"))
         .ToolBar(toolbar =>
         {
             toolbar.Search();
@@ -65,8 +71,8 @@
             model.Field(p => p.ReservationType);
             model.Field(p => p.ReservationDetailId);
         })
-        .Read(read => read.Action("getFunctionRoomReservation", "FunctionRoom", new { gridType = "myReservation" }))
-        .PageSize(50)
+        .Read(read => read.Action("getFunctionRoomReservation", "FunctionRoom", new { gridType = "myReservation" }).Data("filterFunctionReservationYear").Type(HttpVerbs.Get))
+        .PageSize(20)
         )
         .Events(events => events.DataBound("onGridDataBound"))
         )

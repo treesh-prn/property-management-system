@@ -1,5 +1,6 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
-<div class="card-body">
+<partial name="~/Views/Dorm/Shared/_reservationDetails.cshtml" model="Model" />
+<div class="card-body legacy-module-summary" hidden>
     <div class="row align-items-start">
         <div class="col-2">
             <img src="@Url.Content("~/img/dorm-room.jpg")" alt="Accommodation" class="rounded img-fluid">

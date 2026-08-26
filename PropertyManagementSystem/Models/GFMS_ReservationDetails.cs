@@ -17,11 +17,13 @@ namespace PropertyManagementSystem.Models
         public string? Company { get; set; }
         public string? Relationship { get; set; }
         public DateTime? DateAdded { get; set; }
+        [NotMapped]
         public int EmployeeID { get; set; }
 
-        public int RoomId { get; set; }
-        public int FacilityId { get; set; }
+        public int? RoomId { get; set; }
+        public int? FacilityId { get; set; }
         public int NumberOfGuest {  get; set; }
+        [NotMapped]
         public string? EquipmentNeeded {  get; set; }
 
         public int? AppliedUnit {  get; set; }
@@ -46,6 +48,9 @@ namespace PropertyManagementSystem.Models
         public bool? isOnCall { get; set; }
         public string? DeptHeadRemarks { get; set; }
         public string? OtherInfo { get; set; }
+
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
         public GFMS_ReservationHeader ReservationHeader { get; set; }
         public virtual GFMS_Rooms Room { get; set; }

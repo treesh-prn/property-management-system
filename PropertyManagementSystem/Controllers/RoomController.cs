@@ -6,16 +6,27 @@ using PropertyManagementSystem.Data;
 using PropertyManagementSystem.Models;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authorization;
+using PropertyManagementSystem.Attributes;
+using PropertyManagementSystem.Services;
 
 namespace PropertyManagementSystem.Controllers
 {
     [Authorize]
+    [ActiveRoleAuthorize("GFMS.System Admin", "GFMS.Admin Approver", "GFMS.Admin Manager")]
     public class RoomController : Controller
     {
         private readonly DAL _context;
-        public RoomController(DAL context)
+        private readonly ILogger<RoomController> _logger;
+        private readonly ISetupReservationGuard _reservationGuard;
+
+        public RoomController(
+            DAL context,
+            ILogger<RoomController> logger,
+            ISetupReservationGuard reservationGuard)
         {
             _context = context;
+            _logger = logger;
+            _reservationGuard = reservationGuard;
         }
         public IActionResult Index()
         {
@@ -51,6 +62,32 @@ namespace PropertyManagementSystem.Controllers
             {
                 return NotFound();
             }
+            var occupants = (from detail in _context.ReservationDetails.AsNoTracking()
+                             join header in _context.ReservationHeaders.AsNoTracking()
+                                 on detail.ReservationId equals header.ReservationId
+                             where detail.RoomId == RoomId
+                                   && header.Status == ReservationStatuses.Approved
+                                   && detail.StartDate.HasValue
+                                   && detail.EndDate.HasValue
+                             select new RoomOccupantViewModel
+                             {
+                                 OccupantName = detail.GuestName ?? header.Requestor ?? "Unnamed occupant",
+                                 Company = detail.Company,
+                                 ReservationCode = header.ReservationCode,
+                                 ArrivalDate = detail.StartDate.GetValueOrDefault(),
+                                 DepartureDate = detail.EndDate.GetValueOrDefault()
+                             })
+                .ToList();
+
+            var now = DateTime.Now;
+            occupants = occupants
+                .OrderBy(occupant =>
+                    occupant.ArrivalDate <= now && occupant.DepartureDate >= now ? 0 :
+                    occupant.ArrivalDate > now ? 1 : 2)
+                .ThenBy(occupant => occupant.ArrivalDate)
+                .ThenBy(occupant => occupant.OccupantName)
+                .ToList();
+
             var roomViewModel = new RoomViewModel
             {
                 RoomId = roomDetails.RoomId,
@@ -60,7 +97,8 @@ namespace PropertyManagementSystem.Controllers
                 FacilityLocation = roomDetails.FacilityLocation,
                 Capacity = roomDetails.Capacity,
                 isActive = roomDetails.isActive,
-                RoomType = roomDetails.RoomType
+                RoomType = roomDetails.RoomType,
+                Occupants = occupants
 
             };
 
@@ -79,6 +117,7 @@ namespace PropertyManagementSystem.Controllers
 
         }
         /*Display*/
+        [HttpGet]
         public ActionResult getGHRooms([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_Rooms> _Rooms = _context.Rooms
@@ -115,6 +154,7 @@ namespace PropertyManagementSystem.Controllers
             });
             return Json(result);
         }
+        [HttpGet]
         public ActionResult getFNRooms([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_Rooms> _Rooms = _context.Rooms
@@ -150,6 +190,7 @@ namespace PropertyManagementSystem.Controllers
 
             return Json(rooms);
         }
+        [HttpGet]
         public ActionResult getDMRooms([DataSourceRequest] DataSourceRequest request)
         {
             List<GFMS_Rooms> _Rooms = _context.Rooms.AsQueryable()
@@ -168,8 +209,25 @@ namespace PropertyManagementSystem.Controllers
         }
         /*Create*/
         [HttpPost]
-        public IActionResult newGHRoom(string _name, string _status, int _facility,  int _capacity, bool _isActive)
+        public IActionResult newGHRoom(
+            string _name,
+            string _status,
+            int _facility,
+            int _capacity,
+            bool _isActive,
+            double? _costPerDay,
+            double? _costPerWeek,
+            double? _costPerMonth)
         {
+            if (!ValidateCapacity(_capacity))
+            {
+                return RedirectToAction("GuestRoom", "Room");
+            }
+            if (!ValidateOptionalRoomCosts(_costPerDay, _costPerWeek, _costPerMonth))
+            {
+                return RedirectToAction("GuestRoom", "Room");
+            }
+
             GFMS_Rooms _room = new GFMS_Rooms()
             {
                 RoomName = _name,
@@ -177,18 +235,40 @@ namespace PropertyManagementSystem.Controllers
                 Capacity = _capacity,
                 FacilityId = _facility,
                 isActive = _isActive,
-                RoomType = 0
+                RoomType = 0,
+                CostPerDay = _costPerDay,
+                CostPerWeek = _costPerWeek,
+                CostPerMonth = _costPerMonth
             };
 
 
-            _context.Rooms.Add(_room);
-            _context.SaveChanges();
+            if (!TryCreateRoom(_room, "Guest room"))
+            {
+                return RedirectToAction("GuestRoom", "Room");
+            }
 
             return RedirectToAction("GuestRoom", "Room");
         }
         [HttpPost]
-        public IActionResult newFNRoom(string _name, string _status, int _facility, int _capacity, bool _isActive)
+        public IActionResult newFNRoom(
+            string _name,
+            string _status,
+            int _facility,
+            int _capacity,
+            bool _isActive,
+            double? _costPerDay,
+            double? _costPerWeek,
+            double? _costPerMonth)
         {
+            if (!ValidateCapacity(_capacity))
+            {
+                return RedirectToAction("FunctionRoom", "Room");
+            }
+            if (!ValidateOptionalRoomCosts(_costPerDay, _costPerWeek, _costPerMonth))
+            {
+                return RedirectToAction("FunctionRoom", "Room");
+            }
+
             GFMS_Rooms _room = new GFMS_Rooms()
             {
                 RoomName = _name,
@@ -196,18 +276,28 @@ namespace PropertyManagementSystem.Controllers
                 Capacity = _capacity,
                 FacilityId = _facility,
                 isActive = _isActive,
-                RoomType = 1
+                RoomType = 1,
+                CostPerDay = _costPerDay,
+                CostPerWeek = _costPerWeek,
+                CostPerMonth = _costPerMonth
             };
 
 
-            _context.Rooms.Add(_room);
-            _context.SaveChanges();
+            if (!TryCreateRoom(_room, "Function room"))
+            {
+                return RedirectToAction("FunctionRoom", "Room");
+            }
 
             return RedirectToAction("FunctionRoom", "Room");
         }
         [HttpPost]
         public IActionResult newDMRoom(string _name, string _status, int _facility, int _capacity, bool _isActive)
         {
+            if (!ValidateCapacity(_capacity))
+            {
+                return RedirectToAction("DormRoom", "Room");
+            }
+
             GFMS_Rooms _room = new GFMS_Rooms()
             {
                 RoomName = _name,
@@ -219,8 +309,10 @@ namespace PropertyManagementSystem.Controllers
             };
 
 
-            _context.Rooms.Add(_room);
-            _context.SaveChanges();
+            if (!TryCreateRoom(_room, "Dorm room"))
+            {
+                return RedirectToAction("DormRoom", "Room");
+            }
 
             return RedirectToAction("DormRoom", "Room");
         }
@@ -228,19 +320,59 @@ namespace PropertyManagementSystem.Controllers
         /*Update*/
 
         [HttpPost]
-        public IActionResult EditGHRoom(GFMS_Rooms room, int _roomId, string _roomName, int _facility, string _roomStatus, int _capacity, bool _isActive, double _costPerDay)
+        public IActionResult EditGHRoom(
+            int _roomId,
+            string _roomName,
+            int _facility,
+            string _roomStatus,
+            int _capacity,
+            bool _isActive,
+            double? _costPerDay,
+            double? _costPerWeek,
+            double? _costPerMonth)
         {
             var ghRoom = _context.Rooms.FirstOrDefault(gh => gh.RoomId == _roomId);
             if (ghRoom == null)
             {
-                return NotFound("Reservation detail not found.");
+                SetToast("Room not found", "The selected room may have already been removed.", "error");
+                return RedirectToAction("GuestRoom", "Room");
             }
+
+            if (!ValidateCapacity(_capacity))
+            {
+                return RedirectToAction("ViewGuestRoom", "Room", new { RoomId = _roomId });
+            }
+            if (!ValidateOptionalRoomCosts(_costPerDay, _costPerWeek, _costPerMonth))
+            {
+                return RedirectToAction("ViewGuestRoom", "Room", new { RoomId = _roomId });
+            }
+
+            if (ghRoom.isActive && !_isActive)
+            {
+                var blockingReservationCount = _reservationGuard
+                    .CountBlockingReservationsForRoom(_roomId, DateTime.Now);
+
+                if (blockingReservationCount > 0)
+                {
+                    var reservationLabel = blockingReservationCount == 1
+                        ? "reservation"
+                        : "reservations";
+                    SetToast(
+                        $"{GetRoomTypeLabel(ghRoom.RoomType)} cannot be made inactive",
+                        $"{ghRoom.RoomName} has {blockingReservationCount} pending, ongoing, or upcoming {reservationLabel}. Reassign, cancel, or complete them before changing its status.",
+                        "warning");
+                    return RedirectToAction("ViewGuestRoom", "Room", new { RoomId = _roomId });
+                }
+            }
+
             ghRoom.RoomName = _roomName;
             ghRoom.FacilityId = _facility;
             ghRoom.RoomStatus = _roomStatus;
             ghRoom.Capacity = _capacity;
             ghRoom.isActive = _isActive;
             ghRoom.CostPerDay = _costPerDay;
+            ghRoom.CostPerWeek = _costPerWeek;
+            ghRoom.CostPerMonth = _costPerMonth;
 
             try
             {
@@ -249,13 +381,17 @@ namespace PropertyManagementSystem.Controllers
             }
             catch (DbUpdateException ex)
             {
-                Console.WriteLine($"An error occurred while updating changes: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                }
-                throw;
+                _logger.LogError(ex, "Failed to update room {RoomId}.", _roomId);
+                SetToast(
+                    $"{GetRoomTypeLabel(ghRoom.RoomType)} could not be updated",
+                    "The changes were not saved. Review the details and try again.",
+                    "error");
+                return RedirectToAction("ViewGuestRoom", "Room", new { RoomId = _roomId });
             }
+            SetToast(
+                $"{GetRoomTypeLabel(ghRoom.RoomType)} updated",
+                $"Changes to {ghRoom.RoomName} were saved successfully.",
+                "success");
             string redirectUrl = Url.Action("ViewGuestRoom", "Room", new { RoomId = _roomId });
             return Redirect(redirectUrl);
         }
@@ -267,12 +403,10 @@ namespace PropertyManagementSystem.Controllers
             GFMS_Rooms room = _context.Rooms.Find(RoomId);
             if(room == null)
             {
-                return NotFound();
+                SetToast("Guest room not found", "The selected room may have already been removed.", "error");
+                return RedirectToAction("GuestRoom", "Room");
             }
-            _context.Rooms.Remove(room);
-            _context.SaveChanges();
-
-            
+            DeleteRoom(room);
             return RedirectToAction("GuestRoom", "Room");
 
         }
@@ -283,10 +417,10 @@ namespace PropertyManagementSystem.Controllers
             GFMS_Rooms room = _context.Rooms.Find(RoomId);
             if (room == null)
             {
-                return NotFound();
+                SetToast("Dorm room not found", "The selected room may have already been removed.", "error");
+                return RedirectToAction("DormRoom", "Room");
             }
-            _context.Rooms.Remove(room);
-            _context.SaveChanges();
+            DeleteRoom(room);
 
             return RedirectToAction("DormRoom", "Room");
         }
@@ -296,13 +430,102 @@ namespace PropertyManagementSystem.Controllers
             GFMS_Rooms room = _context.Rooms.Find(RoomId);
             if(room == null)
             {
-                return NotFound();
+                SetToast("Function room not found", "The selected room may have already been removed.", "error");
+                return RedirectToAction("FunctionRoom", "Room");
             }
 
-            _context.Rooms.Remove(room);
-            _context.SaveChanges();
+            DeleteRoom(room);
 
             return RedirectToAction("FunctionRoom", "Room");
+        }
+
+        private bool TryCreateRoom(GFMS_Rooms room, string roomTypeLabel)
+        {
+            try
+            {
+                _context.Rooms.Add(room);
+                _context.SaveChanges();
+                SetToast(
+                    $"{roomTypeLabel} created",
+                    $"{room.RoomName} is now available in the room directory.",
+                    "success");
+                return true;
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(exception, "Failed to create {RoomType} {RoomName}.", roomTypeLabel, room.RoomName);
+                SetToast(
+                    $"{roomTypeLabel} could not be created",
+                    "Review the room details and try again.",
+                    "error");
+                return false;
+            }
+        }
+
+        private bool ValidateOptionalRoomCosts(params double?[] costs)
+        {
+            if (!ModelState.IsValid)
+            {
+                SetToast("Room rates are invalid", "Enter valid numeric room rates or leave the optional fields blank.", "warning");
+                return false;
+            }
+            if (costs.Any(cost => cost.HasValue && (cost.Value < 0 || double.IsNaN(cost.Value) || double.IsInfinity(cost.Value))))
+            {
+                SetToast("Room rates are invalid", "Room rates cannot be negative or outside the supported numeric range.", "warning");
+                return false;
+            }
+            return true;
+        }
+
+        private void DeleteRoom(GFMS_Rooms room)
+        {
+            var roomTypeLabel = GetRoomTypeLabel(room.RoomType);
+            try
+            {
+                _context.Rooms.Remove(room);
+                _context.SaveChanges();
+                SetToast(
+                    $"{roomTypeLabel} deleted",
+                    $"{room.RoomName} was removed from the room directory.",
+                    "success");
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(exception, "Failed to delete room {RoomId}.", room.RoomId);
+                SetToast(
+                    $"{roomTypeLabel} could not be deleted",
+                    "This room may still be linked to equipment, occupants, or reservations.",
+                    "error");
+            }
+        }
+
+        private static string GetRoomTypeLabel(int roomType) => roomType switch
+        {
+            0 => "Guest room",
+            1 => "Function room",
+            2 => "Dorm room",
+            _ => "Room"
+        };
+
+        private bool ValidateCapacity(int capacity)
+        {
+            if (RoomCapacityPolicy.IsValid(capacity))
+            {
+                return true;
+            }
+
+            SetToast(
+                "Invalid room capacity",
+                RoomCapacityPolicy.ValidationMessage,
+                "warning");
+            return false;
+        }
+
+        private void SetToast(string title, string message, string type)
+        {
+            TempData["ToastTitle"] = title;
+            TempData["ToastMessage"] = message;
+            TempData["ToastType"] = type;
         }
     }
 }

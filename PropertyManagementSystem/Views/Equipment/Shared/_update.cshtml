@@ -1,66 +1,106 @@
 ﻿@model PropertyManagementSystem.Models.EquipmentViewModel;
-<form asp-action="EditEquipment" asp-controller="Equipment" method="post">
+@{
+    var locationLinks = Model.LocationLinks ?? new List<PropertyManagementSystem.Models.EquipmentLocationLinkViewModel>();
+    var hasAssignment = Model.isFacilityEquipment == true || Model.FacilityId.HasValue || locationLinks.Count > 0;
+    var hasMultipleAssignments = locationLinks.Count > 1;
+}
+<form asp-action="EditEquipment" asp-controller="Equipment" method="post" class="management-update-form">
     <input type="hidden" name="Id" asp-for="Id" />
+    <div class="management-form-section-title">Equipment information</div>
     <div class="mb-3">
         <label class="form-label required">Equipment Name </label>
         <input class="form-control" name="_name" type="text" required="required" asp-for="EquipmentName">
     </div>
     <div class="mb-3">
         <label class="form-label required">Equipment Quantity </label>
-        <input class="form-control" name="_quantity" type="text" required="required" asp-for="EquipmentQty">
+        <input class="form-control" name="_quantity" type="number" min="1" required="required" asp-for="EquipmentQty">
     </div>
     <div class="mb-3">
         <label class="form-label required">Purchase Cost </label>
-        <input class="form-control" name="_purCost" type="text" step="0.01" required="required" asp-for="PurchaseCost">
+        <input class="form-control" name="_purCost" type="number" min="0" step="0.01" required="required" asp-for="PurchaseCost">
     </div>
     <div class="mb-3">
-        <label class="form-label required">Half Cost </label>
-        <input class="form-control" name="_halfCost" type="text" step="0.01" required="required" asp-for="HalfDayCost">
+        <label class="form-label required">Half Day Cost </label>
+        <input class="form-control" name="_halfCost" type="number" min="0" step="0.01" required="required" asp-for="HalfDayCost">
     </div>
     <div class="mb-3">
         <label class="form-label required">Whole Day Cost </label>
-        <input class="form-control" name="_wholeCost" type="text" step="0.01" required="required" asp-for="WholeDayCost">
+        <input class="form-control" name="_wholeCost" type="number" min="0" step="0.01" required="required" asp-for="WholeDayCost">
     </div>
     <div class="mb-3">
         <label class="form-label required">Remarks</label>
         <input class="form-control" name="_remarks" type="text" required="required" asp-for="Remarks">
     </div>
-    <div class="mb-3 d-flex align-items-center">
+    <div class="management-form-section-title">Availability and assignment</div>
+    <div class="management-toggle-row">
         <label for="_isActive" class="form-label me-auto">Is Active?</label>
         <div class="form-check form-switch">
             <input class="form-check-input" name="_isActive" type="checkbox" value="true" @(Model.isActive == true ? "checked" : "") />
         </div>
     </div>
-    <div class="mb-3 d-flex align-items-center">
-        <label for="isFacilityEquipment" class="form-label me-auto">Is Facility Equipment?</label>
-        <div class="form-check form-switch">
-            <input id="isFacilityEquipment" class="form-check-input" name="_isFacilityEquipment" type="checkbox" value="true" @(Model.isFacilityEquipment == true ? "checked" : "")/>
+    @if (hasMultipleAssignments)
+    {
+        <input type="hidden" name="_preserveLocationLinks" value="true" />
+        <div class="alert alert-info">
+            <div class="fw-semibold mb-1">Current Function Room assignments</div>
+            <div class="text-secondary small mb-2">This equipment is linked to multiple locations. Manage these links from Facility Setup; saving here will preserve all assignments.</div>
+            <div class="reservation-equipment-chips">
+                @foreach (var link in locationLinks)
+                {
+                    <span class="reservation-equipment-chip">
+                        @link.DefaultQuantity× @link.FacilityName@(string.IsNullOrWhiteSpace(link.RoomName) ? "" : $" / {link.RoomName}") · @(link.LinkType == "INCLUDED" ? "Included" : "Add-on")
+                    </span>
+                }
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="management-toggle-row">
+            <div class="me-auto">
+                <label for="editIsFacilityEquipment" class="form-label mb-0">Assigned to a Function Room?</label>
+                <div class="form-hint">Link this equipment to a Function Room facility or a specific room.</div>
+            </div>
+            <div class="form-check form-switch">
+                <input id="editIsFacilityEquipment" class="form-check-input equipment-assignment-toggle" name="_isFacilityEquipment" type="checkbox" value="true" @(hasAssignment ? "checked" : null)/>
+            </div>
+        </div>
 
-    <!-- Facility and Room Dropdowns Wrapper -->
-    <div id="facilityRoomWrapper" style="display: none;">
+        <div class="equipment-assignment-fields" style="display: @(hasAssignment ? "block" : "none");">
+        @if (hasAssignment)
+        {
+            <div class="alert alert-info py-2 mb-3">
+                <div class="fw-semibold">Current assignment</div>
+                <div class="small">
+                    @(Model.FacilityName ?? locationLinks.FirstOrDefault()?.FacilityName ?? "Select a Function Room facility")
+                    @if (!string.IsNullOrWhiteSpace(Model.RoomName ?? locationLinks.FirstOrDefault()?.RoomName))
+                    {
+                        <span> / @(Model.RoomName ?? locationLinks.FirstOrDefault()?.RoomName)</span>
+                    }
+                </div>
+            </div>
+        }
         <div class="mb-3">
-            <label for="facilityId" class="form-label required">Facility</label>
+            <label for="_facilityId" class="form-label required">Function Room Facility</label>
             @(
                 Html.Kendo().DropDownList()
                 .Name("_facilityId")
                 .DataTextField("FacilityName")
                 .DataValueField("FacilityId")
-                .Value(Model.RoomId.ToString())
+                .Value(Model.FacilityId.ToString())
                 .DataSource(source =>
                 {
                     source.Read(read =>
                     {
-                        read.Action("GetFacility", "FunctionRoom").Data("filterFacilities");
+                        read.Action("GetFunctionRoomFacilities", "Global");
                     });
                 })
                 .HtmlAttributes(new { style = "width: 100%" })
-                .OptionLabel("Select Facility")
+                .OptionLabel("Select Function Room Facility")
                 )
         </div>
         <div class="mb-3">
-            <label for="roomId" class="form-label required">Room</label>
+            <label for="_roomId" class="form-label">Function Room <span class="text-secondary">Optional</span></label>
             @(Html.Kendo().DropDownList()
                 .Name("_roomId")
                 .DataTextField("RoomName")
@@ -71,14 +111,39 @@
                 {
                     source.Read(read =>
                     {
-                        read.Action("GetRoom", "FunctionRoom").Data("filterRooms");
+                        read.Action("GetFunctionRooms", "Global").Data("equipmentRoomFilter");
                     }).ServerFiltering(true);
                 })
                 .HtmlAttributes(new { style = "width: 100%" })
-                .OptionLabel("Select Room")
+                .OptionLabel("Select Function Room")
                 )
+            <div class="form-hint">Leave blank to link the equipment to the entire facility.</div>
         </div>
-    <div class="mb-3 text-end">
-        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <div class="row g-2 mb-3">
+            <div class="col-sm-7">
+                <label for="equipmentLinkTypeUpdate" class="form-label">Reservation behavior</label>
+                <select id="equipmentLinkTypeUpdate" class="form-select" name="_linkType">
+                    <option value="INCLUDED" selected="@(Model.LinkType == "INCLUDED" ? "selected" : null)">Automatically included</option>
+                    <option value="ADD_ON" selected="@(Model.LinkType == "ADD_ON" ? "selected" : null)">Available add-on</option>
+                </select>
+            </div>
+            <div class="col-sm-5">
+                <label for="equipmentDefaultQuantityUpdate" class="form-label">Default quantity</label>
+                <input id="equipmentDefaultQuantityUpdate" class="form-control" name="_defaultQuantity" type="number"
+                       min="1" max="@(Model.EquipmentQty ?? 1)" value="@Model.DefaultQuantity" />
+            </div>
+        </div>
+        <div class="management-toggle-row mb-3">
+            <label for="equipmentIsFixedUpdate" class="form-label me-auto">Fixed to this location</label>
+            <div class="form-check form-switch">
+                <input id="equipmentIsFixedUpdate" class="form-check-input" name="_isFixed" type="checkbox" value="true"
+                       @(Model.IsFixed ? "checked" : null) />
+            </div>
+        </div>
+        </div>
+    }
+
+    <div class="management-form-actions">
+        <button type="submit" class="btn btn-primary"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes</button>
     </div>
 </form>

@@ -5,24 +5,21 @@
 }
 
 
-<body class=" border-top-wide border-primary d-flex flex-column">
-    <script src="./dist/js/demo-theme.min.js?1695847769"></script>
-    <div class="page page-center">
-        <div class="container-tight py-4">
-            <div class="empty">
-                <div class="empty-header">500</div>
-                <p class="empty-title">Oops… You just found an error page</p>
-                <p class="empty-subtitle text-secondary">
-                    We are sorry but our server encountered an internal error
-                </p>
-                <div class="empty-action">
-                    <a asp-action="FunctionRoom" asp-controller="FunctionRoom" class="btn btn-primary">
-                        <!-- Download SVG icon from http://tabler-icons.io/i/arrow-left -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg>
-                        Take me home
-                    </a>
-                </div>
+<main class="page-wrapper">
+    <div class="page-body">
+        <div class="container-tight py-5">
+            <div class="request-empty-state" role="alert">
+                <span class="request-empty-icon" aria-hidden="true"><i class="ti ti-alert-circle"></i></span>
+                <h1>We could not complete that request</h1>
+                <p>Something unexpected happened. Return home and try the action again.</p>
+                @if (Model?.ShowRequestId == true)
+                {
+                    <p class="request-reference">Reference: <code>@Model.RequestId</code></p>
+                }
+                <a asp-action="Index" asp-controller="Home" class="btn btn-primary">
+                    <i class="ti ti-home" aria-hidden="true"></i> Return Home
+                </a>
             </div>
         </div>
     </div>
-</body>
+</main>

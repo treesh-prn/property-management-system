@@ -1,209 +1,281 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel
+@model PropertyManagementSystem.Models.ReservationViewModel
 @inject PropertyManagementSystem.Services.IRoleService RoleService
 
 @{
-    ViewData["Title"] = "Home Page";
-    var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms>;
-    var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
+    ViewData["Title"] = "Dorm and Housing";
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+    var isAdminView = activeRole == "GFMS.Department Head"
+        || activeRole == "GFMS.Admin Manager"
+        || activeRole == "GFMS.Admin Approver"
+        || activeRole == "GFMS.System Admin";
 }
-<div class="page-wrapper">
-    <!-- Page header -->
+
+<div class="page-wrapper dorm-module-page reservation-page admin-operations-page">
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        ACCOMMODATION
-                    </div>
+                    <div class="page-pretitle">Dorm and Housing</div>
                     <h2 class="page-title">
-                        DORM and HOUSING
+                        @(isAdminView ? "Facilities and Occupancy" : "My Housing")
                     </h2>
+                    <div class="text-secondary mt-1">
+                        @(isAdminView
+                            ? "Monitor buildings, rooms, assigned dormers, room capacity, and availability."
+                            : "Review your existing request or assigned dorm information.")
+                    </div>
                 </div>
-                <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
-                        <span class="d-none d-sm-inline">
-                            <a href="@Url.Action("ReservationList","Dorm")" class="btn">
-                                Reservation List
+                        @if (isAdminView)
+                        {
+                            <a href="@Url.Action("ReservationList","Dorm")" class="btn btn-outline-secondary">
+                                <i class="ti ti-list-details" aria-hidden="true"></i>
+                                Reservation Requests
                             </a>
-                        </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservatoion">
-                            <i class="ti ti-plus"></i>
-                            Create New Application
-                        </a>
-                        <a href="#" class="btn btn-primary d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-report" aria-label="Create New Reservation">
-                            <i class="ti ti-plus"></i>
-                        </a>
+                            <a href="@Url.Action("DormRoom", "Room")" class="btn btn-outline-secondary">
+                                <i class="ti ti-door" aria-hidden="true"></i>
+                                Manage Rooms
+                            </a>
+                            <a href="@Url.Action("Index", "Facility")" class="btn btn-primary">
+                                <i class="ti ti-building" aria-hidden="true"></i>
+                                Manage Facilities
+                            </a>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-secondary" disabled aria-disabled="true" title="Dorm and Housing applications are coming soon">
+                                <i class="ti ti-lock" aria-hidden="true"></i>
+                                Coming soon
+                            </button>
+                        }
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Page body -->
+
     <div class="page-body">
         <div class="container-xl">
-            <div class="row row-deck row-cards">
-                <div class="row row-deck row-cards">
-                    <div class="col-12">
-                        <div class="row row-cards">
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-primary text-white avatar">
-                                                    <i class="ti ti-user-star" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                </div>
-                                                <div class="text-secondary">
-                                                    New Reservations
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+            @if (isAdminView)
+            {
+                <div class="dorm-admin-shell">
+                    <section class="admin-kpi-grid" aria-label="Dorm and housing summary">
+                        <article class="card admin-stat-card"><div class="card-body">
+                            <span class="admin-stat-icon text-primary bg-primary-lt"><i class="ti ti-inbox"></i></span>
+                            <div><strong>@Model.NewDRMReservationsCount</strong><span>Pending requests</span></div>
+                        </div></article>
+                        <article class="card admin-stat-card"><div class="card-body">
+                            <span class="admin-stat-icon text-azure bg-azure-lt"><i class="ti ti-users"></i></span>
+                            <div><strong>@Model.ActiveGuestCount</strong><span>Assigned dormers</span></div>
+                        </div></article>
+                        <article class="card admin-stat-card"><div class="card-body">
+                            <span class="admin-stat-icon text-orange bg-orange-lt"><i class="ti ti-bed"></i></span>
+                            <div><strong>@Model.OccupiedRoomsCount</strong><span>Occupied rooms</span></div>
+                        </div></article>
+                        <article class="card admin-stat-card"><div class="card-body">
+                            <span class="admin-stat-icon text-success bg-success-lt"><i class="ti ti-bed-flat"></i></span>
+                            <div><strong>@Model.AvailableRoomsCount</strong><span>Available beds</span></div>
+                        </div></article>
+                    </section>
+
+                    <section class="card dorm-management-card admin-workspace-card" aria-labelledby="facility-occupancy-heading">
+                        <div class="card-header">
+                            <div>
+                                <span class="reservation-eyebrow">Occupancy</span>
+                                <h3 class="card-title" id="facility-occupancy-heading">Facilities and rooms</h3>
+                                <p class="card-subtitle">Expand a facility to inspect room capacity, availability, and assigned dormers.</p>
                             </div>
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-success text-white avatar">
-                                                    <i class="ti ti-friends" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                    10
-                                                </div>
-                                                <div class="text-secondary">
-                                                    Active Guest Count
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-danger text-white avatar">
-                                                    <i class="ti ti-bed" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                    @Model.OccupiedRoomsCount
-                                                </div>
-                                                <div class="text-secondary">
-                                                    Occupied Rooms
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-warning text-white avatar">
-                                                    <i class="ti ti-home" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                    @Model.AvailableRoomsCount
-                                                </div>
-                                                <div class="text-secondary">
-                                                    Available Room
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
+                        <div class="card-body p-0">
                             @(
                                 Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
-                                .Name("grid")
-                                .ToolBar(tools => tools.Excel())
-                                .Excel(excel => excel
-                                .FileName("Reservations.xlsx")
-                                .AllPages(true))
-                                .Columns(columns =>
-                                {
-                                    columns.Bound(c => c.FacilityId).Visible(false).Exportable(false);
-                                    columns.Bound(c => c.RoomId).Visible(false).Exportable(false);
-                                    columns.Bound(c => c.FacilityName);
-                                    columns.Bound(c => c.FacilityLocation);
-                                })
-                                .ClientDetailTemplateId("template")
-                                .NoRecords()
-                                .Groupable()
-                                .Filterable()
-                                .Scrollable()
-                                .Scrollable()
+                                .Name("dormFacilityGrid")
+                                .HtmlAttributes(new { @class = "management-grid dorm-facility-grid" })
                                 .ToolBar(toolbar =>
                                 {
                                     toolbar.Search();
+                                    toolbar.Excel();
                                 })
+                                .Excel(excel => excel
+                                    .FileName("DormFacilities.xlsx")
+                                    .AllPages(true))
+                                .Columns(columns =>
+                                {
+                                    columns.Bound(c => c.FacilityId).Visible(false).Exportable(false);
+                                    columns.Bound(c => c.FacilityName).Title("Facility / Building");
+                                    columns.Bound(c => c.FacilityLocation).Title("Location");
+                                    columns.Bound(c => c.RoomCount).Title("Rooms").Width(120);
+                                    columns.Bound(c => c.TotalCapacity).Title("Capacity").Width(120);
+                                    columns.Bound(c => c.OccupiedCount).Title("Dormers").Width(120);
+                                    columns.Bound(c => c.TotalCapacity).Title("Availability").ClientTemplate(
+                                        "# var available = Math.max(TotalCapacity - OccupiedCount, 0); #" +
+                                        "<div class='dorm-availability-cell'>" +
+                                        "<strong>#=available#</strong><span>available</span>" +
+                                        "</div>"
+                                    ).Width(150);
+                                    columns.Bound(c => c.isActive).Title("Status").ClientTemplate(
+                                        "# if (isActive) { #" +
+                                        "<span class='status status-green'><span class='status-dot'></span>Active</span>" +
+                                        "# } else { #" +
+                                        "<span class='status status-red'><span class='status-dot'></span>Inactive</span>" +
+                                        "# } #"
+                                    ).Width(160);
+                                })
+                                .ClientDetailTemplateId("rooms-template")
+                                .NoRecords()
+                                .Filterable()
+                                .Sortable()
+                                .Scrollable()
                                 .DataSource(dataSource => dataSource
-                                .Ajax()
-                                .Read(read => read.Action("getDormList", "Global"))
-                                .PageSize(50)
+                                    .Ajax()
+                                    .Read(read => read.Action("GetDormFacilities", "Dorm"))
+                                    .PageSize(20)
                                 )
-                                .Events(events => events.DataBound("dataBound"))
-                                )
+                            )
+                        </div>
+                    </section>
+
+                    <section class="card dorm-management-card admin-workspace-card" aria-labelledby="dormer-directory-heading">
+                        <div class="card-header">
+                            <div>
+                                <span class="reservation-eyebrow">Directory</span>
+                                <h3 class="card-title" id="dormer-directory-heading">Assigned dormers</h3>
+                                <p class="card-subtitle">Search every approved dormer assignment by facility, room, name, or schedule.</p>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            @(Html.Kendo().Grid<dynamic>()
+                                .Name("dormerDirectoryGrid")
+                                .HtmlAttributes(new { @class = "management-grid dormer-directory-grid" })
+                                .ToolBar(toolbar =>
+                                {
+                                    toolbar.Search();
+                                    toolbar.Excel();
+                                })
+                                .Excel(excel => excel.FileName("AssignedDormers.xlsx").AllPages(true))
+                                .Columns(columns =>
+                                {
+                                    columns.Bound("FacilityName").Title("Facility / Dorm").Width(240);
+                                    columns.Bound("RoomName").Title("Room").Width(180);
+                                    columns.Bound("Dormer").Title("Dormer").Width(220);
+                                    columns.Bound("ScheduleType").Title("Schedule").Width(150);
+                                    columns.Bound("ContactNumber").Title("Contact").Width(170);
+                                    columns.Bound("ReservationCode").Title("Application").Width(190);
+                                    columns.Command(command => command.Custom("view")
+                                        .Text("<i class='ti ti-eye'></i> View")
+                                        .Click("onViewClickReservationList")
+                                        .HtmlAttributes(new { @class = "k-button k-grid-View" }))
+                                        .Title("Actions").Width(140);
+                                })
+                                .NoRecords()
+                                .Filterable()
+                                .Sortable()
+                                .Pageable()
+                                .Scrollable()
+                                .DataSource(dataSource => dataSource
+                                    .Ajax()
+                                    .Read(read => read.Action("GetDormerDirectory", "Dorm"))
+                                    .PageSize(20))
+                            )
+                        </div>
+                    </section>
+                </div>
+            }
+            else
+            {
+                <div class="dorm-requestor-shell">
+                    <div class="alert alert-info" role="status">
+                        <i class="ti ti-info-circle me-2" aria-hidden="true"></i>
+                        <strong>Dorm and Housing applications are coming soon.</strong>
+                        New applications are temporarily unavailable.
+                    </div>
+                    <div class="card reservation-list-card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">My Dorm and Housing Requests</h3>
+                                <p class="card-subtitle">Only requests submitted under your account are shown here.</p>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <partial name="Shared/_myReservation" />
                         </div>
                     </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 </div>
-@*NEW APPLICATION FORM *@
-<partial name="Shared/_newReservation" />
-@*END - NEW Room MODAL *@
 
-<script id="template" type="text/kendo-tmpl">
-    @(Html.Kendo().Grid<PropertyManagementSystem.Models.ReservationViewModel>()
-    .Name("childGrid")
-    .Columns(columns =>
-    {
-        columns.Bound(o => o.RoomName);
-        columns.Bound(o => o.Requestor).Title("Dormer");
-        columns.Command(command =>
+<script id="rooms-template" type="text/kendo-tmpl">
+    @(Html.Kendo().Grid<dynamic>()
+        .Name("rooms_#=FacilityId#")
+        .HtmlAttributes(new { @class = "management-grid dorm-room-grid" })
+        .Columns(columns =>
         {
-            command.Custom("view")
-            .Text("<i class='ti ti-eye'></i>View")
-            .Click("onViewClickReservationList")
-            .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success", style = "width: 250px;" });
+            columns.Bound("RoomId").Visible(false);
+            columns.Bound("RoomName").Title("Room");
+            columns.Bound("Capacity").Title("Capacity").Width(120);
+            columns.Bound("OccupiedCount").Title("Dormers").Width(120);
+            columns.Bound("AvailableCount").Title("Available").Width(120);
+            columns.Bound("OccupancyPercent").Title("Occupancy").ClientTemplate(
+                "<div class='dorm-occupancy-cell'>" +
+                "<div class='progress progress-sm'><div class='progress-bar' style='width: #=OccupancyPercent#%'></div></div>" +
+                "<span>#=OccupancyPercent#%</span>" +
+                "</div>"
+            ).Width(220);
+            columns.Bound("AvailabilityStatus").Title("Status").ClientTemplate(
+                "# if (AvailabilityStatus === 'Available') { #" +
+                "<span class='status status-green'><span class='status-dot'></span>Available</span>" +
+                "# } else if (AvailabilityStatus === 'Partially Occupied') { #" +
+                "<span class='status status-yellow'><span class='status-dot'></span>Partially Occupied</span>" +
+                "# } else if (AvailabilityStatus === 'Full') { #" +
+                "<span class='status status-red'><span class='status-dot'></span>Full</span>" +
+                "# } else { #" +
+                "<span class='status status-secondary'><span class='status-dot'></span>Inactive</span>" +
+                "# } #"
+            ).Width(190);
         })
-         .Title("Actions")
-         .Width(300)
-         .Exportable(false);
-    })
-    .DataSource(dataSource => dataSource
-        .Ajax()
-        .PageSize(10)
-        .Read(read => read.Action("getDormReservation", "Dorm", new { FacilityId = "#=FacilityId#", RoomId = "#=RoomId#" }))
+        .ClientDetailTemplateId("dormers-template")
+        .NoRecords()
+        .Sortable()
+        .Filterable()
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .Read(read => read.Action("getDormRoomsByFacility", "Dorm", new { facilityId = "#=FacilityId#" }))
+            .PageSize(10)
+        )
+        .ToClientTemplate()
     )
-    .Sortable()
-    .ToClientTemplate()
-   )
+</script>
+
+<script id="dormers-template" type="text/kendo-tmpl">
+    @(Html.Kendo().Grid<dynamic>()
+        .Name("dormers_#=RoomId#")
+        .HtmlAttributes(new { @class = "management-grid dormer-room-grid" })
+        .Columns(columns =>
+        {
+            columns.Bound("ReservationCode").Title("Application");
+            columns.Bound("Dormer").Title("Dormer");
+            columns.Bound("RequestorEmail").Title("Email").Hidden(true);
+            columns.Bound("ContactNumber").Title("Contact");
+            columns.Bound("Status").Title("Status").ClientTemplate("<span class='status status-green'><span class='status-dot'></span>#=Status#</span>").Width(140);
+            columns.Command(command =>
+            {
+                command.Custom("view")
+                    .Text("<i class='ti ti-eye'></i>View")
+                    .Click("onViewClickReservationList")
+                    .HtmlAttributes(new { @class = "k-button k-grid-View k-button-sm k-rounded-md k-button-solid k-button-solid-success" });
+            }).Title("Actions").Width(160);
+        })
+        .NoRecords()
+        .Sortable()
+        .Filterable()
+        .DataSource(dataSource => dataSource
+            .Ajax()
+            .Read(read => read.Action("getDormersByRoom", "Dorm", new { roomId = "#=RoomId#" }))
+            .PageSize(10)
+        )
+        .ToClientTemplate()
+    )
 </script>

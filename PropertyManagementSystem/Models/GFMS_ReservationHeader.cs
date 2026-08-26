@@ -30,6 +30,9 @@ namespace PropertyManagementSystem.Models
         public string? Remarks { get; set; }
         public string? ApprovedBy {  get; set; }
 
+        [Timestamp]
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
         //public ICollection<GFMS_ReservationDetails> ReservationDetails { get; set; }
     }
 }

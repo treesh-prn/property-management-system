@@ -1,0 +1,44 @@
+@{
+    var toastTitle = TempData["ToastTitle"] as string;
+    var toastMessage = TempData["ToastMessage"] as string;
+    var toastType = (TempData["ToastType"] as string ?? "info").ToLowerInvariant();
+    var isError = toastType == "error" || toastType == "danger";
+    var isWarning = toastType == "warning";
+    var icon = isError || isWarning ? "ti-alert-circle" : toastType == "success" ? "ti-circle-check" : "ti-info-circle";
+}
+
+@if (!string.IsNullOrWhiteSpace(toastTitle))
+{
+    <div class="toast-container position-fixed top-0 end-0 p-3 setup-toast-container" aria-live="polite" aria-atomic="true">
+        <div id="setup-action-toast"
+             class="toast setup-toast setup-toast-@toastType"
+             role="@(isError || isWarning ? "alert" : "status")"
+             aria-live="@(isError || isWarning ? "assertive" : "polite")"
+             aria-atomic="true"
+             data-bs-autohide="true"
+             data-bs-delay="5000">
+            <div class="toast-body">
+                <span class="setup-toast-icon" aria-hidden="true">
+                    <i class="ti @icon"></i>
+                </span>
+                <span class="setup-toast-content">
+                    <strong>@toastTitle</strong>
+                    @if (!string.IsNullOrWhiteSpace(toastMessage))
+                    {
+                        <span>@toastMessage</span>
+                    }
+                </span>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close notification"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toastElement = document.getElementById("setup-action-toast");
+            if (toastElement && window.bootstrap && window.bootstrap.Toast) {
+                window.bootstrap.Toast.getOrCreateInstance(toastElement).show();
+            }
+        });
+    </script>
+}

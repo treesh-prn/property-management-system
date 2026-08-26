@@ -28,26 +28,32 @@
 
 
 </head>
-<body class=" d-flex flex-column bg-white">
+<body class="d-flex flex-column bg-white">
+    <main id="main-content" class="flex-fill">
     <div class="row g-0 flex-fill">
         <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
             <div class="container container-tight my-5 px-lg-5">
                 <div class="text-center mb-4">
                     <a href="." class="navbar-brand navbar-brand-autodark"><img src="/img/teco-logo.png" height="36" alt=""></a>
                 </div>
-                <h2 class="h3 text-center mb-3">
+                <h1 class="h3 text-center mb-3">
                     Login to your account
-                </h2>
+                </h1>
                 <form id="account" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert" aria-live="assertive"></div>
                     <div class="mb-3">
-                        <label class="form-label">Email address</label>
-                        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" />
-                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                        <label asp-for="Input.Email" class="form-label">Email address</label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true"
+                               aria-invalid="@(ViewData.ModelState.TryGetValue("Input.Email", out var emailState) && emailState.Errors.Count > 0 ? "true" : null)"
+                               aria-describedby="Input_Email-error" />
+                        <span asp-validation-for="Input.Email" id="Input_Email-error" class="text-danger"></span>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label">Password</label>
-                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true">
-                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                        <label asp-for="Input.Password" class="form-label">Password</label>
+                        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true"
+                               aria-invalid="@(ViewData.ModelState.TryGetValue("Input.Password", out var passwordState) && passwordState.Errors.Count > 0 ? "true" : null)"
+                               aria-describedby="Input_Password-error" />
+                        <span asp-validation-for="Input.Password" id="Input_Password-error" class="text-danger"></span>
                     </div>
                     <div class="form-footer">
                         <button type="submit" class="btn btn-primary w-100">Sign in</button>
@@ -60,12 +66,12 @@
         </div>
         <div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block">
             <!-- Photo -->
-            <div class="bg-cover h-100 min-vh-100" style="background-image: url(@Url.Content("~/img/guest-room.jpg")"></div>
+            <div class="bg-cover h-100 min-vh-100" style="background-image: url('@Url.Content("~/img/guest-room.jpg")');"></div>
         </div>
     </div>
+    </main>
     <!-- Libs JS -->
     <!-- Tabler Core -->
-    <script src="~/js/tabler.min.js" asp-append-version="true"></script>
 </body>
 </html>
 

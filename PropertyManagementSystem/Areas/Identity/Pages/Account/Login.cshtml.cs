@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using PropertyManagementSystem.Models;
+using PropertyManagementSystem.Services;
 
 namespace WebApplication1.Areas.Identity.Pages.Account
 {
@@ -23,12 +24,14 @@ namespace WebApplication1.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IRoleService _roleService;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, IConfiguration configuration)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger, IConfiguration configuration, IRoleService roleService)
         {
             _signInManager = signInManager;
             _logger = logger;
             _configuration = configuration;
+            _roleService = roleService;
         }
 
         /// <summary>
@@ -147,6 +150,13 @@ namespace WebApplication1.Areas.Identity.Pages.Account
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
+                    var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                    if (user != null)
+                    {
+                        await _roleService.SetDefaultActiveRoleAsync(user);
+                        await _signInManager.RefreshSignInAsync(user);
+                    }
+
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(returnUrl);
                 }

@@ -28,7 +28,7 @@
             m.Field(f => f.FacilityId);
             m.Field(f => f.RoomName);
         })
-        .Read("ViewReservation", "Accommodation")
+        .Read(read => read.Action("ViewReservation", "Accommodation").Type(HttpVerbs.Get))
         .Update("ViewReservationDetails", "Accommodation")
         .Destroy(destroy => destroy.Action("DeleteReservationDetail", "Accommodation"))
         )

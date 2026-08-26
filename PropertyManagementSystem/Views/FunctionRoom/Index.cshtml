@@ -1,221 +1,136 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel
-@inject PropertyManagementSystem.Services.IRoleService RoleService
+@model PropertyManagementSystem.Models.ReservationViewModel
 @{
-    ViewData["Title"] = "Home Page";
-    var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms>;
-    var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility>;
-    //var rooms = ViewData["Rooms"] as List<GFMS_Rooms>;
-    //var facilities = ViewData["Facilities"] as List<GFMS_Facility>;
-
-    var employee = await RoleService.GetUserName(User);
+    ViewData["Title"] = "Function Room Operations";
+    var rooms = ViewData["Rooms"] as List<PropertyManagementSystem.Models.GFMS_Rooms> ?? new();
+    var facilities = ViewData["Facilities"] as List<PropertyManagementSystem.Models.GFMS_Facility> ?? new();
+    var today = DateTime.Today;
 }
-<div class="page-wrapper">
-    <!-- Page header -->
+
+<div class="page-wrapper reservation-page admin-operations-page">
     <div class="page-header d-print-none">
         <div class="container-xl">
             <div class="row g-2 align-items-center">
                 <div class="col">
-                    <!-- Page pre-title -->
-                    <div class="page-pretitle">
-                        FACILITIES
-                    </div>
-                    <h2 class="page-title">
-                        FUNCTION ROOM
-                    </h2>
+                    <div class="page-pretitle">Facility Reservation</div>
+                    <h2 class="page-title">Function Room Operations</h2>
+                    <div class="text-secondary mt-1">Review requests, monitor room availability, and inspect the booking schedule.</div>
                 </div>
-                <!-- Page title actions -->
                 <div class="col-auto ms-auto d-print-none">
-                    <div class="btn-list">
-                        <span class="d-none d-sm-inline">
-                            <a href="@Url.Action("ReservationList","FunctionRoom")" class="btn">
-                                Reservation List
-                            </a>
-                        </span>
-                        <a href="#" class="btn btn-primary d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-newReservation">
-                            <i class="ti ti-plus"></i>
-                            Create New Reservation
+                    <div class="btn-list admin-page-actions">
+                        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-outline-secondary">
+                            <i class="ti ti-list-details" aria-hidden="true"></i>
+                            Reservation Requests
                         </a>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-newReservation">
+                            <i class="ti ti-calendar-plus" aria-hidden="true"></i>
+                            New Reservation
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Page body -->
+
     <div class="page-body">
         <div class="container-xl">
-            <div class="row row-deck row-cards">
-                <div class="row row-deck row-cards">
-                    <div class="col-12">
-                        <div class="row row-cards">
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-primary text-white avatar">
-                                                    <i class="ti ti-user-star" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                    
-                                                </div>
-                                                <div class="text-secondary">
-                                                    New Reservations
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-success text-white avatar">
-                                                    <i class="ti ti-friends" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                    10
-                                                </div>
-                                                <div class="text-secondary">
-                                                    Active Guest Count
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-danger text-white avatar">
-                                                    <i class="ti ti-bed" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                    @Model.OccupiedRoomsCount
-                                                </div>
-                                                <div class="text-secondary">
-                                                    Occupied Rooms
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6 col-lg-3">
-                                <div class="card card-sm">
-                                    <div class="card-body">
-                                        <div class="row align-items-center">
-                                            <div class="col-auto">
-                                                <span class="bg-warning text-white avatar">
-                                                    <i class="ti ti-home" style="font-size: 30px;"></i>
-                                                </span>
-                                            </div>
-                                            <div class="col">
-                                                <div class="font-weight-heavy">
-                                                    @Model.AvailableRoomsCount
-                                                </div>
-                                                <div class="text-secondary">
-                                                    Available Room
-                                                </div>
-                                            </div>
-                                            <div class="col-auto">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
-                                .Name("scheduler")
-                                .StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0))
-                                .EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 17, 0, 0))
-                                .MajorTick(60)
-                                //.MinorTickCount(1)
-                                .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
-                                .Views(views =>
-                                {
-                                    
-                                    views.TimelineWorkWeekView(timeline =>
-                                    {
-                                        timeline.EventHeight(50);
-                                        timeline.StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0));
-                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 18, 0, 0));
-                                    });
-                                    views.TimelineMonthView(timeline =>
-                                    {
-                                        timeline.StartTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 7, 0, 0));
-                                        timeline.EndTime(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 18, 0, 0));
-                                        timeline.MajorTick(60);
-                                        timeline.EventHeight(50);
-                                    });
-                                })
-                                .Timezone("Etc/UTC")
-                                .Group(g => g.Resources("Rooms", "Facilities").Orientation(SchedulerGroupOrientation.Vertical))
-                                .Resources(resource =>
-                                {
-                                    resource.Add(m => m.FacilityId)
-                                    .Title("Facility")
-                                    .Name("Facilities")
-                                    .DataTextField("FacilityName")
-                                    .DataValueField("FacilityId")
-                                    .BindTo(facilities.Select(f => new
-                                    {
-                                        FacilityId = f.FacilityId,
-                                        FacilityName = f.FacilityName
-                                    }));
-
-                                    resource.Add(m => m.RoomId)
-                                    .Title("Room")
-                                    .Name("Rooms")
-                                    .DataTextField("RoomName")
-                                    .DataValueField("RoomId")
-                                    .DataParentValueField("FacilityId")
-                                    .BindTo(rooms.Select(r => new
-                                    {
-                                        RoomId = r.RoomId,
-                                        RoomName = r.RoomName,
-                                        FacilityId = r.FacilityId
-                                    }));
-                                })
-                                .DataSource(d => d
-                                .Model(m =>
-                                {
-                                    m.Id(f => f.ReservationId);
-                                    m.Field(f => f.Title).DefaultValue("No title");
-                                    m.Field(f => f.GUID);
-                                    m.RecurrenceId(f => f.RecurrenceID);
-                                    m.Field(f => f.Start);
-                                    m.Field(f => f.End);
-                                    m.Field(f => f.RoomId);
-                                    m.Field(f => f.FacilityId);
-                                })
-                                .Read("ViewReservation", "FunctionRoom")
-                                .Update("ViewReservationDetails", "FunctionRoom")
-                                .Destroy(destroy => destroy.Action("DeleteReservationDetail", "FunctionRoom"))
-                                )
-                                .Events(events => events
-                                .DataBound("onDataBound")
-                                .Edit("onEditView"))
-                                )
-                        </div>
+            <section class="admin-kpi-grid" aria-label="Function room summary">
+                <article class="card admin-stat-card">
+                    <div class="card-body">
+                        <span class="admin-stat-icon text-primary bg-primary-lt"><i class="ti ti-inbox"></i></span>
+                        <div><strong>@Model.NewFNReservationsCount</strong><span>Pending requests</span></div>
                     </div>
+                </article>
+                <article class="card admin-stat-card">
+                    <div class="card-body">
+                        <span class="admin-stat-icon text-azure bg-azure-lt"><i class="ti ti-calendar-event"></i></span>
+                        <div><strong>@Model.ActiveGuestCount</strong><span>Today's bookings</span></div>
+                    </div>
+                </article>
+                <article class="card admin-stat-card">
+                    <div class="card-body">
+                        <span class="admin-stat-icon text-orange bg-orange-lt"><i class="ti ti-door-enter"></i></span>
+                        <div><strong>@Model.OccupiedRoomsCount</strong><span>In use now</span></div>
+                    </div>
+                </article>
+                <article class="card admin-stat-card">
+                    <div class="card-body">
+                        <span class="admin-stat-icon text-success bg-success-lt"><i class="ti ti-door"></i></span>
+                        <div><strong>@Model.AvailableRoomsCount</strong><span>Available now</span></div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="card admin-workspace-card admin-schedule-card" aria-labelledby="function-schedule-heading">
+                <header class="card-header">
+                    <div>
+                        <span class="reservation-eyebrow">Schedule</span>
+                        <h3 class="card-title" id="function-schedule-heading">Room booking calendar</h3>
+                        <p class="card-subtitle">Compare reservations across facilities and function rooms.</p>
+                    </div>
+                </header>
+                <div class="card-body p-0">
+                    @(Html.Kendo().Scheduler<PropertyManagementSystem.Models.ReservationViewModel>()
+                        .Name("scheduler")
+                        .HtmlAttributes(new { @class = "admin-scheduler" })
+                        .StartTime(today.AddHours(7))
+                        .EndTime(today.AddHours(17))
+                        .MajorTick(60)
+                        .DateHeaderTemplate("<strong>#=kendo.toString(date, 'D')#</strong>")
+                        .Views(views =>
+                        {
+                            views.TimelineWorkWeekView(timeline =>
+                            {
+                                timeline.EventHeight(44);
+                                timeline.StartTime(today.AddHours(7));
+                                timeline.EndTime(today.AddHours(18));
+                            });
+                            views.TimelineMonthView(timeline =>
+                            {
+                                timeline.StartTime(today.AddHours(7));
+                                timeline.EndTime(today.AddHours(18));
+                                timeline.MajorTick(60);
+                                timeline.EventHeight(44);
+                            });
+                        })
+                        .Timezone("Etc/UTC")
+                        .Group(g => g.Resources("Rooms", "Facilities").Orientation(SchedulerGroupOrientation.Vertical))
+                        .Resources(resource =>
+                        {
+                            resource.Add(m => m.FacilityId)
+                                .Title("Facility")
+                                .Name("Facilities")
+                                .DataTextField("FacilityName")
+                                .DataValueField("FacilityId")
+                                .BindTo(facilities.Select(f => new { f.FacilityId, f.FacilityName }));
+
+                            resource.Add(m => m.RoomId)
+                                .Title("Room")
+                                .Name("Rooms")
+                                .DataTextField("RoomName")
+                                .DataValueField("RoomId")
+                                .DataParentValueField("FacilityId")
+                                .BindTo(rooms.Select(r => new { r.RoomId, r.RoomName, r.FacilityId }));
+                        })
+                        .DataSource(dataSource => dataSource
+                            .Model(model =>
+                            {
+                                model.Id(item => item.ReservationDetailId);
+                                model.Field(item => item.Title).DefaultValue("No title");
+                                model.Field(item => item.GUID);
+                                model.RecurrenceId(item => item.RecurrenceID);
+                                model.Field(item => item.Start);
+                                model.Field(item => item.End);
+                                model.Field(item => item.RoomId);
+                                model.Field(item => item.FacilityId);
+                            })
+                            .Read(read => read.Action("ViewReservation", "FunctionRoom").Type(HttpVerbs.Get))
+                            .Update("ViewReservationDetails", "FunctionRoom"))
+                        .Events(events => events.DataBound("onDataBound").Edit("onEditView"))
+                    )
                 </div>
-            </div>
+            </section>
         </div>
     </div>
 </div>
+
 <partial name="Shared/_newReservation" />

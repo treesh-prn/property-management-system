@@ -1,0 +1,149 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@{
+    var details = Model.ReservationDetails?
+        .Where(item => item.StartDate.HasValue && item.EndDate.HasValue)
+        .OrderBy(item => item.StartDate)
+        .ToList() ?? new List<PropertyManagementSystem.Models.GFMS_ReservationDetails>();
+    var detail = details.FirstOrDefault();
+    var equipment = Model.EquipmentNames != null && Model.EquipmentNames.Any()
+        ? string.Join(", ", Model.EquipmentNames)
+        : "No equipment needed";
+    var contactNumber = string.IsNullOrWhiteSpace(detail?.ContactNumber)
+        ? "Not provided"
+        : $"+63 {detail.ContactNumber}";
+}
+
+<section class="module-reservation-details accommodation-reservation-details" aria-labelledby="function-room-details-heading">
+    <header class="accommodation-details-header">
+        <div class="accommodation-details-icon" aria-hidden="true"><i class="ti ti-building-community"></i></div>
+        <div>
+            <h3 id="function-room-details-heading">Reservation details</h3>
+            <p>Room assignment, booking requirements, and event schedule.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            @if (details.Count > 1)
+            {
+                <span class="badge bg-purple-lt"><i class="ti ti-repeat me-1" aria-hidden="true"></i>@details.Count occurrences</span>
+            }
+            <span class="accommodation-guest-count">@(detail?.NumberOfGuest ?? 0) attendees</span>
+        </div>
+    </header>
+
+    @if (detail != null)
+    {
+        <div class="accommodation-detail-section">
+            <h4>Booking information</h4>
+            <dl class="module-detail-grid">
+                <div class="module-detail-item">
+                    <dt>Contact number</dt>
+                    <dd>@contactNumber</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Charge to department</dt>
+                    <dd>@(Model.Department?.DepartmentCode ?? "Not provided")</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Facility</dt>
+                    <dd>@(Model.Facility?.FacilityName ?? detail.Facility?.FacilityName ?? "For assignment")</dd>
+                </div>
+                <div class="module-detail-item">
+                    <dt>Room</dt>
+                    <dd>@(Model.Room?.RoomName ?? detail.Room?.RoomName ?? "For assignment")</dd>
+                </div>
+                <div class="module-detail-item module-detail-item-wide reservation-equipment-summary">
+                    <dt>Equipment assignment</dt>
+                    <dd>
+                        @if (Model.IncludedEquipments.Count > 0 || Model.AdditionalEquipments.Count > 0)
+                        {
+                            @if (Model.IncludedEquipments.Count > 0)
+                            {
+                                <div class="reservation-equipment-group">
+                                    <span class="reservation-equipment-label">Included with facility or room</span>
+                                    <div class="reservation-equipment-chips">
+                                        @foreach (var item in Model.IncludedEquipments)
+                                        {
+                                            <span class="badge bg-blue-lt">@item.Quantity× @item.EquipmentName <small>· @item.SourceType.ToLowerInvariant()</small></span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            @if (Model.AdditionalEquipments.Count > 0)
+                            {
+                                <div class="reservation-equipment-group">
+                                    <span class="reservation-equipment-label">Additional requested equipment</span>
+                                    <div class="reservation-equipment-chips">
+                                        @foreach (var item in Model.AdditionalEquipments)
+                                        {
+                                            <span class="badge bg-secondary-lt">@item.Quantity× @item.EquipmentName</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            @equipment
+                        }
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        @if (details.Count > 1)
+        {
+            <div class="function-series-schedule" aria-labelledby="function-series-heading">
+                <div class="function-series-heading">
+                    <div>
+                        <h4 id="function-series-heading"><i class="ti ti-repeat" aria-hidden="true"></i> Recurring schedule</h4>
+                        <p>Every occurrence is checked separately for room and equipment availability.</p>
+                    </div>
+                    <span class="badge bg-purple-lt">@details.Count dates</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Occurrence</th>
+                                <th scope="col">Start</th>
+                                <th scope="col">End</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (var index = 0; index < details.Count; index++)
+                            {
+                                var occurrence = details[index];
+                                <tr>
+                                    <td><span class="function-occurrence-number">@(index + 1)</span></td>
+                                    <td>@occurrence.StartDate!.Value.ToString("MMM d, yyyy h:mm tt")</td>
+                                    <td>@occurrence.EndDate!.Value.ToString("MMM d, yyyy h:mm tt")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <div class="accommodation-stay-summary">
+            <div class="accommodation-stay-item">
+                <span class="accommodation-stay-icon" aria-hidden="true"><i class="ti ti-calendar-time"></i></span>
+                <div><span>Start</span><strong>@(detail.StartDate?.ToString("MMM d, yyyy h:mm tt") ?? "Not provided")</strong></div>
+            </div>
+            <div class="accommodation-stay-item">
+                <span class="accommodation-stay-icon" aria-hidden="true"><i class="ti ti-calendar-event"></i></span>
+                <div><span>End</span><strong>@(detail.EndDate?.ToString("MMM d, yyyy h:mm tt") ?? "Not provided")</strong></div>
+            </div>
+            <div class="accommodation-stay-item accommodation-purpose-item">
+                <span class="accommodation-stay-icon" aria-hidden="true"><i class="ti ti-notes"></i></span>
+                <div><span>Purpose</span><strong>@(string.IsNullOrWhiteSpace(detail.Purpose) ? "Not provided" : detail.Purpose)</strong></div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="accommodation-details-empty">
+            <i class="ti ti-calendar-off" aria-hidden="true"></i>
+            <div><strong>No reservation details available</strong><span>Booking information has not been added yet.</span></div>
+        </div>
+    }
+</section>

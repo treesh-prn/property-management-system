@@ -1,6 +1,12 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
 
-<form asp-action="CreateReservationDetails" asp-controller="FunctionRoom" method="post">
+@inject PropertyManagementSystem.Services.IRoleService RoleService
+@{
+    var activeRole = await RoleService.GetActiveRoleAsync(User);
+    var canAssignDraftRoom = activeRole is "GFMS.Admin Approver" or "GFMS.Admin Manager";
+}
+
+<form asp-action="CreateReservationDetails" asp-controller="FunctionRoom" method="post" class="reservation-workflow-form" data-preserve-draft="function-room">
 
     <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
     <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
@@ -9,7 +15,7 @@
         <div id="dynamic-rows">
             <div class="row">
                 <div class="col-lg-8 mb-3">
-                    <div class="card">
+                    <div class="card reservation-input-card">
                         <div class="card-header">
                             <h3 class="card-title">Facilities Reservation Form</h3>
                         </div>
@@ -17,7 +23,7 @@
                             <div class="row mb-3">
                                 <div class="col-lg-6">
                                     <label class="form-label required">Number of Attendees</label>
-                                    <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees" required>
+                                    <input type="number" class="form-control" name="_numOfGuests" placeholder="Number of Attendees" min="1" inputmode="numeric" required>
                                 </div>
                                 <div class="col-lg-6">
                                     <div>
@@ -28,78 +34,141 @@
                                             <span class="input-group-text">
                                                 +63
                                             </span>
-                                            <input type="text" class="form-control" name="_contactNumber" placeholder="Contact Number" maxlength="10" required>
+                                            <input type="tel" class="form-control" name="_contactNumber" placeholder="Mobile Number" minlength="10" maxlength="10" pattern="[0-9]{10}" inputmode="numeric" aria-describedby="functionContactHelp" required>
                                         </div>
-
+                                        <div id="functionContactHelp" class="form-hint">Enter the 10-digit mobile number after +63.</div>
                                     </div>
                                 </div>
                             </div>
-                            <label class="form-label">Duration of Stay</label>
+                            <div class="reservation-section-title"><i class="ti ti-calendar-time" aria-hidden="true"></i>Reservation schedule</div>
                             <div class="row mb-3">
                                 <div class="col-lg-6">
-                                    <label class="form-label required">Start Date </label>
+                                    <label class="form-label required">Start Date and Time</label>
                                     @(Html.Kendo().DateTimePicker()
                                         .Name("_startDate")
                                         .Value(DateTime.Today.AddHours(7))
                                         .Min(DateTime.Today)
-                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                        .Format("MM/dd/yyyy hh:mm tt")
+                                        .ParseFormats(new string[] { "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         .Events(e => e.Open("onDateTimePickerOpen"))
-                                        .HtmlAttributes(new { id = "_startDate", onkeydown = "return false;" })
+                                        .HtmlAttributes(new { id = "_startDate", onkeydown = "return false;", required = "required", aria_describedby = "functionScheduleValidation" })
                                         )
                                 </div>
                                 <div class="col-lg-6">
-                                    <label class="form-label required">End Date </label>
+                                    <label class="form-label required">End Date and Time</label>
                                     @(Html.Kendo().DateTimePicker()
                                         .Name("_endDate")
                                         .Value(DateTime.Today.AddHours(18))
                                         .Min(DateTime.Today)
-                                        .Format("yyyy/MM/dd HH:mm:ss.fff")
-                                        .ParseFormats(new string[] { "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
+                                        .Format("MM/dd/yyyy hh:mm tt")
+                                        .ParseFormats(new string[] { "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         .Events(e => e.Open("onDateTimePickerOpen"))
-                                        .HtmlAttributes(new { id = "_endDate", onkeydown = "return false;" })
+                                        .HtmlAttributes(new { id = "_endDate", onkeydown = "return false;", required = "required", aria_describedby = "functionScheduleValidation" })
                                         )
                                 </div>
                             </div>
-                            @if(User.IsInRole("GFMS.Admin Manager")){
-                                <div class="row mb-3">
-                                    <div class="col-lg-6">
-                                        <label class="form-label required">Facility</label>
+                            <div id="functionScheduleValidation"
+                                 class="alert alert-danger py-2 px-3 mb-3"
+                                 role="alert"
+                                 aria-live="polite"
+                                 hidden>
+                                End date and time must be later than start date and time.
+                            </div>
+                            @if (canAssignDraftRoom)
+                            {
+                                <section class="function-recurrence-card" aria-labelledby="function-recurrence-title">
+                                    <div class="function-recurrence-heading">
+                                        <span class="draft-room-assignment-icon" aria-hidden="true">
+                                            <i class="ti ti-repeat"></i>
+                                        </span>
+                                        <div>
+                                            <h4 id="function-recurrence-title">Repeat this reservation</h4>
+                                            <p>Use a bounded weekly schedule for meetings that happen more than once.</p>
+                                        </div>
+                                        <span class="badge bg-blue-lt">Admin only</span>
+                                    </div>
+                                    <label class="form-label" id="functionRecurrenceLabel">Recurrence</label>
+                                    <input id="_recurrenceRule"
+                                           name="_recurrenceRule"
+                                           type="hidden" />
+                                    <div id="functionRecurrenceEditor"
+                                         aria-labelledby="functionRecurrenceLabel"
+                                         aria-describedby="functionRecurrenceHelp functionRecurrenceValidation"></div>
+                                    <div id="functionRecurrenceHelp" class="form-hint mt-2">
+                                        Weekly recurrence is limited to 52 occurrences. Choose either an end date or a number of occurrences.
+                                    </div>
+                                    <div id="functionRecurrenceValidation"
+                                         class="alert alert-danger py-2 px-3 mt-2 mb-0"
+                                         role="alert"
+                                         aria-live="polite"
+                                         hidden></div>
+                                </section>
+                            }
+                            @if (canAssignDraftRoom)
+                            {
+                                <section class="draft-room-assignment" aria-labelledby="draft-room-assignment-title">
+                                    <div class="draft-room-assignment-header">
+                                        <span class="draft-room-assignment-icon" aria-hidden="true">
+                                            <i class="ti ti-building-community"></i>
+                                        </span>
+                                        <div>
+                                            <h4 id="draft-room-assignment-title">Assign a Function Room</h4>
+                                            <p>Select a facility first, then choose a room available for the schedule above.</p>
+                                        </div>
+                                        <span class="badge bg-blue-lt">Admin assignment</span>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-lg-6">
+                                        <label class="form-label required" for="_facilityId">Facility</label>
                                         @(
                                             Html.Kendo().DropDownList()
-                                            .Name("_facilityId")
-                                            .DataTextField("FacilityName")
-                                            .DataValueField("FacilityId")
-                                            .DataSource(source =>
-                                            {
-                                                source.Read(read =>
-                                                {
-                                                    read.Action("GetAllFacility", "Global").Data("filterFacilities");
-                                                });
-                                            })
-                                            .HtmlAttributes(new { style = "width: 100%" })
-                                            .OptionLabel("Select Facility")
-                                            )
+                                                .Name("_facilityId")
+                                                .DataTextField("FacilityName")
+                                                .DataValueField("FacilityId")
+                                                .OptionLabel("Select a facility")
+                                                .DataSource(source => source.Read(read =>
+                                                    read.Action("GetDraftAvailableFacilities", "FunctionRoom")))
+                                                .NoDataTemplate("No active Function Room facility with an active room is available. Check Setup if this is unexpected.")
+                                                .Events(events => events.Change("onDraftFunctionFacilityChanged"))
+                                                .HtmlAttributes(new { style = "width: 100%", required = "required" })
+                                        )
+                                            <div class="form-hint mt-1">Choose the facility that contains the requested Function Room.</div>
+                                        </div>
+                                        <div class="col-lg-6">
+                                        <label class="form-label required" for="_roomId">Function Room</label>
+                                        @(
+                                            Html.Kendo().DropDownList()
+                                                .Name("_roomId")
+                                                .DataTextField("RoomName")
+                                                .DataValueField("RoomId")
+                                                .OptionLabel("Select a room")
+                                                .CascadeFrom("_facilityId")
+                                                .DataSource(source => source.Read(read =>
+                                                        read.Action("GetDraftAvailableRooms", "FunctionRoom")
+                                                            .Data("filterDraftFunctionRooms"))
+                                                    .ServerFiltering(true))
+                                                .NoDataTemplate("Select a facility or adjust the reservation schedule.")
+                                                .Events(events => events.Change("onDraftFunctionRoomChanged").DataBound("onDraftFunctionRoomChanged"))
+                                                .HtmlAttributes(new { style = "width: 100%", required = "required" })
+                                        )
+                                            <div class="form-hint mt-1">Rooms already booked for this schedule are excluded.</div>
+                                        </div>
                                     </div>
-                                    <div class="col-lg-6">
-                                        <label class="form-label required">Room</label>
-                                        @(Html.Kendo().DropDownList()
-                                            .Name("_roomId")
-                                            .DataTextField("RoomName")
-                                            .DataValueField("RoomId")
-                                            .CascadeFrom("_facilityId")
-                                            .DataSource(source =>
-                                            {
-                                                source.Read(read =>
-                                                {
-                                                    read.Action("GetAllRooms", "Global").Data("filterRooms");
-                                                }).ServerFiltering(true);
-                                            })
-                                            .HtmlAttributes(new { style = "width: 100%" })
-                                            .OptionLabel("Select Room")
-                                            )
+                                    <div class="alert alert-warning py-2 px-3 mt-3 mb-0 d-none"
+                                         role="alert"
+                                         aria-live="polite"
+                                         data-draft-function-capacity-warning></div>
+                                    <div class="reservation-included-equipment mt-3 d-none"
+                                         data-included-equipment-preview
+                                         aria-live="polite">
+                                        <div class="reservation-included-equipment-title">
+                                            <i class="ti ti-package" aria-hidden="true"></i>
+                                            Included with this assignment
+                                        </div>
+                                        <div class="reservation-equipment-chips" data-included-equipment-items></div>
+                                        <small class="text-secondary">These items are added automatically and do not need to be selected below.</small>
                                     </div>
-                                </div>
+                                </section>
                             }
                             <div class="row mb-3">
                                 <div class="col-lg-12">
@@ -117,7 +186,8 @@
                                         {
                                             source.Read(read =>
                                             {
-                                                read.Action("GetEquipments", "Global");
+                                                read.Action("GetEquipments", "Global")
+                                                    .Data("functionEquipmentFilter");
                                             });
                                         })
                                         )
@@ -131,64 +201,44 @@
                                         Purpose
                                         <span id="charCount" class="form-label-description">0/50</span>
                                     </label>
-                                    <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50"></textarea>
+                                    <textarea class="form-control" rows="3" name="_purpose" id="purposeTextarea" maxlength="50" aria-describedby="functionPurposeHelp" required></textarea>
+                                    <div id="functionPurposeHelp" class="form-hint">Briefly describe the meeting, event, or activity.</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="card booking-summary">
+                    <div class="card booking-summary reservation-summary-panel" data-review-panel="function-room">
                         <div class="card-header">
-                            <h3 class="card-title">Reservation Summary</h3>
+                            <h3 class="card-title">Quick Review</h3>
                         </div>
                         <div class="card-body">
-                            <div class="row align-items-start">
-                                <div class="col-3">
-                                    <img src="@Url.Content("~/img/facility-room.jpg")" alt="Dorm Reservation" class="rounded">
-                                </div>
-                                <div class="col-9">
-                                    <div class="text-primary h4 d-flex align-items-center">
-                                        <span>@Model.ReservationHeader.ReservationCode</span>
-                                        <span class="ms-3">
-                                            @if (Model.ReservationHeader.Status == "APPROVED")
-                                            {
-                                                <span class='status status-teal'>
-                                                    <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                </span>
-                                            }
-                                            else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                                            {
-                                                <span class='status status-teal'>
-                                                    <span class='status-dot status-dot-animated'></span>FOR APPROVAL
-                                                </span>
-                                            }
-                                            else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
-                                            {
-                                                <span class='status status-red'>
-                                                    <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class='status status-blue'>
-                                                    <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                </span>
-                                            }
-                                        </span>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <dl class="row">
-                                            <dt class="col-4 text-primary">Requestor:</dt>
-                                            <dd class="col-8 ">@Model.ReservationHeader.Requestor</dd>
-                                            <dt class="col-4 text-primary">Email:</dt>
-                                            <dd class="col-8">@Model.ReservationHeader.RequestorEmail</dd>
-                                            <dt class="col-4 text-primary">Chrg to Dept:</dt>
-                                            <dd class="col-8">@Model.Department.DepartmentCode</dd>
-                                        </dl>
-                                    </div>
-                                </div>
+                            <div class="quick-review-intro">
+                                <i class="ti ti-clipboard-check"></i>
+                                <span>Review the room booking details before submitting.</span>
                             </div>
+                            <dl class="quick-review-list">
+                                <dt>Attendees</dt>
+                                <dd data-review-value="attendees">Not provided</dd>
+                                <dt>Start</dt>
+                                <dd data-review-value="start">Select start date</dd>
+                                <dt>End</dt>
+                                <dd data-review-value="end">Select end date</dd>
+                                @if (canAssignDraftRoom)
+                                {
+                                    <dt>Recurrence</dt>
+                                    <dd data-review-value="recurrence">Does not repeat</dd>
+                                }
+                                <dt>Facility</dt>
+                                <dd data-review-value="facility">For assignment</dd>
+                                <dt>Room</dt>
+                                <dd data-review-value="room">For assignment</dd>
+                                <dt>Equipment</dt>
+                                <dd data-review-value="equipment">No equipment selected</dd>
+                                <dt>Purpose</dt>
+                                <dd data-review-value="purpose">No purpose entered</dd>
+                            </dl>
                         </div>
                     </div>
                 </div>
@@ -196,14 +246,14 @@
         </div>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center">
-        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-link link-secondary">
-            Go Back
+        <a href="@Url.Action("ReservationList", "FunctionRoom")" class="btn btn-link link-secondary" data-draft-back>
+            Back to My Requests
         </a>
         <div class="ms-auto">
             <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
                 <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-                Create
+                Submit Request
             </button>
         </div>
     </div>

@@ -1,16 +1,52 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel;
 
-<form asp-action="CreateReservationDetails" asp-controller="Dorm" method="post">
+@{
+    var applicantCivilStatus = DormHousingEligibilityPolicy.NormalizeCivilStatus(Model.ApplicantCivilStatus);
+    var applicantCivilStatusLabel = DormHousingEligibilityPolicy.GetCivilStatusLabel(applicantCivilStatus);
+    var canApplyForHousing = DormHousingEligibilityPolicy.CanApplyForUnit(
+        applicantCivilStatus,
+        DormHousingEligibilityPolicy.HousingUnit);
+}
+
+<form asp-action="CreateReservationDetails" asp-controller="Dorm" method="post" class="reservation-workflow-form" data-guided-workflow="dorm" data-preserve-draft="dorm">
     <input type="hidden" class="form-control" name="_reservationId" asp-for="ReservationHeader.ReservationId">
+    <input type="hidden" name="_civilStat" value="@applicantCivilStatus">
+    <nav class="request-workflow-steps" aria-label="Housing request progress">
+        <button type="button" class="request-workflow-step is-active" data-workflow-target="0" aria-current="step">
+            <span>1</span>
+            <strong>Applicant</strong>
+        </button>
+        <button type="button" class="request-workflow-step" data-workflow-target="1">
+            <span>2</span>
+            <strong>Home &amp; travel</strong>
+        </button>
+        <button type="button" class="request-workflow-step" data-workflow-target="2">
+            <span>3</span>
+            <strong>Dependents</strong>
+        </button>
+    </nav>
     <div class="container container-lg mt-3">
         <div id="dynamic-rows">
             <div class="row">
                 <div class="col-lg-8">
-                    <div class="card">
+                    <div class="card reservation-input-card" data-workflow-panel="0">
                         <div class="card-header">
                             <h3 class="card-title">Applicant Details</h3>
                         </div>
                         <div class="card-body">
+                            <div class="alert @(canApplyForHousing ? "alert-success" : "alert-info") mb-3" role="status">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="ti @(canApplyForHousing ? "ti-circle-check" : "ti-info-circle") mt-1" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>Civil status on your employee profile: @applicantCivilStatusLabel</strong>
+                                        <div class="mt-1">
+                                            @(canApplyForHousing
+                                                ? "You may apply for either Dorm or Housing."
+                                                : "You may apply for Dorm. Housing becomes available when your employee profile shows Married.")
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form-selectgroup-boxes row mb-3">
                                 <div class="col-lg-6">
                                     <label class="form-selectgroup-item">
@@ -21,19 +57,23 @@
                                             </span>
                                             <span class="form-selectgroup-label-content">
                                                 <span class="form-selectgroup-title strong mb-1">Dorm</span>
+                                                <span class="form-selectgroup-description">Available for Single and Married employees</span>
                                             </span>
                                         </span>
                                     </label>
                                 </div>
                                 <div class="col-lg-6">
-                                    <label class="form-selectgroup-item">
-                                        <input type="radio" name="_unitApplied" value="1" class="form-selectgroup-input">
+                                    <label class="form-selectgroup-item @(canApplyForHousing ? string.Empty : "opacity-50")">
+                                        <input type="radio" name="_unitApplied" value="1" class="form-selectgroup-input" disabled="@(canApplyForHousing ? null : "disabled")">
                                         <span class="form-selectgroup-label d-flex align-items-center p-3">
                                             <span class="me-3">
                                                 <span class="form-selectgroup-check"></span>
                                             </span>
                                             <span class="form-selectgroup-label-content">
                                                 <span class="form-selectgroup-title strong mb-1">Housing</span>
+                                                <span class="form-selectgroup-description">
+                                                    @(canApplyForHousing ? "Available based on your Married status" : "Available only when civil status is Married")
+                                                </span>
                                             </span>
                                         </span>
                                     </label>
@@ -92,8 +132,9 @@
                                         <span class="input-group-text">
                                             +63
                                         </span>
-                                        <input type="text" class="form-control pb-2" name="_contactNumber" placeholder="Contact Number" asp-for="@Model.ReservationDetails.FirstOrDefault().ContactNumber" maxlength="10">
+                                        <input type="tel" class="form-control pb-2" name="_contactNumber" placeholder="10-digit mobile number" asp-for="@Model.ReservationDetails.FirstOrDefault().ContactNumber" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" aria-describedby="dorm-contact-hint">
                                     </div>
+                                    <small id="dorm-contact-hint" class="form-hint">Enter the 10 digits after +63.</small>
 
                                 </div>
                             </div>
@@ -117,7 +158,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card mt-3">
+                    <div class="card mt-3 reservation-input-card" data-workflow-panel="1" hidden>
                         <div class="card-header">
                             <h3 class="card-title">Home and Transportation Details</h3>
                         </div>
@@ -259,53 +300,19 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card mt-3 mb-3">
+                    <div class="card mt-3 mb-3 reservation-input-card" data-workflow-panel="2" hidden>
                         <div class="card-header">
                             <h3 class="card-title">Dependents</h3>
                         </div>
                         <div class="card-body">
                             <label class="form-label">Civil Status</label>
-                            <div class="form-selectgroup-boxes row mb-3">
-                                <div class="col-lg-4">
-                                    <label class="form-selectgroup-item">
-                                        <input type="radio" name="_civilStat" value="SINGLE" class="form-selectgroup-input" checked>
-                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="form-selectgroup-title strong mb-1">Single</span>
-                                            </span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="col-lg-4">
-                                    <label class="form-selectgroup-item">
-                                        <input type="radio" name="_civilStat" value="MARRIED" class="form-selectgroup-input">
-                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="form-selectgroup-title strong mb-1">Married</span>
-
-                                            </span>
-                                        </span>
-                                    </label>
-                                </div>
-                                <div class="col-lg-4">
-                                    <label class="form-selectgroup-item">
-                                        <input type="radio" name="_civilStat" value="WIDOWED" class="form-selectgroup-input">
-                                        <span class="form-selectgroup-label d-flex align-items-center p-3">
-                                            <span class="me-3">
-                                                <span class="form-selectgroup-check"></span>
-                                            </span>
-                                            <span class="form-selectgroup-label-content">
-                                                <span class="form-selectgroup-title strong mb-1">Widowed</span>
-
-                                            </span>
-                                        </span>
-                                    </label>
+                            <div class="border rounded p-3 mb-3 bg-light">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ti ti-id-badge-2 text-primary" aria-hidden="true"></i>
+                                    <div>
+                                        <strong>@applicantCivilStatusLabel</strong>
+                                        <div class="text-secondary small">Retrieved from your employee profile and used to determine Housing eligibility.</div>
+                                    </div>
                                 </div>
                             </div>
                             <div id="dynamic-rows-dependent-label">
@@ -386,8 +393,9 @@
                                         .AutoUpload(true)
                                         )
                                         .DropZone(".dropZoneElement")
-                                        .Events(e => e
-                                        .Success("onSuccess")
+                                                        .Events(e => e
+                                                        .Upload("onUpload")
+                                                        .Success("onSuccess")
                                         .Error("onError")
                                         )
                                         )
@@ -402,57 +410,31 @@
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="card booking-summary">
+                    <div class="card booking-summary reservation-summary-panel" data-review-panel="dorm">
                         <div class="card-header">
-                            <h3 class="card-title">Reservation Summary</h3>
+                            <h3 class="card-title">Quick Review</h3>
                         </div>
                         <div class="card-body">
-                            <div class="row align-items-start">
-                                <div class="col-3">
-                                    <img src="@Url.Content("~/img/dorm-room.jpg")" alt="Dorm Reservation" class="rounded">
-                                </div>
-                                <div class="col-9">
-                                    <div class="text-primary h4 d-flex align-items-center">
-                                        <span>@Model.ReservationHeader.ReservationCode</span>
-                                        <span class="ms-3">
-                                            @if (Model.ReservationHeader.Status == "APPROVED")
-                                            {
-                                                <span class='status status-teal'>
-                                                    <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                </span>
-                                            }
-                                            else if (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL")
-                                            {
-                                                <span class='status status-teal'>
-                                                    <span class='status-dot status-dot-animated'></span>FOR APPROVAL
-                                                </span>
-                                            }
-                                            else if (Model.ReservationHeader.Status == "CANCELLED" || Model.ReservationHeader.Status == "DISAPPROVED")
-                                            {
-                                                <span class='status status-red'>
-                                                    <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span class='status status-blue'>
-                                                    <span class='status-dot status-dot-animated'></span>@Model.ReservationHeader.Status
-                                                </span>
-                                            }
-                                        </span>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <dl class="row">
-                                            <dt class="col-4 text-primary">Requestor:</dt>
-                                            <dd class="col-8 ">@Model.ReservationHeader.Requestor</dd>
-                                            <dt class="col-4 text-primary">Email:</dt>
-                                            <dd class="col-8">@Model.ReservationHeader.RequestorEmail</dd>
-                                            <dt class="col-4 text-primary">Department:</dt>
-                                            <dd class="col-8"> @Model.Department.DepartmentCode </dd>
-                                        </dl>
-                                    </div>
-                                </div>
+                            <div class="quick-review-intro">
+                                <i class="ti ti-clipboard-check"></i>
+                                <span>Review the housing application details before submitting.</span>
                             </div>
+                            <dl class="quick-review-list">
+                                <dt>Applied Unit</dt>
+                                <dd data-review-value="unit">Dorm</dd>
+                                <dt>Schedule Type</dt>
+                                <dd data-review-value="schedule">Not selected</dd>
+                                <dt>Contact Number</dt>
+                                <dd data-review-value="contact">Not provided</dd>
+                                <dt>Current Address</dt>
+                                <dd data-review-value="currentAddress">Not provided</dd>
+                                <dt>Home Ownership</dt>
+                                <dd data-review-value="homeOwnership">Not selected</dd>
+                                <dt>Dependents</dt>
+                                <dd data-review-value="dependents">1 dependent row</dd>
+                                <dt>Attachment</dt>
+                                <dd data-review-value="attachment">No file uploaded</dd>
+                            </dl>
                         </div>
                     </div>
                 </div>
@@ -460,13 +442,22 @@
         </div>
     </div>
     <div class="card-footer d-flex justify-content-between align-items-center">
-        <a href="@Url.Action("ReservationList", "Dorm")" class="btn btn-link link-secondary">
-            Go Back
+        <a href="@Url.Action("ReservationList", "Dorm")" class="btn btn-link link-secondary" data-draft-back>
+            Back to My Requests
         </a>
-        <button id="svbtn15" type="submit" class="btn btn btn-primary ms-auto">
-            <!-- Download SVG icon from http://tabler-icons.io/i/plus -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
-            Create
+        <div class="request-workflow-actions ms-auto">
+            <button type="button" class="btn btn-outline-secondary" data-workflow-previous hidden>
+                <i class="ti ti-arrow-left" aria-hidden="true"></i>
+                Previous
+            </button>
+            <button type="button" class="btn btn-primary" data-workflow-next>
+                Continue
+                <i class="ti ti-arrow-right" aria-hidden="true"></i>
+            </button>
+        </div>
+        <button id="svbtn15" type="submit" class="btn btn-primary ms-2" data-workflow-submit hidden>
+            <i class="ti ti-send" aria-hidden="true"></i>
+            Submit Request
         </button>
     </div>
 </form>
