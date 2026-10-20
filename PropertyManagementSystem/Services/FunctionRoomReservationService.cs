@@ -569,7 +569,7 @@ namespace PropertyManagementSystem.Services
                     "Access denied.", ReservationOperationFailure.Forbidden);
             }
             var userId = actor.UserId;
-            var (managerEmail, managerFullName) = await _employeeService.GetManagerInfo(userId);
+
 
             if (string.IsNullOrWhiteSpace(actor.EmployeeEmail) ||
                 string.IsNullOrWhiteSpace(actor.EmployeeName) ||
@@ -581,13 +581,6 @@ namespace PropertyManagementSystem.Services
                     ReservationOperationFailure.Forbidden);
             }
 
-            if (managerEmail == null || managerFullName == null)
-            {
-                return FunctionRoomOperationResult.Fail(
-                    "Manager not found for the authenticated employee.",
-                    ReservationOperationFailure.NotFound);
-            }
-
             var guid = Guid.NewGuid().ToString("N").ToUpper();
             var reservation = new GFMS_ReservationHeader
             {
@@ -595,14 +588,19 @@ namespace PropertyManagementSystem.Services
                 ChargeToCompany = actor.CompanyId.Value,
                 Requestor = actor.EmployeeName,
                 RequestorEmail = actor.EmployeeEmail,
-                Approver = managerFullName,
-                ApproverEmail = managerEmail,
                 DateFiled = DateTime.Now,
                 DateSubmitted = null,
                 Status = "DRAFT",
                 Department = actor.DepartmentId.Value,
                 ReservationType = ReservationType
             };
+
+            var submissionStatus = await _authorization.GetSubmissionStatusAsync(reservation, actor);
+            if (submissionStatus == ReservationStatuses.DepartmentHeadApproval &&
+                string.IsNullOrWhiteSpace(reservation.ApproverEmail))
+                return FunctionRoomOperationResult.Fail(
+                    "Department Head not configured for the authenticated employee's department.",
+                    ReservationOperationFailure.NotFound);
 
             await _reservationCodes.CreateAsync(reservation, "RSQ-FN");
 
@@ -1290,17 +1288,7 @@ namespace PropertyManagementSystem.Services
             ReservationActor actor,
             GFMS_ReservationHeader reservation)
         {
-            if (actor.ActiveRole == ReservationRoles.AdminApprover)
-            {
-                return ReservationStatuses.AdminManagerApproval;
-            }
-
-            if (actor.ActiveRole == ReservationRoles.DepartmentHead)
-            {
-                return ReservationStatuses.AdminApproverApproval;
-            }
-
-            return await _authorization.GetSubmissionStatusAsync(reservation);
+            return await _authorization.GetSubmissionStatusAsync(reservation, actor);
         }
 
         private async Task AddSubmissionAuditAsync(

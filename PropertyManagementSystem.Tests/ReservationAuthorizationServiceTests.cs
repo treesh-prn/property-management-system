@@ -8,6 +8,19 @@ namespace PropertyManagementSystem.Tests;
 public class ReservationAuthorizationServiceTests
 {
     [Theory]
+    [InlineData(ReservationRoles.Requestor, "IT", "Information Technology", ReservationStatuses.DepartmentHeadApproval)]
+    [InlineData(ReservationRoles.DepartmentHead, "IT", "Information Technology", ReservationStatuses.AdminApproverApproval)]
+    [InlineData(ReservationRoles.Requestor, "ADMIN", "Administrative Services", ReservationStatuses.AdminApproverApproval)]
+    [InlineData(ReservationRoles.Requestor, "ADM", "Administration", ReservationStatuses.AdminApproverApproval)]
+    [InlineData(ReservationRoles.Requestor, " admin ", null, ReservationStatuses.AdminApproverApproval)]
+    [InlineData(ReservationRoles.AdminApprover, "ADMIN", "Administration", ReservationStatuses.AdminManagerApproval)]
+    public void Submission_routes_by_requestor_role_and_department(
+        string role, string code, string? name, string expected)
+    {
+        Assert.Equal(expected, ReservationAuthorizationService.GetSubmissionStatus(role, code, name));
+    }
+
+    [Theory]
     [InlineData(ReservationStatuses.Draft)]
     [InlineData(ReservationStatuses.DepartmentHeadApproval)]
     [InlineData(ReservationStatuses.AdminApproverApproval)]

@@ -259,13 +259,6 @@ namespace PropertyManagementSystem.Controllers
                 return Forbid();
             }
 
-            var (managerEmail, managerFullName) = await _employeeService.GetManagerInfo(userId);
-
-            if (managerEmail == null || managerFullName == null)
-            {
-                return NotFound("Manager not found for the given department.");
-            }
-
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
             GFMS_ReservationHeader _reservation = new GFMS_ReservationHeader()
@@ -274,14 +267,17 @@ namespace PropertyManagementSystem.Controllers
                 ChargeToCompany = actor.CompanyId.Value,
                 Requestor = actor.EmployeeName,
                 RequestorEmail = actor.EmployeeEmail,
-                Approver = managerFullName,
-                ApproverEmail = managerEmail,
                 DateFiled = DateTime.Now,
                 DateSubmitted = null,
                 Status = "DRAFT",
                 Department = actor.DepartmentId.Value,
                 ReservationType = "GH"
             };
+
+            var submissionStatus = await _authorization.GetSubmissionStatusAsync(_reservation, actor);
+            if (submissionStatus == ReservationStatuses.DepartmentHeadApproval &&
+                string.IsNullOrWhiteSpace(_reservation.ApproverEmail))
+                return NotFound("Department Head not configured for the authenticated employee's department.");
 
             await _reservationCodes.CreateAsync(_reservation, "RSQ-GH");
 
@@ -429,7 +425,7 @@ namespace PropertyManagementSystem.Controllers
             try
             {
                 var previousStatus = reservationHeader.Status;
-                var submissionStatus = await _authorization.GetSubmissionStatusAsync(reservationHeader);
+                var submissionStatus = await _authorization.GetSubmissionStatusAsync(reservationHeader, await _authorization.GetActorAsync(User));
                 if (_guests != null && _company != null && _relationship != null)
                 {
                     int length = Math.Min(Math.Min(_guests.Length, _company.Length), _relationship.Length);
@@ -828,7 +824,7 @@ namespace PropertyManagementSystem.Controllers
             TempData["AlertType"] = "success";
             if (isResubmission)
             {
-                header.Status = await _authorization.GetSubmissionStatusAsync(header);
+                header.Status = await _authorization.GetSubmissionStatusAsync(header, await _authorization.GetActorAsync(User));
                 header.DateSubmitted = _processingPolicy.GetSubmissionTimestamp();
                 header.Remarks = null;
                 header.ApprovedBy = null;

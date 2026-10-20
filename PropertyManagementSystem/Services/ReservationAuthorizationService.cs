@@ -82,6 +82,7 @@ namespace PropertyManagementSystem.Services
         Task<bool> CanCreateAsync(ClaimsPrincipal user);
         Task<bool> ShouldBypassDepartmentHeadAsync(GFMS_ReservationHeader reservation);
         Task<string> GetSubmissionStatusAsync(GFMS_ReservationHeader reservation);
+        Task<string> GetSubmissionStatusAsync(GFMS_ReservationHeader reservation, ReservationActor actor);
         Task<ReservationAuthorizationResult> AuthorizeAsync(
             ClaimsPrincipal user,
             GFMS_ReservationHeader reservation,
@@ -144,8 +145,37 @@ namespace PropertyManagementSystem.Services
                 ReservationRoles.AdminManager);
         }
 
+        public static string GetSubmissionStatus(string activeRole, string? departmentCode, string? departmentName)
+        {
+            var isAdmin = new[] { departmentCode, departmentName }.Any(value =>
+                string.Equals(value?.Trim(), "ADMIN", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(value?.Trim(), "ADMINISTRATION", StringComparison.OrdinalIgnoreCase));
+            if (activeRole == ReservationRoles.DepartmentHead ||
+                (activeRole == ReservationRoles.Requestor && isAdmin))
+                return ReservationStatuses.AdminApproverApproval;
+            if (activeRole == ReservationRoles.AdminApprover)
+                return ReservationStatuses.AdminManagerApproval;
+            return ReservationStatuses.DepartmentHeadApproval;
+        }
+
+        public async Task<string> GetSubmissionStatusAsync(
+            GFMS_ReservationHeader reservation, ReservationActor actor)
+        {
+            var department = _context == null ? null : await _context.Departments
+                .AsNoTracking().FirstOrDefaultAsync(d => d.Id == actor.DepartmentId);
+            var status = GetSubmissionStatus(actor.ActiveRole, department?.DepartmentCode, department?.DepartmentName);
+            var head = _context == null || department?.DepartmentHead == null ? null :
+                await _context.Employees.AsNoTracking()
+                    .FirstOrDefaultAsync(e => e.GUID == department.DepartmentHead);
+            reservation.ApproverEmail = head?.Email;
+            reservation.Approver = head == null ? null : head.Firstname + " " + head.Lastname;
+            return status;
+        }
+
         public async Task<bool> ShouldBypassDepartmentHeadAsync(GFMS_ReservationHeader reservation)
         {
+            if (reservation.ReservationType is "FN" or "GH") return false;
+
             if (_userManager == null || string.IsNullOrWhiteSpace(reservation.ApproverEmail))
             {
                 return false;
@@ -239,7 +269,7 @@ namespace PropertyManagementSystem.Services
                 return Matches(reservation.ApproverEmail, actor.Email) ||
                     Matches(reservation.ApproverEmail, actor.EmployeeEmail) ||
                     Matches(reservation.Approver, actor.EmployeeName) ||
-                    IsManagedRequest(reservation, actor);
+                    (reservation.ReservationType != "FN" && reservation.ReservationType != "GH" && IsManagedRequest(reservation, actor));
             }
 
             return actor.AssignedRoles.Contains(ReservationRoles.AdminApprover) ||
@@ -323,7 +353,7 @@ namespace PropertyManagementSystem.Services
                 !(Matches(reservation.ApproverEmail, actor.Email) ||
                   Matches(reservation.ApproverEmail, actor.EmployeeEmail) ||
                   Matches(reservation.Approver, actor.EmployeeName) ||
-                  IsManagedRequest(reservation, actor)))
+                  (reservation.ReservationType != "FN" && reservation.ReservationType != "GH" && IsManagedRequest(reservation, actor))))
             {
                 return ReservationAuthorizationResult.Forbid();
             }
