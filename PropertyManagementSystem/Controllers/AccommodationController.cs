@@ -890,7 +890,7 @@ namespace PropertyManagementSystem.Controllers
                 await _audit.AddAsync(
                     reservationHeader, User, "DELETE", previousStatus, reservationHeader.Status);
 
-                return RedirectToAction("Index", "Accommodation");
+                return Json(new { success = true });
             }
             catch (Exception ex)
             {

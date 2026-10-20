@@ -1369,75 +1369,39 @@ function onGridDataBound(e) {
 
 
 function onDeleteClickReservation(e) {
+    e.preventDefault();
     var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-    var reservationId = dataItem.ReservationId;
-    var reservationType = dataItem.ReservationType;
-    console.log(reservationId);
-    console.log(reservationType);
-
-    if (dataItem.CanDelete !== true) {
+    if (!dataItem || dataItem.CanDelete !== true) {
         alert("You are not allowed to delete this reservation.");
         return;
     }
 
-    // Show confirmation before deleting
-    if (confirm("Are you sure you want to delete this reservation?")) {
-        if (reservationType == "FN") {
-            $.ajax({
-                url: '/FunctionRoom/DeleteReservationDetail',
-                type: 'POST',
-                data: { reservationId: reservationId },
-                success: function (response) {
-                    if (response.success) {
-                        alert(response.message);
-                        location.reload();
-                    } else {
-                        location.reload();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    alert("Failed to delete the reservation. Error: " + xhr.status + " " + xhr.statusText);
-                }
-            });
-        }
-        else if (reservationType == "GH") {
-            $.ajax({
-                url: '/Accommodation/DeleteReservationDetail',
-                type: 'POST',
-                data: { reservationId: reservationId },
-                success: function (response) {
-                    if (response.success) {
-                        alert(response.message);
-                        location.reload();
-                    } else {
-                        location.reload();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    alert("Failed to delete the reservation. Error: " + xhr.status + " " + xhr.statusText);
-                }
-            });
-        }
-        else if (reservationType == "DRM") {
-            $.ajax({
-                url: '/Dorm/DeleteReservationDetail',
-                type: 'POST',
-                data: { reservationId: reservationId },
-                success: function (response) {
-                    if (response.success) {
-                        alert(response.message);
-                        location.reload();
-                    } else {
-                        location.reload();
-                    }
-                },
-                error: function (xhr, status, error) {
-                    alert("Failed to delete the reservation. Error: " + xhr.status + " " + xhr.statusText);
-                }
-            });
-        }
-
+    var controllers = { FN: 'FunctionRoom', GH: 'Accommodation', DRM: 'Dorm' };
+    var controller = controllers[dataItem.ReservationType];
+    if (!controller || !confirm("Are you sure you want to delete this reservation?")) {
+        return;
     }
+
+    var token = document.querySelector('input[name="__RequestVerificationToken"]');
+    if (!token || !token.value) {
+        alert("Please refresh the page before deleting this reservation.");
+        return;
+    }
+
+    $.ajax({
+        url: '/' + controller + '/DeleteReservationDetail',
+        type: 'POST',
+        data: {
+            reservationId: dataItem.ReservationId,
+            __RequestVerificationToken: token.value
+        },
+        success: function () {
+            location.reload();
+        },
+        error: function (xhr) {
+            alert("Failed to delete the reservation. Error: " + xhr.status + " " + xhr.statusText);
+        }
+    });
 }
 
 function onDeleteClick(e) {

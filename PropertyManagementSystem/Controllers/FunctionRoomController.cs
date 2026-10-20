@@ -221,7 +221,7 @@ namespace PropertyManagementSystem.Controllers
             var failure = FailureResult(result);
             if (failure != null) return failure;
 
-            return RedirectToAction("Index", "FunctionRoom");
+            return Json(new { success = true });
         }
 
         [HttpPost]
