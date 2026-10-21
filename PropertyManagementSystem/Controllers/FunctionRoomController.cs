@@ -154,6 +154,33 @@ namespace PropertyManagementSystem.Controllers
             return RedirectToAction("ViewReservationDetails", new { Id = result.RedirectGuid });
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditReservation(string id)
+        {
+            var header = _context.ReservationHeaders.FirstOrDefault(h => h.GUID == id && h.ReservationType == "FN");
+            if (header == null) return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Edit);
+            if (!access.Succeeded) return Forbid();
+            return ReservationEditPage(header);
+        }
+
+        private IActionResult ReservationEditPage(GFMS_ReservationHeader header, string? error = null)
+        {
+            if (error != null) ModelState.AddModelError(string.Empty, error);
+            ViewData["Companies"] = _context.Companies.AsNoTracking()
+                .Where(c => c.Company != null).Select(c => c.Company.Trim()).Distinct().ToList();
+            ViewData["SelectedEquipment"] = _context.ReservationEquipments.AsNoTracking()
+                .Where(e => !e.IsAutomatic && _context.ReservationDetails.Any(d =>
+                    d.ReservationDetailId == e.ReservationDetailId && d.ReservationId == header.ReservationId))
+                .Select(e => e.EquipmentId.ToString()).Distinct().ToArray();
+            return View("~/Views/Shared/ReservationEdit.cshtml", new ReservationViewModel
+            {
+                ReservationHeader = header,
+                ReservationDetails = _context.ReservationDetails.AsNoTracking()
+                    .Where(d => d.ReservationId == header.ReservationId).OrderBy(d => d.ReservationDetailId).ToList()
+            });
+        }
+
         public async Task<IActionResult> ViewReservationDetails(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -204,14 +231,21 @@ namespace PropertyManagementSystem.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditReservationDetails(EditFunctionRoomReservationDetailsRequest request)
         {
+            var header = FindHeaderForDetail(request.ReservationDetailId);
+            if (header == null || header.ReservationType != "FN") return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Edit);
+            if (!access.Succeeded) return Forbid();
+            if (!ModelState.IsValid) return ReservationEditPage(header, "Check the fields below and enter valid values.");
             var result = await _functionRoomReservationService.EditReservationDetails(request, User);
+            if (!result.Success && result.Failure is ReservationOperationFailure.Validation or ReservationOperationFailure.Conflict)
+                return ReservationEditPage(header, result.ErrorMessage);
             var failure = FailureResult(result);
             if (failure != null) return failure;
-
             SetAlert(result);
-            return RedirectToAction("ReservationList", "FunctionRoom");
+            return RedirectToAction("ViewReservationDetails", new { id = header.GUID });
         }
 
         [HttpPost]

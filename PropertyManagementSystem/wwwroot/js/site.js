@@ -1242,7 +1242,7 @@ function assignFacility() {
 //alert
 $(document).ready(function () {
     window.setTimeout(function () {
-        $(".alert").fadeTo(500, 0).animate({ right: '100%' }, 500, function () {
+        $(".alert").not("[data-persistent-alert]").fadeTo(500, 0).animate({ right: '100%' }, 500, function () {
             $(this).remove();
         });
     }, 5000);

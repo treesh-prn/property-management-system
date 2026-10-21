@@ -895,18 +895,12 @@ namespace PropertyManagementSystem.Services
             var isResubmission = previousStatus == ReservationStatuses.ForRescheduling;
             var assignmentCommitted = false;
 
-            ValidateSqlDateRange(request.StartDate, request.EndDate);
-
-            if (request.StartDate >= request.EndDate)
-            {
-                return FunctionRoomOperationResult.Fail("The start date must be earlier than the end date.");
-            }
-
-            if (isResubmission && request.StartDate <= DateTime.Now)
-            {
-                return FunctionRoomOperationResult.Fail(
-                    "Choose a future start date before resubmitting this request.");
-            }
+            var inputError = ReservationEditValidation.Validate(request.StartDate, request.EndDate, request._purpose, DateTime.Now);
+            if (inputError != null) return FunctionRoomOperationResult.Fail(inputError);
+            if (request.NumberOfGuest < 1)
+                return FunctionRoomOperationResult.Fail("Enter at least one attendee.");
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request._contactNumber ?? "", @"^[0-9]{10}$"))
+                return FunctionRoomOperationResult.Fail("Enter a 10-digit contact number after +63.");
 
             if (!isResubmission && (request._facilityId.HasValue || request._roomId.HasValue))
             {

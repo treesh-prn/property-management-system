@@ -33830,3 +33830,50 @@ a.dashboard-metric-card:focus-visible {
         justify-content: center;
     }
 }
+
+/* Keep the overview action compact instead of stretching to fill its grid cell. */
+.reservation-detail-hero-with-actions .reservation-detail-edit-action {
+    justify-self: end;
+    align-self: start;
+}
+.reservation-detail-hero-with-actions .reservation-detail-edit-action .btn {
+    width: auto;
+    min-height: 2rem;
+    padding: .375rem .75rem;
+    white-space: nowrap;
+}
+.reservation-detail-hero-with-actions .reservation-detail-hero-meta {
+    grid-column: 1 / -1;
+}
+.reservation-edit-page .reservation-workflow-form > .card-footer {
+    background: #fff;
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 8px;
+}
+@media (max-width: 767.98px) {
+    .reservation-detail-hero-with-actions .reservation-detail-edit-action { justify-self: start; }
+}
+
+.reservation-edit-page .guest-edit-row {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 3fr) minmax(0, 3fr) 2.5rem;
+    align-items: end;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #f9fbfd;
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 6px;
+}
+.reservation-edit-page .guest-edit-row .form-label { margin-bottom: 0; }
+.reservation-edit-page .guest-edit-action { padding-bottom: .15rem; }
+.reservation-edit-page .guest-edit-action [hidden] { display: none !important; }
+@media (max-width: 767.98px) {
+    .reservation-edit-page .guest-edit-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .reservation-edit-page .guest-edit-name { grid-column: 1 / -1; }
+    .reservation-edit-page .guest-edit-action { justify-self: end; grid-column: 2; }
+}
+
+.reservation-edit-page .reservation-date-invalid {
+    border-color: var(--tblr-danger, #d63939) !important;
+    box-shadow: 0 0 0 1px var(--tblr-danger, #d63939);
+}

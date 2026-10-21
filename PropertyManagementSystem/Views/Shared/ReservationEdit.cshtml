@@ -1,0 +1,111 @@
+@model PropertyManagementSystem.Models.ReservationViewModel
+@{
+    ViewData["Title"] = "Edit Reservation";
+    var guesthouse = Model.ReservationHeader.ReservationType == "GH";
+    var controller = guesthouse ? "Accommodation" : "FunctionRoom";
+    var detail = Model.ReservationDetails.FirstOrDefault();
+    var posted = Context.Request.HasFormContentType;
+    string Value(string key, string? fallback) => posted ? Context.Request.Form[key].ToString() : fallback ?? "";
+    var companies = ((List<string>)ViewData["Companies"]!).Concat(Model.ReservationDetails.Select(d => d.Company ?? "")).Append("N/A").Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().ToList();
+    var selected = posted ? Context.Request.Form["EquipmentNeeded"].ToArray() : (ViewData["SelectedEquipment"] as string[] ?? (detail?.EquipmentNeeded ?? "").Split(','));
+    var guests = posted ? Context.Request.Form["_guests[]"].ToArray() : Model.ReservationDetails.Select(d => d.GuestName).ToArray();
+    var guestCompanies = posted ? Context.Request.Form["_company[]"].ToArray() : Model.ReservationDetails.Select(d => d.Company).ToArray();
+    var relationships = posted ? Context.Request.Form["_relationship[]"].ToArray() : Model.ReservationDetails.Select(d => d.Relationship).ToArray();
+}
+<div class="page-wrapper reservation-page reservation-edit-page">
+    <div class="page-header"><div class="container-xl">
+        <a asp-controller="@controller" asp-action="ViewReservationDetails" asp-route-id="@Model.ReservationHeader.GUID" class="text-secondary">&larr; Back to reservation</a>
+        <div class="page-pretitle mt-3">@(guesthouse ? "Accommodation" : "Function Room") &middot; @Model.ReservationHeader.ReservationCode</div>
+        <h1 class="page-title">Edit Reservation</h1>
+        <p class="text-secondary mt-2">Update your details and schedule, then save your changes.</p>
+    </div></div>
+    <div class="page-body"><div class="container-xl">
+        <form asp-controller="@controller" asp-action="@(guesthouse ? "UpdateReservationDetails" : "EditReservationDetails")" method="post" id="reservation-edit-form" data-facility-id="@detail?.FacilityId" data-room-id="@detail?.RoomId" class="reservation-workflow-form">
+            <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId" />
+            <input type="hidden" name="ReservationDetailId" value="@Value("ReservationDetailId", detail?.ReservationDetailId.ToString())" />
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger" data-persistent-alert role="alert" tabindex="-1"><div><h3 class="alert-title">Your changes haven't been saved</h3><div asp-validation-summary="All"></div></div></div>
+            }
+            <div class="container container-lg mt-3"><div class="row">
+                <div class="col-lg-8">
+                    <div class="card reservation-input-card"><div class="card-header"><h2 class="card-title">@(guesthouse ? "Guesthouse Reservation Form" : "Facilities Reservation Form")</h2></div><div class="card-body">
+                    @if (guesthouse)
+                    {
+                        <div id="edit-guests">
+                        @for (var i = 0; i < Math.Max(guests.Length, 1); i++)
+                        {
+                            <div class="guest-edit-row">
+                                <div class="guest-edit-name"><label class="form-label d-block">Guest Name <span class="text-danger" aria-hidden="true">*</span><input class="form-control mt-2" name="_guests[]" value="@(guests.ElementAtOrDefault(i))" required /></label></div>
+                                <div class="guest-edit-company"><label class="form-label d-block">Company <span class="text-danger" aria-hidden="true">*</span><select class="form-select mt-2" name="_company[]" required><option value="">Select company</option>@foreach (var company in companies) { <option value="@company" selected="@(company == guestCompanies.ElementAtOrDefault(i))">@company</option> }</select></label></div>
+                                <div class="guest-edit-relationship"><label class="form-label d-block">Relationship <span class="form-label-description">Optional</span><input class="form-control mt-2" name="_relationship[]" value="@(relationships.ElementAtOrDefault(i))" /></label></div>
+                                <div class="guest-edit-action"><button type="button" class="btn btn-outline-danger btn-icon" data-remove-guest aria-label="Remove guest" hidden="@(i == 0)"><i class="ti ti-trash" aria-hidden="true"></i></button></div>
+                            </div>
+                        }
+                        </div>
+                        <div class="guest-list-actions mt-3">
+                            <button type="button" class="btn btn-outline-primary" id="add-edit-guest"><i class="ti ti-plus" aria-hidden="true"></i> Add Another Guest</button>
+                            <span id="edit-guest-count" class="text-secondary" aria-live="polite"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label" for="edit-attendees">Number of attendees</label><input id="edit-attendees" class="form-control" type="number" min="1" max="2147483647" step="1" required name="NumberOfGuest" value="@Value("NumberOfGuest", detail?.NumberOfGuest.ToString())" /></div>
+                            <div class="col-md-6"><label class="form-label" for="edit-contact">Contact number</label><div class="input-group"><span class="input-group-text">+63</span><input id="edit-contact" class="form-control" type="tel" name="_contactNumber" required pattern="[0-9]{10}" minlength="10" maxlength="10" inputmode="numeric" value="@Value("_contactNumber", detail?.ContactNumber)" /></div><small class="text-secondary">Enter 10 digits after +63.</small></div>
+                        </div>
+                    }
+                    <div class="reservation-section-title"><i class="ti ti-calendar-time" aria-hidden="true"></i>@(guesthouse ? "Duration of stay" : "Reservation schedule")</div>
+                        <div id="edit-schedule-error" class="alert alert-danger" data-persistent-alert role="alert" aria-live="polite" hidden></div>
+                        <div class="row g-3">
+                            <div class="col-md-6"><label class="form-label" for="edit-start">@(guesthouse ? "Arrival" : "Start") date and time</label><input class="form-control" id="edit-start" type="text" autocomplete="off" name="StartDate" required aria-describedby="edit-schedule-error" value="@Value("StartDate", detail?.StartDate?.ToString("yyyy-MM-ddTHH:mm"))" /></div>
+                            <div class="col-md-6"><label class="form-label" for="edit-end">@(guesthouse ? "Departure" : "End") date and time</label><input class="form-control" id="edit-end" type="text" autocomplete="off" name="EndDate" required aria-describedby="edit-schedule-error" value="@Value("EndDate", detail?.EndDate?.ToString("yyyy-MM-ddTHH:mm"))" /></div>
+                        </div>
+                        <p class="text-secondary mt-3 mb-0">Choose a future start time. The end time must be after the start time.</p>
+                    <div class="reservation-section-title"><i class="ti ti-notes" aria-hidden="true"></i>Additional details</div>
+                        @if (!guesthouse)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label" for="EquipmentNeeded">Equipment Needed <span class="form-label-description">Optional</span></label>
+                                @(Html.Kendo().MultiSelect()
+                                    .Name("EquipmentNeeded")
+                                    .Placeholder("Please select needed equipment/s")
+                                    .DownArrow(true)
+                                    .DataTextField("EquipmentName")
+                                    .DataValueField("Id")
+                                    .AutoBind(true)
+                                    .DataSource(source => source.Read(read => read.Action("GetEquipments", "Global").Data("editEquipmentFilter")))
+                                    .Value(selected)
+                                    .Filter("contains")
+                                    .Events(e => e.Change("onEditEquipmentChange").DataBound("onEditEquipmentChange")))
+                                <p class="form-hint mt-2">Availability is checked when saving.</p>
+                            </div>
+                        }
+                        <label class="form-label" for="edit-purpose">Purpose <span id="edit-purpose-count" class="form-label-description"></span></label>
+                        <textarea class="form-control" id="edit-purpose" name="@(guesthouse ? "purpose" : "_purpose")" rows="4" required maxlength="50">@Value(guesthouse ? "purpose" : "_purpose", detail?.Purpose)</textarea>
+                    </div></div>
+                </div>
+                <aside class="col-lg-4">
+                    <div class="card booking-summary reservation-summary-panel">
+                        <div class="card-header"><h2 class="card-title">Quick Review</h2></div>
+                        <div class="card-body">
+                            <div class="quick-review-intro"><i class="ti ti-clipboard-check" aria-hidden="true"></i><span>Review your reservation details before saving.</span></div>
+                            <dl class="quick-review-list">
+                                <dt>@(guesthouse ? "Guests" : "Attendees")</dt><dd data-edit-review="people"></dd>
+                                <dt>@(guesthouse ? "Arrival" : "Start")</dt><dd data-edit-review="start"></dd>
+                                <dt>@(guesthouse ? "Departure" : "End")</dt><dd data-edit-review="end"></dd>
+                                @if (!guesthouse) { <dt>Equipment</dt><dd data-edit-review="equipment"></dd> }
+                                <dt>Purpose</dt><dd data-edit-review="purpose"></dd>
+                            </dl>
+                        </div>
+                    </div>
+                </aside>
+            </div></div>
+            <div class="card-footer d-flex justify-content-between align-items-center mt-3">
+                <a class="btn btn-link link-secondary" asp-controller="@controller" asp-action="ViewReservationDetails" asp-route-id="@Model.ReservationHeader.GUID">Cancel</a>
+                <button class="btn btn-primary" type="submit"><i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+<script src="~/js/reservation-edit.js" asp-append-version="true"></script>

@@ -73,12 +73,16 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Dismiss validation message"></button>
             </section>
         }
-        <div class="reservation-detail-hero">
+        <div class="reservation-detail-hero reservation-detail-hero-with-actions">
             <div class="reservation-detail-hero-copy">
                 <span class="reservation-eyebrow">Booking overview</span>
                 <h3>@Model.ReservationHeader.ReservationCode</h3>
                 <p>Guesthouse stay details, guests, assigned room, schedule, and approval actions.</p>
             </div>
+            @if (isOwner && (Model.ReservationHeader.Status == "FOR DEPARTMENT HEAD'S APPROVAL" || Model.ReservationHeader.Status == "FOR RESCHEDULING"))
+            {
+                <div class="reservation-detail-edit-action"><a class="btn btn-primary btn-sm" asp-action="EditReservation" asp-route-id="@Model.ReservationHeader.GUID"><i class="ti ti-pencil" aria-hidden="true"></i> Edit Reservation</a></div>
+            }
             <div class="reservation-detail-hero-meta">
                 <div>
                     <span>Date Filed</span>

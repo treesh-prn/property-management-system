@@ -283,6 +283,29 @@ namespace PropertyManagementSystem.Controllers
 
             return RedirectToAction("ViewReservationDetails", new { Id = unique });
         }
+        [HttpGet]
+        public async Task<IActionResult> EditReservation(string id)
+        {
+            var header = _context.ReservationHeaders.FirstOrDefault(h => h.GUID == id && h.ReservationType == "GH");
+            if (header == null) return NotFound();
+            var access = await _authorization.AuthorizeAsync(User, header, ReservationOperation.Edit);
+            if (!access.Succeeded) return Forbid();
+            return ReservationEditPage(header);
+        }
+
+        private IActionResult ReservationEditPage(GFMS_ReservationHeader header, string? error = null)
+        {
+            if (error != null) ModelState.AddModelError(string.Empty, error);
+            ViewData["Companies"] = _context.Companies.AsNoTracking()
+                .Where(c => c.Company != null).Select(c => c.Company.Trim()).Distinct().ToList();
+            return View("~/Views/Shared/ReservationEdit.cshtml", new ReservationViewModel
+            {
+                ReservationHeader = header,
+                ReservationDetails = _context.ReservationDetails.AsNoTracking()
+                    .Where(d => d.ReservationId == header.ReservationId).OrderBy(d => d.ReservationDetailId).ToList()
+            });
+        }
+
         public async Task<IActionResult> ViewReservationDetails(string Id)
         {
             if (string.IsNullOrEmpty(Id))
@@ -686,6 +709,7 @@ namespace PropertyManagementSystem.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateReservationDetails(int ReservationId, List<string> _guests, List<string> _company, List<string> _relationship, DateTime startDate, DateTime endDate, string purpose)
         {
 
@@ -700,48 +724,24 @@ namespace PropertyManagementSystem.Controllers
             var guid = header.GUID;
             purpose = purpose?.Trim() ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(purpose) || purpose.Length > 50)
-            {
-                TempData["AlertMessage"] = "Enter a valid reservation purpose.";
-                TempData["AlertSubMessage"] = "Purpose is required and must not exceed 50 characters.";
-                TempData["AlertType"] = "warning";
-                return RedirectToAction("ViewReservationDetails", new { id = guid });
-            }
-
-            if (!IsValidSqlSchedule(startDate, endDate))
-            {
-                return GuestScheduleValidationFailure(
-                    guid,
-                    "Select valid arrival and departure dates.");
-            }
-
-            if (endDate <= startDate)
-            {
-                return GuestScheduleValidationFailure(
-                    guid,
-                    "Departure date and time must be later than arrival date and time.");
-            }
-
-            if (isResubmission && startDate <= DateTime.Now)
-            {
-                TempData["AlertMessage"] = "Choose a future reservation schedule.";
-                TempData["AlertSubMessage"] = "The revised start date and time must be later than the current time.";
-                TempData["AlertType"] = "warning";
-                return RedirectToAction("ViewReservationDetails", new { id = guid });
-            }
+            var inputError = ReservationEditValidation.Validate(startDate, endDate, purpose, DateTime.Now);
+            if (inputError != null) return ReservationEditPage(header, inputError);
+            if (!ModelState.IsValid) return ReservationEditPage(header, "Check the fields and enter valid values.");
 
             Console.WriteLine("Reservation Id: " + ReservationId);
             var existingReservationDetails = _context.ReservationDetails
                 .Where(rd => rd.ReservationId == ReservationId)
                 .ToList();
 
+            _guests = _guests?.Select(name => name?.Trim() ?? "").ToList()!;
             if (_guests == null || _company == null || _relationship == null ||
-                _guests.Count == 0 || _guests.Count != _company.Count ||
+                _guests.Count == 0 || _guests.Any(string.IsNullOrWhiteSpace) ||
+                _guests.Distinct(StringComparer.OrdinalIgnoreCase).Count() != _guests.Count || _guests.Count != _company.Count ||
                 _guests.Count != _relationship.Count)
             {
-                return GuestCompanyValidationFailure(
-                    guid,
-                    "Complete the guest name, company, and relationship fields for every guest.");
+                return ReservationEditPage(
+                    header,
+                    "Enter a unique name and select a company for every guest. Relationship is optional.");
             }
 
             var normalizedCompanies = await NormalizeGuestCompaniesAsync(
@@ -749,8 +749,8 @@ namespace PropertyManagementSystem.Controllers
                 existingReservationDetails.Select(detail => detail.Company));
             if (normalizedCompanies == null)
             {
-                return GuestCompanyValidationFailure(
-                    guid,
+                return ReservationEditPage(
+                    header,
                     "Select a company from the list or choose N/A for every guest.");
             }
 
@@ -764,7 +764,7 @@ namespace PropertyManagementSystem.Controllers
                     startDate,
                     endDate);
                 var rescheduleFailure = CommitFailure(rescheduled);
-                if (rescheduleFailure != null) return rescheduleFailure;
+                if (rescheduleFailure != null) return ReservationEditPage(header, rescheduled.Message ?? "The selected schedule is unavailable.");
                 header = rescheduled.Reservation!;
             }
 
