@@ -1,4 +1,4 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel;
+@model PropertyManagementSystem.Models.ReservationViewModel;
 
 @{
     ViewData["Title"] = "View Reservation Details";
@@ -22,8 +22,7 @@
     var allGuestsAssigned = reservationDetails.Count > 0 &&
         reservationDetails.All(detail => detail.FacilityId.HasValue && detail.RoomId.HasValue);
     var isCurrentApprover =
-        (gfmsRoles.Contains("GFMS.Admin Approver") && Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL") ||
-        (gfmsRoles.Contains("GFMS.Admin Manager") && Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL");
+        (gfmsRoles.Contains("GFMS.Admin Approver") && (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL"));
     var alertMessage = TempData["AlertMessage"] as string;
     var alertSubMessage = TempData["AlertSubMessage"] as string;
     var alertType = TempData["AlertType"] as string;
@@ -131,12 +130,7 @@
                         {
                             <partial name="Shared/DepartmentHead/_pending" />
                         }
-                        else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" &&
-                                 gfmsRoles.Contains("GFMS.Admin Manager"))
-                        {
-                            <partial name="Shared/AdminManager/_pending" />
-                        }
-                        else if (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" &&
+                        else if ((Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL") &&
                                  gfmsRoles.Contains("GFMS.Admin Approver"))
                         {
                             <partial name="Shared/AdminApprover/_pending" />

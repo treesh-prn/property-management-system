@@ -145,7 +145,7 @@ namespace PropertyManagementSystem.Services
                 ReservationRoles.AdminManager);
         }
 
-        public static string GetSubmissionStatus(string activeRole, string? departmentCode, string? departmentName)
+        public static string GetSubmissionStatus(string activeRole, string? departmentCode, string? departmentName, string? reservationType = null)
         {
             var isAdmin = new[] { departmentCode, departmentName }.Any(value =>
                 string.Equals(value?.Trim(), "ADMIN", StringComparison.OrdinalIgnoreCase) ||
@@ -154,7 +154,9 @@ namespace PropertyManagementSystem.Services
                 (activeRole == ReservationRoles.Requestor && isAdmin))
                 return ReservationStatuses.AdminApproverApproval;
             if (activeRole == ReservationRoles.AdminApprover)
-                return ReservationStatuses.AdminManagerApproval;
+                return reservationType is "FN" or "GH"
+                    ? ReservationStatuses.AdminApproverApproval
+                    : ReservationStatuses.AdminManagerApproval;
             return ReservationStatuses.DepartmentHeadApproval;
         }
 
@@ -163,7 +165,7 @@ namespace PropertyManagementSystem.Services
         {
             var department = _context == null ? null : await _context.Departments
                 .AsNoTracking().FirstOrDefaultAsync(d => d.Id == actor.DepartmentId);
-            var status = GetSubmissionStatus(actor.ActiveRole, department?.DepartmentCode, department?.DepartmentName);
+            var status = GetSubmissionStatus(actor.ActiveRole, department?.DepartmentCode, department?.DepartmentName, reservation.ReservationType);
             var head = _context == null || department?.DepartmentHead == null ? null :
                 await _context.Employees.AsNoTracking()
                     .FirstOrDefaultAsync(e => e.GUID == department.DepartmentHead);
@@ -306,10 +308,10 @@ namespace PropertyManagementSystem.Services
                 "FN" => reservation.Status switch
                 {
                     ReservationStatuses.AdminApproverApproval => ReservationRoles.AdminApprover,
-                    ReservationStatuses.AdminManagerApproval => ReservationRoles.AdminManager,
+                    ReservationStatuses.AdminManagerApproval => ReservationRoles.AdminApprover,
                     _ => null
                 },
-                "GH" when reservation.Status == ReservationStatuses.AdminApproverApproval =>
+                "GH" when reservation.Status is ReservationStatuses.AdminApproverApproval or ReservationStatuses.AdminManagerApproval =>
                     ReservationRoles.AdminApprover,
                 "DRM" when reservation.Status == ReservationStatuses.AdminApproverApproval =>
                     ReservationRoles.AdminApprover,
@@ -374,12 +376,16 @@ namespace PropertyManagementSystem.Services
 
             if (status == ReservationStatuses.AdminApproverApproval)
             {
-                return (ReservationRoles.AdminApprover, ReservationStatuses.AdminManagerApproval);
+                return (ReservationRoles.AdminApprover, reservationType is "FN" or "GH"
+                    ? ReservationStatuses.Approved
+                    : ReservationStatuses.AdminManagerApproval);
             }
 
             if (status == ReservationStatuses.AdminManagerApproval)
             {
-                return (ReservationRoles.AdminManager, ReservationStatuses.Approved);
+                return (reservationType is "FN" or "GH"
+                    ? ReservationRoles.AdminApprover
+                    : ReservationRoles.AdminManager, ReservationStatuses.Approved);
             }
 
             return null;

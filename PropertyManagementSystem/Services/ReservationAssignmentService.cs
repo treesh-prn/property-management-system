@@ -618,7 +618,7 @@ namespace PropertyManagementSystem.Services
                     return new GuestRoomSwapResult(ReservationCommitResult.Fail(
                         ReservationCommitFailure.Conflict, "A room assignment changed. Refresh and try again."));
 
-                if (targetHeader.Status != ReservationStatuses.AdminManagerApproval ||
+                if ((targetHeader.Status is not ReservationStatuses.AdminApproverApproval and not ReservationStatuses.AdminManagerApproval) ||
                     !ActiveStatuses.Contains(conflictHeader.Status ?? string.Empty) ||
                     conflictDetail.RoomId != assignment.Slot.RoomId ||
                     conflictDetail.ReservationId == targetDetail.ReservationId ||

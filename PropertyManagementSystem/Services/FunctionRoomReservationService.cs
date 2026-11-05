@@ -1164,9 +1164,9 @@ namespace PropertyManagementSystem.Services
                 ReservationCommitResult committed;
                 if (request._swapWithReservationDetailId.HasValue)
                 {
-                    if (reservation.Status != ReservationStatuses.AdminManagerApproval)
+                    if (reservation.Status is not ReservationStatuses.AdminApproverApproval and not ReservationStatuses.AdminManagerApproval)
                         return FunctionRoomOperationResult.Fail(
-                            "Only the Admin Manager can swap two occupied Function Room assignments.",
+                            "Only the Admin Approver can swap two occupied Function Room assignments.",
                             ReservationOperationFailure.Forbidden);
 
                     swap = await _assignments.SwapFunctionRoomAsync(new FunctionRoomSwapCommand(
@@ -1191,7 +1191,7 @@ namespace PropertyManagementSystem.Services
                     await _audit.AddAsync(
                         swap.ConflictingReservation, user, "SWAP_ASSIGNMENT",
                         swap.ConflictingReservation.Status, swap.ConflictingReservation.Status,
-                        $"Room reassigned during manager swap with reservation {reservation.ReservationCode ?? reservation.ReservationId.ToString()}; " +
+                        $"Room reassigned during approver swap with reservation {reservation.ReservationCode ?? reservation.ReservationId.ToString()}; " +
                         $"new room ID {swap.ConflictingDetail.RoomId}.");
                 }
                 else

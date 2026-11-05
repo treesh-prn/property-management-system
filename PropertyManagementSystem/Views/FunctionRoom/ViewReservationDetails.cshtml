@@ -1,4 +1,4 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel;
+@model PropertyManagementSystem.Models.ReservationViewModel;
 
 @{
     ViewData["Title"] = "View Reservation Details";
@@ -124,12 +124,7 @@
                         {
                             <partial name="Shared/DepartmentHead/_pending" />
                         }
-                        else if (Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL" &&
-                                 gfmsRoles.Contains("GFMS.Admin Manager"))
-                        {
-                            <partial name="Shared/AdminManager/_pending" />
-                        }
-                        else if (Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" &&
+                        else if ((Model.ReservationHeader.Status == "FOR ADMIN APPROVER'S APPROVAL" || Model.ReservationHeader.Status == "FOR ADMIN MANAGER'S APPROVAL") &&
                                  gfmsRoles.Contains("GFMS.Admin Approver"))
                         {
                             <partial name="Shared/AdminApprover/_pending" />

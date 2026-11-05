@@ -8,6 +8,33 @@ namespace PropertyManagementSystem.Tests;
 public class ReservationAuthorizationServiceTests
 {
     [Theory]
+    [InlineData("FN")]
+    [InlineData("GH")]
+    public void Admin_approver_submission_uses_final_admin_approver_review(string type)
+    {
+        Assert.Equal(ReservationStatuses.AdminApproverApproval,
+            ReservationAuthorizationService.GetSubmissionStatus(
+                ReservationRoles.AdminApprover, "ADMIN", "Administration", type));
+    }
+
+    [Theory]
+    [InlineData("FN")]
+    [InlineData("GH")]
+    public async Task Admin_manager_cannot_approve_reject_or_assign_at_final_review(string type)
+    {
+        var service = CreateService();
+        var manager = User("manager", "manager@example.invalid", ReservationRoles.AdminManager);
+        foreach (var status in new[] { ReservationStatuses.AdminApproverApproval, ReservationStatuses.AdminManagerApproval })
+        foreach (var operation in new[] { ReservationOperation.Approve, ReservationOperation.Reject, ReservationOperation.Assign })
+        {
+            var result = await service.AuthorizeAsync(manager,
+                Reservation("owner@example.invalid", type, status), operation);
+            Assert.False(result.Succeeded);
+            Assert.Equal(ReservationAuthorizationFailure.Forbidden, result.Failure);
+        }
+    }
+
+    [Theory]
     [InlineData(ReservationRoles.Requestor, "IT", "Information Technology", ReservationStatuses.DepartmentHeadApproval)]
     [InlineData(ReservationRoles.DepartmentHead, "IT", "Information Technology", ReservationStatuses.AdminApproverApproval)]
     [InlineData(ReservationRoles.Requestor, "ADMIN", "Administrative Services", ReservationStatuses.AdminApproverApproval)]
@@ -83,10 +110,10 @@ public class ReservationAuthorizationServiceTests
     [Theory]
     [InlineData("FN", ReservationStatuses.DepartmentHeadApproval, ReservationRoles.DepartmentHead)]
     [InlineData("FN", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover)]
-    [InlineData("FN", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminManager)]
+    [InlineData("FN", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminApprover)]
     [InlineData("GH", ReservationStatuses.DepartmentHeadApproval, ReservationRoles.DepartmentHead)]
     [InlineData("GH", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover)]
-    [InlineData("GH", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminManager)]
+    [InlineData("GH", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminApprover)]
     [InlineData("DRM", ReservationStatuses.DepartmentHeadApproval, ReservationRoles.DepartmentHead)]
     [InlineData("DRM", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminManager)]
     [InlineData("DRM", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover)]
@@ -110,11 +137,11 @@ public class ReservationAuthorizationServiceTests
 
     [Theory]
     [InlineData("FN", ReservationStatuses.DepartmentHeadApproval, ReservationRoles.DepartmentHead, ReservationStatuses.AdminApproverApproval)]
-    [InlineData("FN", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover, ReservationStatuses.AdminManagerApproval)]
-    [InlineData("FN", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminManager, ReservationStatuses.Approved)]
+    [InlineData("FN", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover, ReservationStatuses.Approved)]
+    [InlineData("FN", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminApprover, ReservationStatuses.Approved)]
     [InlineData("GH", ReservationStatuses.DepartmentHeadApproval, ReservationRoles.DepartmentHead, ReservationStatuses.AdminApproverApproval)]
-    [InlineData("GH", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover, ReservationStatuses.AdminManagerApproval)]
-    [InlineData("GH", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminManager, ReservationStatuses.Approved)]
+    [InlineData("GH", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover, ReservationStatuses.Approved)]
+    [InlineData("GH", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminApprover, ReservationStatuses.Approved)]
     [InlineData("DRM", ReservationStatuses.DepartmentHeadApproval, ReservationRoles.DepartmentHead, ReservationStatuses.AdminApproverApproval)]
     [InlineData("DRM", ReservationStatuses.AdminApproverApproval, ReservationRoles.AdminApprover, ReservationStatuses.AdminManagerApproval)]
     [InlineData("DRM", ReservationStatuses.AdminManagerApproval, ReservationRoles.AdminManager, ReservationStatuses.Approved)]

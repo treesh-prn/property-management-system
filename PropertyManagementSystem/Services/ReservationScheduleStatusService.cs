@@ -139,6 +139,16 @@ namespace PropertyManagementSystem.Services
             GFMS_ReservationHeader reservation,
             CancellationToken cancellationToken)
         {
+            if (reservation.ReservationType is "FN" or "GH" &&
+                reservation.Status == ReservationStatuses.AdminManagerApproval)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                reservation.Status = ReservationStatuses.AdminApproverApproval;
+                _logger.LogInformation("Reservation {ReservationId} rerouted to final Admin Approver review.",
+                    reservation.ReservationId);
+                return true;
+            }
+
             if (reservation.Status != ReservationStatuses.DepartmentHeadApproval ||
                 !await _authorization.ShouldBypassDepartmentHeadAsync(reservation))
             {

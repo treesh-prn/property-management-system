@@ -1,7 +1,7 @@
 @model PropertyManagementSystem.Models.ReservationViewModel
 @{
     var detail = Model.ReservationDetails?.FirstOrDefault();
-    var isManagerReassignment = Model.ReservationHeader?.Status == "FOR ADMIN MANAGER'S APPROVAL";
+    var isManagerReassignment = Model.ReservationHeader?.Status is "FOR ADMIN APPROVER'S APPROVAL" or "FOR ADMIN MANAGER'S APPROVAL";
     var hasSavedAssignment = detail?.FacilityId.HasValue == true && detail.RoomId.HasValue;
 }
 
@@ -105,7 +105,7 @@
                         )
                     </div>
                     <div class="guest-room-field-message facility-room-assignment-message">
-                        Available rooms are listed first. Admin Managers may select an occupied room when a safe two-room swap is possible.
+                        Available rooms are listed first. Admin Approvers may select an occupied room when a safe two-room swap is possible.
                     </div>
                     <div class="alert alert-info mt-2 mb-0 d-none"
                          role="status"

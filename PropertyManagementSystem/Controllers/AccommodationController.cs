@@ -1,4 +1,4 @@
-﻿using Kendo.Mvc.Extensions;
+using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis;
@@ -616,11 +616,7 @@ namespace PropertyManagementSystem.Controllers
 
             if (activeRole == ReservationRoles.AdminApprover)
             {
-                query = query.Where(x => x.Status == "FOR ADMIN APPROVER'S APPROVAL" || x.Status == "RESERVED");
-            }
-            else if (activeRole == ReservationRoles.AdminManager)
-            {
-                query = query.Where(x => x.Status == "FOR ADMIN MANAGER'S APPROVAL");
+                query = query.Where(x => x.Status == "FOR ADMIN APPROVER'S APPROVAL" || x.Status == "FOR ADMIN MANAGER'S APPROVAL" || x.Status == "RESERVED");
             }
             else if (activeRole != ReservationRoles.SystemAdmin)
             {
@@ -1004,10 +1000,10 @@ namespace PropertyManagementSystem.Controllers
             if (reservation == null || detail == null || room == null) return NotFound();
 
             var actor = await _authorization.GetActorAsync(User);
-            if (actor.ActiveRole != ReservationRoles.AdminManager) return Forbid();
-            if (reservation.Status != ReservationStatuses.AdminManagerApproval)
+            if (!actor.AssignedRoles.Contains(ReservationRoles.AdminApprover)) return Forbid();
+            if (reservation.Status is not ReservationStatuses.AdminApproverApproval and not ReservationStatuses.AdminManagerApproval)
                 return RedirectRoomAssignmentFailure(reservation.GUID,
-                    "This reservation is no longer awaiting Admin Manager review.");
+                    "This reservation is no longer awaiting final Admin Approver review.");
             if (!detail.StartDate.HasValue || !detail.EndDate.HasValue)
                 return RedirectRoomAssignmentFailure(reservation.GUID,
                     "The reservation schedule is incomplete.");
@@ -1103,10 +1099,10 @@ namespace PropertyManagementSystem.Controllers
             if (reservation == null) return NotFound();
 
             var actor = await _authorization.GetActorAsync(User);
-            if (actor.ActiveRole != ReservationRoles.AdminManager) return Forbid();
-            if (reservation.Status != ReservationStatuses.AdminManagerApproval)
+            if (!actor.AssignedRoles.Contains(ReservationRoles.AdminApprover)) return Forbid();
+            if (reservation.Status is not ReservationStatuses.AdminApproverApproval and not ReservationStatuses.AdminManagerApproval)
                 return RedirectRoomAssignmentFailure(reservation.GUID,
-                    "This reservation is no longer awaiting Admin Manager review.");
+                    "This reservation is no longer awaiting final Admin Approver review.");
 
             try
             {
@@ -1188,6 +1184,7 @@ namespace PropertyManagementSystem.Controllers
                 return RedirectToAction("ReservationList", "Accommodation");
             }
 
+            previousStatus = reservation.Status;
             var authorization = await _authorization.AuthorizeAsync(User, reservation, operation.Value);
             var failure = AuthorizationFailure(authorization);
             if (failure != null) return failure;

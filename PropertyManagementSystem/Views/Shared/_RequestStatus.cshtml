@@ -7,21 +7,24 @@
         status != "DRAFT" && status != "FOR DEPARTMENT HEAD'S APPROVAL";
     var isCancelled = status == "CANCELLED" || status == "DELETED" || status == "EXPIRED";
     var isRejected = status == "DISAPPROVED" || status == "REJECTED";
+    var finalAdminApprover = Model.ReservationHeader?.ReservationType is "FN" or "GH";
     var currentStep = status switch
     {
         "FOR DEPARTMENT HEAD'S APPROVAL" => 1,
         "FOR ADMIN APPROVER'S APPROVAL" => 2,
-        "FOR ADMIN MANAGER'S APPROVAL" => 3,
-        "APPROVED" => 4,
+        "FOR ADMIN MANAGER'S APPROVAL" => finalAdminApprover ? 2 : 3,
+        "APPROVED" => finalAdminApprover ? 3 : 4,
         _ => 0
     };
     var message = status switch
     {
         "DRAFT" => "This draft has not been submitted. Complete the required information, review it, and submit when ready.",
         "FOR DEPARTMENT HEAD'S APPROVAL" => "Your request is waiting for Department Head approval. No action is required from you.",
+        "FOR ADMIN APPROVER'S APPROVAL" when finalAdminApprover => "Your request is waiting for final Admin Approver approval.",
         "FOR ADMIN APPROVER'S APPROVAL" => departmentHeadBypassed
             ? "Department Head review was not required because the assigned approver is also an Admin Manager. Your request is waiting for independent Admin Approver review."
             : "Department Head review is complete. Your request is waiting for Admin Approver review.",
+        "FOR ADMIN MANAGER'S APPROVAL" when finalAdminApprover => "Your request is waiting for final Admin Approver approval.",
         "FOR ADMIN MANAGER'S APPROVAL" => "Admin Approver review is complete. Your request is waiting for final Admin Manager approval.",
         "APPROVED" => "Your request has been approved. Review the assigned facility or room information below.",
         "CANCELLED" => "This request was cancelled and is now read-only.",
@@ -33,7 +36,9 @@
         _ => "Review the current request status and details below."
     };
     var tone = isCancelled || isRejected ? "danger" : status == "APPROVED" ? "success" : status == "DRAFT" ? "neutral" : "warning";
-    var steps = new[] { "Draft", "Department Head", "Admin Approver", "Admin Manager", "Approved" };
+    var steps = finalAdminApprover
+        ? new[] { "Draft", "Department Head", "Admin Approver", "Approved" }
+        : new[] { "Draft", "Department Head", "Admin Approver", "Admin Manager", "Approved" };
     var remarks = Model.ReservationHeader?.Remarks?.Trim();
     var reviewedBy = Model.ReservationHeader?.ApprovedBy?.Trim();
 }

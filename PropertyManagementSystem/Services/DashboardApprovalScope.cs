@@ -27,8 +27,11 @@ namespace PropertyManagementSystem.Services
 
             return reservations.Where(reservation =>
                 (canApproveAsAdminApprover &&
-                 reservation.Status == ReservationStatuses.AdminApproverApproval) ||
+                 (reservation.Status == ReservationStatuses.AdminApproverApproval ||
+                  ((reservation.ReservationType == "FN" || reservation.ReservationType == "GH") &&
+                   reservation.Status == ReservationStatuses.AdminManagerApproval))) ||
                 (canApproveAsAdminManager &&
+                 reservation.ReservationType != "FN" && reservation.ReservationType != "GH" &&
                  reservation.Status == ReservationStatuses.AdminManagerApproval) ||
                 (canApproveAsDepartmentHead &&
                  reservation.Status == ReservationStatuses.DepartmentHeadApproval &&

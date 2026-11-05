@@ -14,6 +14,23 @@ public class DashboardApprovalScopeTests
         DepartmentId = 10
     };
 
+    [Theory]
+    [InlineData("FN")]
+    [InlineData("GH")]
+    public void Legacy_manager_queue_belongs_to_admin_approver(string type)
+    {
+        var reservations = new[]
+        {
+            new GFMS_ReservationHeader { ReservationId = 1, ReservationType = type,
+                Status = ReservationStatuses.AdminManagerApproval }
+        }.AsQueryable();
+        var employees = Array.Empty<Gen_Employee>().AsQueryable();
+        Assert.Single(reservations.ForAssignedApprovalRoles(
+            new[] { ReservationRoles.AdminApprover }, null, employees));
+        Assert.Empty(reservations.ForAssignedApprovalRoles(
+            new[] { ReservationRoles.AdminManager }, null, employees));
+    }
+
     [Fact]
     public void ForDepartmentHead_OnlyIncludesAssignedReservationsFromOwnDepartment()
     {

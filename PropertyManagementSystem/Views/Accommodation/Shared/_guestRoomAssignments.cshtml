@@ -5,7 +5,8 @@
     var assignmentPercent = details.Count == 0
         ? 0
         : (int)Math.Round((double)selectedCount / details.Count * 100);
-    var isManagerReassignment = Model.ReservationHeader?.Status == "FOR ADMIN MANAGER'S APPROVAL";
+    var isManagerReassignment = Model.ReservationHeader?.Status is "FOR ADMIN APPROVER'S APPROVAL" or "FOR ADMIN MANAGER'S APPROVAL"
+        && details.Any(detail => detail.RoomId.HasValue);
 }
 
 <section class="card mt-3 guest-room-assignment"
