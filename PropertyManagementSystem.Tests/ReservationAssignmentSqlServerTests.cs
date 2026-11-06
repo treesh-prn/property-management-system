@@ -9,6 +9,44 @@ namespace PropertyManagementSystem.Tests;
 public sealed class ReservationAssignmentSqlServerTests
 {
     [Fact]
+    public async Task GuesthouseAutoApprovedReservation_SavesRoomsAndRemainsApproved()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+
+        var databaseName = $"PmsGuesthouseAutoApprove_{Guid.NewGuid():N}";
+        var connectionString =
+            $"Server=(localdb)\\MSSQLLocalDB;Database={databaseName};Integrated Security=true;TrustServerCertificate=true;MultipleActiveResultSets=true";
+        try
+        {
+            await SeedGuesthouseAsync(connectionString, guestCount: 2, roomCapacity: 3);
+            await using var context = CreateContext(connectionString);
+            var header = await context.ReservationHeaders.SingleAsync();
+            header.Status = ReservationStatuses.Approved;
+            header.ApprovedBy = "admin.approver";
+            await context.SaveChangesAsync();
+            var details = await context.ReservationDetails.ToListAsync();
+            var room = await context.Rooms.SingleAsync();
+
+            var result = await new ReservationAssignmentService(context).ApproveAssignedReservationAsync(
+                header.ReservationId, "GH", ReservationStatuses.Approved, header.RowVersion.ToArray(),
+                ReservationStatuses.Approved, header.ApprovedBy,
+                details.Select(detail => new ReservationRoomAssignmentSelection(detail.ReservationDetailId, room.RoomId)).ToList());
+
+            Assert.True(result.Succeeded, result.Message);
+            context.ChangeTracker.Clear();
+            var saved = await context.ReservationHeaders.SingleAsync();
+            Assert.Equal(ReservationStatuses.Approved, saved.Status);
+            Assert.Equal("admin.approver", saved.ApprovedBy);
+            Assert.All(await context.ReservationDetails.ToListAsync(), detail => Assert.Equal(room.RoomId, detail.RoomId));
+        }
+        finally
+        {
+            await using var cleanup = CreateContext(connectionString);
+            await cleanup.Database.EnsureDeletedAsync();
+        }
+    }
+
+    [Fact]
     public async Task GuesthouseSoftAssignments_SaveOnlyWhenApprovalCommits()
     {
         if (!OperatingSystem.IsWindows()) return;

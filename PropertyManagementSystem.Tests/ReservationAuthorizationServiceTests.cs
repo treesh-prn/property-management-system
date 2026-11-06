@@ -10,11 +10,97 @@ public class ReservationAuthorizationServiceTests
     [Theory]
     [InlineData("FN")]
     [InlineData("GH")]
-    public void Admin_approver_submission_uses_final_admin_approver_review(string type)
+    public async Task Auto_approval_removes_unused_department_head_assignment_and_access(string type)
     {
-        Assert.Equal(ReservationStatuses.AdminApproverApproval,
+        var service = CreateService();
+        var owner = User("owner", "owner@example.invalid", ReservationRoles.AdminApprover);
+        var head = User("head", "head@example.invalid", ReservationRoles.DepartmentHead, "Department Head");
+        var reservation = Reservation("owner@example.invalid", type, ReservationStatuses.Draft);
+        reservation.ApproverEmail = "head@example.invalid";
+        reservation.Approver = "Department Head";
+
+        reservation.Status = await service.GetSubmissionStatusAsync(reservation, await service.GetActorAsync(owner));
+
+        Assert.Equal(ReservationStatuses.Approved, reservation.Status);
+        Assert.Null(reservation.ApproverEmail);
+        Assert.Null(reservation.Approver);
+        foreach (var operation in new[] { ReservationOperation.Read, ReservationOperation.Approve, ReservationOperation.Reject })
+            Assert.False((await service.AuthorizeAsync(head, reservation, operation)).Succeeded);
+        Assert.True((await service.AuthorizeAsync(owner, reservation, ReservationOperation.Read)).Succeeded);
+        Assert.True((await service.AuthorizeAsync(
+            User("admin", "admin@example.invalid", ReservationRoles.AdminManager), reservation, ReservationOperation.Read)).Succeeded);
+    }
+
+    [Theory]
+    [InlineData("FN", ReservationStatuses.DepartmentHeadApproval)]
+    [InlineData("GH", ReservationStatuses.DepartmentHeadApproval)]
+    [InlineData("FN", ReservationStatuses.Approved)]
+    [InlineData("GH", ReservationStatuses.Approved)]
+    public async Task Genuine_department_head_assignment_retains_review_and_history_access(string type, string status)
+    {
+        var reservation = Reservation("owner@example.invalid", type, status);
+        reservation.ApproverEmail = "head@example.invalid";
+        var result = await CreateService().AuthorizeAsync(
+            User("head", "head@example.invalid", ReservationRoles.DepartmentHead), reservation, ReservationOperation.Read);
+        Assert.True(result.Succeeded);
+    }
+
+    [Theory]
+    [InlineData("FN")]
+    [InlineData("GH")]
+    public async Task Matching_display_name_alone_cannot_grant_department_head_access(string type)
+    {
+        var reservation = Reservation("owner@example.invalid", type, ReservationStatuses.DepartmentHeadApproval);
+        reservation.Approver = "Same Name ";
+        reservation.ApproverEmail = "another-head@example.invalid";
+        var head = User("head", "head@example.invalid", ReservationRoles.DepartmentHead, "Same Name");
+        foreach (var operation in new[] { ReservationOperation.Read, ReservationOperation.Approve, ReservationOperation.Reject })
+            Assert.False((await CreateService().AuthorizeAsync(head, reservation, operation)).Succeeded);
+    }
+
+    [Theory]
+    [InlineData("FN")]
+    [InlineData("GH")]
+    public async Task Department_head_cannot_read_someone_elses_draft_even_with_stale_assignment(string type)
+    {
+        var reservation = Reservation("owner@example.invalid", type, ReservationStatuses.Draft);
+        reservation.ApproverEmail = "head@example.invalid";
+        Assert.False((await CreateService().AuthorizeAsync(
+            User("head", "head@example.invalid", ReservationRoles.DepartmentHead), reservation, ReservationOperation.Read)).Succeeded);
+    }
+
+    [Theory]
+    [InlineData("FN")]
+    [InlineData("GH")]
+    public void Admin_approver_submission_is_automatically_approved(string type)
+    {
+        Assert.Equal(ReservationStatuses.Approved,
             ReservationAuthorizationService.GetSubmissionStatus(
                 ReservationRoles.AdminApprover, "ADMIN", "Administration", type));
+    }
+
+    [Fact]
+    public async Task Admin_approver_can_assign_rooms_to_own_approved_guesthouse_without_reapproval()
+    {
+        var owner = User("owner", "owner@example.invalid", ReservationRoles.AdminApprover);
+        var reservation = Reservation("owner@example.invalid", "GH", ReservationStatuses.Approved);
+        var result = await CreateService().AuthorizeAsync(owner, reservation, ReservationOperation.Assign);
+        Assert.True(result.Succeeded);
+        Assert.Equal(ReservationStatuses.Approved, result.NextStatus);
+    }
+
+    [Theory]
+    [InlineData(ReservationRoles.Requestor, "owner@example.invalid", "GH")]
+    [InlineData(ReservationRoles.AdminManager, "owner@example.invalid", "GH")]
+    [InlineData(ReservationRoles.AdminApprover, "other@example.invalid", "GH")]
+    [InlineData(ReservationRoles.AdminApprover, "owner@example.invalid", "FN")]
+    public async Task Approved_room_assignment_exception_is_restricted_to_admin_approver_guesthouse_owner(
+        string role, string email, string type)
+    {
+        var user = User("user", email, role);
+        var result = await CreateService().AuthorizeAsync(user,
+            Reservation("owner@example.invalid", type, ReservationStatuses.Approved), ReservationOperation.Assign);
+        Assert.False(result.Succeeded);
     }
 
     [Theory]

@@ -11,6 +11,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
+// Local credentials stay outside source control. Server environment settings take precedence.
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+if (args.Length > 0) builder.Configuration.AddCommandLine(args);
 var domain =  builder.Configuration["Domain"];
 
 // Add framework services.
@@ -63,7 +67,13 @@ builder.Services.AddSingleton<CompanyChargesPdfService>();
 builder.Services.AddSingleton<OccupancyPdfService>();
 builder.Services.AddSingleton<ExcelReportService>();
 builder.Services.AddScoped<SsrsService>();
-builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddSingleton<Microsoft.Extensions.Options.IValidateOptions<SmtpSettings>, SmtpSettingsValidator>();
+builder.Services.AddOptions<SmtpSettings>().Bind(builder.Configuration.GetSection("SmtpSettings")).ValidateOnStart();
+builder.Services.AddSingleton<FileEmailOutbox>();
+builder.Services.AddSingleton<IEmailOutbox>(services => services.GetRequiredService<FileEmailOutbox>());
+builder.Services.AddSingleton<IEmailTransport, SmtpEmailTransport>();
+builder.Services.AddScoped<IReservationNotificationService, ReservationNotificationService>();
+builder.Services.AddHostedService<EmailDeliveryWorker>();
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 

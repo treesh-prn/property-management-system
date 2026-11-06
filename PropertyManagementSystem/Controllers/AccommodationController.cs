@@ -251,26 +251,26 @@ namespace PropertyManagementSystem.Controllers
             Console.WriteLine("User Id: " + userId);
             Console.WriteLine("Department Id: " + _department);
 
-            if (string.IsNullOrWhiteSpace(actor.EmployeeEmail) ||
-                string.IsNullOrWhiteSpace(actor.EmployeeName) ||
-                !actor.DepartmentId.HasValue ||
-                !actor.CompanyId.HasValue)
+            var details = ReservationCreationPolicy.Resolve(actor, _company, _department);
+            if (details == null)
             {
-                return Forbid();
+                return BadRequest("A requestor name, email, company and department are required. Only an active Admin Approver can select a company and department without an employee profile.");
             }
+            if (!await ReservationCreationPolicy.IsValidCostCenterAsync(_context, details))
+                return BadRequest("Select a valid company and a department belonging to that company.");
 
             var guid1 = Guid.NewGuid().ToString("N").ToUpper();
             var unique = $"{guid1}";
             GFMS_ReservationHeader _reservation = new GFMS_ReservationHeader()
             {
                 GUID = unique,
-                ChargeToCompany = actor.CompanyId.Value,
-                Requestor = actor.EmployeeName,
-                RequestorEmail = actor.EmployeeEmail,
+                ChargeToCompany = details.CompanyId,
+                Requestor = details.Requestor,
+                RequestorEmail = details.RequestorEmail,
                 DateFiled = DateTime.Now,
                 DateSubmitted = null,
                 Status = "DRAFT",
-                Department = actor.DepartmentId.Value,
+                Department = details.DepartmentId,
                 ReservationType = "GH"
             };
 
@@ -420,6 +420,9 @@ namespace PropertyManagementSystem.Controllers
                     guid,
                     "Select valid arrival and departure dates.");
             }
+            var actor = await _authorization.GetActorAsync(User);
+            var scheduleError = ReservationSchedulePolicy.ValidateStart(_startDate, actor, DateTime.Now);
+            if (scheduleError != null) return GuestScheduleValidationFailure(guid, scheduleError);
 
             if (_guests == null || _company == null || _relationship == null ||
                 _guests.Length == 0 || _guests.Length != _company.Length ||
@@ -448,7 +451,7 @@ namespace PropertyManagementSystem.Controllers
             try
             {
                 var previousStatus = reservationHeader.Status;
-                var submissionStatus = await _authorization.GetSubmissionStatusAsync(reservationHeader, await _authorization.GetActorAsync(User));
+                var submissionStatus = await _authorization.GetSubmissionStatusAsync(reservationHeader, actor);
                 if (_guests != null && _company != null && _relationship != null)
                 {
                     int length = Math.Min(Math.Min(_guests.Length, _company.Length), _relationship.Length);
@@ -472,6 +475,8 @@ namespace PropertyManagementSystem.Controllers
                         {
                             reservationHeader.DateSubmitted = _processingPolicy.GetSubmissionTimestamp();
                             reservationHeader.Status = submissionStatus;
+                            if (submissionStatus == ReservationStatuses.Approved)
+                                reservationHeader.ApprovedBy = ReservationCreationPolicy.GetRequestorName(actor);
                         }
                     }
 
@@ -722,6 +727,9 @@ namespace PropertyManagementSystem.Controllers
 
             var inputError = ReservationEditValidation.Validate(startDate, endDate, purpose, DateTime.Now);
             if (inputError != null) return ReservationEditPage(header, inputError);
+            var scheduleError = ReservationSchedulePolicy.ValidateStart(
+                startDate, await _authorization.GetActorAsync(User), DateTime.Now);
+            if (scheduleError != null) return ReservationEditPage(header, scheduleError);
             if (!ModelState.IsValid) return ReservationEditPage(header, "Check the fields and enter valid values.");
 
             Console.WriteLine("Reservation Id: " + ReservationId);
@@ -820,12 +828,16 @@ namespace PropertyManagementSystem.Controllers
             TempData["AlertType"] = "success";
             if (isResubmission)
             {
-                header.Status = await _authorization.GetSubmissionStatusAsync(header, await _authorization.GetActorAsync(User));
+                var actor = await _authorization.GetActorAsync(User);
+                header.Status = await _authorization.GetSubmissionStatusAsync(header, actor);
                 header.DateSubmitted = _processingPolicy.GetSubmissionTimestamp();
                 header.Remarks = null;
-                header.ApprovedBy = null;
+                header.ApprovedBy = header.Status == ReservationStatuses.Approved
+                    ? ReservationCreationPolicy.GetRequestorName(actor) : null;
                 TempData["AlertMessage"] = "Reservation resubmitted successfully!";
-                TempData["AlertSubMessage"] = "The revised schedule was returned to the first approval stage.";
+                TempData["AlertSubMessage"] = header.Status == ReservationStatuses.Approved
+                    ? "The revised reservation is approved. Complete the guest room assignments."
+                    : "The revised schedule was returned to the first approval stage.";
             }
             _context.SaveChanges();
             if (isResubmission)
@@ -1170,6 +1182,7 @@ namespace PropertyManagementSystem.Controllers
             var operation = action switch
             {
                 "Approve" => ReservationOperation.Approve,
+                "Assign" when previousStatus == ReservationStatuses.Approved => ReservationOperation.Assign,
                 "Reject" => ReservationOperation.Reject,
                 _ => (ReservationOperation?)null
             };
@@ -1199,11 +1212,12 @@ namespace PropertyManagementSystem.Controllers
                 return Conflict("Requests submitted after 4:00 PM can be processed on the next day.");
             }
 
-            if (action == "Approve" &&
-                previousStatus is ReservationStatuses.AdminApproverApproval or ReservationStatuses.AdminManagerApproval)
+            if ((action == "Approve" &&
+                previousStatus is ReservationStatuses.AdminApproverApproval or ReservationStatuses.AdminManagerApproval) ||
+                (action == "Assign" && previousStatus == ReservationStatuses.Approved))
             {
                 IReadOnlyCollection<ReservationRoomAssignmentSelection>? softAssignments = null;
-                if (previousStatus is ReservationStatuses.AdminApproverApproval or ReservationStatuses.AdminManagerApproval)
+                if (previousStatus is ReservationStatuses.AdminApproverApproval or ReservationStatuses.AdminManagerApproval || action == "Assign")
                 {
                     softAssignments = (Assignments ?? new List<GuestRoomAssignmentInput>())
                         .Select(item => new ReservationRoomAssignmentSelection(
@@ -1218,7 +1232,7 @@ namespace PropertyManagementSystem.Controllers
                     previousStatus,
                     reservation.RowVersion.ToArray(),
                     authorization.NextStatus!,
-                    actor.EmployeeName,
+                    action == "Assign" ? reservation.ApprovedBy : ReservationCreationPolicy.GetRequestorName(actor),
                     softAssignments);
                 if (!committed.Succeeded)
                 {
@@ -1260,13 +1274,13 @@ namespace PropertyManagementSystem.Controllers
             await _audit.AddAsync(
                 reservation,
                 User,
-                action == "Approve" ? "APPROVE" : "REJECT",
+                action == "Approve" ? "APPROVE" : action == "Assign" ? "SAVE_ROOMS" : "REJECT",
                 previousStatus,
                 reservation.Status);
 
-            TempData["AlertMessage"] = action == "Approve" ? "Approved!" : "Rejected";
+            TempData["AlertMessage"] = action == "Approve" ? "Approved!" : action == "Assign" ? "Room assignments saved" : "Rejected";
             TempData["AlertSubMessage"] = "Reservation status has been updated";
-            TempData["AlertType"] = action == "Approve" ? "success" : "warning";
+            TempData["AlertType"] = action == "Reject" ? "warning" : "success";
             return RedirectToAction("ReservationList", "Accommodation");
         }
 

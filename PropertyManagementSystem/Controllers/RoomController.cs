@@ -51,11 +51,16 @@ namespace PropertyManagementSystem.Controllers
                                    RoomId = room.RoomId,
                                    RoomName = room.RoomName,
                                    RoomStatus = room.RoomStatus,
+                                   FacilityId = room.FacilityId,
                                    FacilityName = facilityList.FacilityName,
                                    FacilityLocation = facilityList.FacilityLocation,
                                    Capacity = room.Capacity,
                                    isActive = room.isActive,
-                                   RoomType = room.RoomType
+                                   RoomType = room.RoomType,
+                                   CostPerDay = room.CostPerDay,
+                                   CostPerWeek = room.CostPerWeek,
+                                   CostPerMonth = room.CostPerMonth,
+                                   isPerHead = room.isPerHead
 
                                }).FirstOrDefault();
             if (roomDetails == null)
@@ -93,11 +98,16 @@ namespace PropertyManagementSystem.Controllers
                 RoomId = roomDetails.RoomId,
                 RoomName = roomDetails.RoomName,
                 RoomStatus = roomDetails.RoomStatus,
+                FacilityId = roomDetails.FacilityId,
                 FacilityName = roomDetails.FacilityName,
                 FacilityLocation = roomDetails.FacilityLocation,
                 Capacity = roomDetails.Capacity,
                 isActive = roomDetails.isActive,
                 RoomType = roomDetails.RoomType,
+                CostPerDay = roomDetails.CostPerDay,
+                CostPerWeek = roomDetails.CostPerWeek,
+                CostPerMonth = roomDetails.CostPerMonth,
+                isPerHead = roomDetails.isPerHead,
                 Occupants = occupants
 
             };

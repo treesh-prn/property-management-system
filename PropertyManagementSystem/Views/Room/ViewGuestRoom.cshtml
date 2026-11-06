@@ -1,7 +1,7 @@
 ﻿@model PropertyManagementSystem.Models.RoomViewModel;
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Room Details";
     var roomListAction = Model.RoomType switch
     {
         0 => "GuestRoom",
@@ -54,7 +54,7 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards management-detail-layout">
-                <div class="col-md-3">
+                <div class="col-lg-3">
                     <div class="card management-media-card">
                         <div class="card-header card-header-light">
                             <h3 class="card-title">@Model.FacilityName</h3>
@@ -74,8 +74,21 @@
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="card management-detail-card">
-                        <div class="card-header">
+                    <div class="card management-detail-card management-record-details">
+                        <div class="card-header management-record-header">
+                            <span class="accommodation-details-icon" aria-hidden="true"><i class="ti @(Model.RoomType == 1 ? "ti-building-community" : "ti-bed")"></i></span>
+                            <div>
+                                <h3 class="card-title">@Model.RoomName</h3>
+                                <p class="card-subtitle">@Model.FacilityName facility assignment, capacity, and operating information.</p>
+                            </div>
+                            <div class="card-actions">
+                                <a id="editRoomButton" href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
+                                    <i class="ti ti-edit" aria-hidden="true"></i>
+                                    Edit Room
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-header management-record-tabs">
                             <ul class="nav nav-tabs card-header-tabs">
                                 <li class="nav-item">
                                     <a class="nav-link active" data-bs-toggle="tab" href="#details">
@@ -91,21 +104,11 @@
                                         }
                                     </a>
                                 </li>
-                                <li class="nav-item ms-auto mb-1">
-                                    <a id="editRoomButton" href="#offcanvasEnd" class="btn btn-primary" data-bs-toggle="offcanvas" data-bs-target="#offcanvasEnd" aria-controls="offcanvasEnd">
-                                        <i class="ti ti-edit" aria-hidden="true"></i>
-                                        Edit Room
-                                    </a>
-                                </li>
                             </ul>
                         </div>
                         <div class="card-body tab-content">
                             <div id="details" class="tab-pane fade show active">
-                                <div class="management-section-heading">
-                                    <span class="reservation-eyebrow">Room record</span>
-                                    <h3>@Model.RoomName</h3>
-                                    <p>@Model.FacilityName facility assignment and operating information.</p>
-                                </div>
+                                <h4 class="management-record-section-title">Room information</h4>
                                 <div class="datagrid">
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Room Name</div>
@@ -165,6 +168,18 @@
                                                 </span>
                                             </div>
                                         }
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Cost Per Day</div>
+                                        <div class="datagrid-content">@(Model.CostPerDay.HasValue ? "₱ " + Model.CostPerDay.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-PH")) : "Not set")</div>
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Cost Per Week</div>
+                                        <div class="datagrid-content">@(Model.CostPerWeek.HasValue ? "₱ " + Model.CostPerWeek.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-PH")) : "Not set")</div>
+                                    </div>
+                                    <div class="datagrid-item">
+                                        <div class="datagrid-title">Cost Per Month</div>
+                                        <div class="datagrid-content">@(Model.CostPerMonth.HasValue ? "₱ " + Model.CostPerMonth.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-PH")) : "Not set")</div>
                                     </div>
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Status</div>
@@ -310,7 +325,7 @@
                                 }
                             </div>
                         </div>
-                        <div class="card-footer d-print-none">
+                        <div class="card-footer management-record-footer d-print-none">
                             <a href="@Url.Action(roomListAction, "Room")" class="btn btn-link link-secondary px-0">
                                 <i class="ti ti-arrow-left" aria-hidden="true"></i>
                                 <span>Back to @roomListLabel</span>

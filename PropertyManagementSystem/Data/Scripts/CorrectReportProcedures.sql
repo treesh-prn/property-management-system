@@ -141,7 +141,25 @@ BEGIN
         CASE
             WHEN DATEDIFF(DAY, RD.StartDate, RD.EndDate) < 0 THEN 0
             ELSE DATEDIFF(DAY, RD.StartDate, RD.EndDate) + 1
-        END AS NoOfDays
+        END AS NoOfDays,
+        -- Preserve the column names consumed by the existing SSRS occupancy report.
+        RD.StartDate AS [Start Date],
+        RD.EndDate AS [End Date],
+        CONVERT(VARCHAR(8), RD.StartDate, 108) AS [Start Time],
+        CONVERT(VARCHAR(8), RD.EndDate, 108) AS [End Time],
+        CASE RH.ReservationType
+            WHEN 'FN' THEN 'Function Room'
+            WHEN 'GH' THEN 'Guest House'
+            WHEN 'DRM' THEN 'Dorm and Housing'
+            ELSE RH.ReservationType
+        END AS [Reservation Type],
+        F.FacilityName AS [Facility/Guesthouse],
+        R.RoomName AS [Room Name],
+        CONCAT(CONVERT(VARCHAR(10), RD.StartDate, 23), ' - ', CONVERT(VARCHAR(10), RD.EndDate, 23)) AS [Date of Stay],
+        CASE
+            WHEN DATEDIFF(DAY, RD.StartDate, RD.EndDate) < 0 THEN 0
+            ELSE DATEDIFF(DAY, RD.StartDate, RD.EndDate) + 1
+        END AS [No of Days]
     FROM dbo.GFMS_ReservationDetails RD
     INNER JOIN dbo.GFMS_ReservationHeader RH ON RH.ReservationId = RD.ReservationId
     INNER JOIN dbo.GFMS_Facility F ON F.FacilityId = RD.FacilityId

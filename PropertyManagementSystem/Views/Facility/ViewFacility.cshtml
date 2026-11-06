@@ -6,7 +6,7 @@
 @{
 }
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Facility Details";
     var linkedEquipment = ((IReadOnlyList<PropertyManagementSystem.Models.FacilityEquipmentLinkOption>)(ViewBag.EquipmentLinkOptions
         ?? new List<PropertyManagementSystem.Models.FacilityEquipmentLinkOption>()))
         .Where(option => option.Selected)
@@ -34,7 +34,7 @@
     <div class="page-body">
         <div class="container-xl">
             <div class="row row-cards management-detail-layout">
-                <div class="col-md-3">
+                <div class="col-lg-3">
                     <div class="card management-media-card">
                         <div class="card-header card-header-light">
                             <h3 class="card-title">@Model.FacilityName</h3>
@@ -47,10 +47,10 @@
                     </div>
                 </div>
                 <div class="col-lg-9">
-                    <div class="card management-detail-card">
-                            <div class="card-header">
+                    <div class="card management-detail-card management-record-details">
+                            <div class="card-header management-record-header">
+                                <span class="accommodation-details-icon" aria-hidden="true"><i class="ti ti-building-community"></i></span>
                                 <div>
-                                    <span class="reservation-eyebrow">Facility record</span>
                                     <h3 class="card-title">@Model.FacilityName</h3>
                                     <p class="card-subtitle">Classification, location, and operating information.</p>
                                 </div>
@@ -62,6 +62,7 @@
                                 </div>
                             </div>
                             <div class="card-body">
+                                <h4 class="management-record-section-title">Facility information</h4>
                                 <div class="datagrid">
                                     <div class="datagrid-item">
                                         <div class="datagrid-title">Facility Name</div>
@@ -131,7 +132,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-footer d-print-none">
+                            <div class="card-footer management-record-footer d-print-none">
                                 <a href="@Url.Action("Index", "Facility")" class="btn btn-link link-secondary px-0">
                                     <i class="ti ti-arrow-left" aria-hidden="true"></i>
                                     <span>Back to Facilities</span>

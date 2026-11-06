@@ -30894,7 +30894,7 @@ a.dashboard-metric-card:focus-visible {
 .reservation-workflow-form .booking-summary dt {
     color: #667382 !important;
     font-size: .72rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: .04em;
     text-transform: uppercase;
 }
@@ -30903,7 +30903,7 @@ a.dashboard-metric-card:focus-visible {
     margin-bottom: .65rem;
     color: #182433;
     overflow-wrap: anywhere;
-    font-weight: 650;
+    font-weight: 400;
 }
 
 .reservation-workflow-form .quick-review-intro {
@@ -30934,7 +30934,7 @@ a.dashboard-metric-card:focus-visible {
     margin: 0;
     color: #667382 !important;
     font-size: .72rem;
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: .04em;
     text-transform: uppercase;
 }
@@ -30945,7 +30945,7 @@ a.dashboard-metric-card:focus-visible {
     color: #182433;
     border-bottom: 1px solid #eef1f4;
     overflow-wrap: anywhere;
-    font-weight: 650;
+    font-weight: 400;
     line-height: 1.35;
 }
 
@@ -32849,6 +32849,134 @@ a.dashboard-metric-card:focus-visible {
     }
 }
 
+/* Setup records follow the reservation detail layout. */
+.management-record-details {
+    overflow: hidden;
+}
+
+.management-record-details > .management-record-header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: .85rem;
+    align-items: center;
+    padding: 1.15rem 1.25rem;
+    border-color: var(--pms-gray-100);
+}
+
+.management-record-header .card-title {
+    margin: 0 0 .15rem;
+    font-size: 1rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.management-record-header .card-subtitle {
+    margin: 0;
+    color: var(--pms-gray-600);
+    font-size: .8125rem;
+    line-height: 1.45;
+}
+
+.management-record-header .card-actions {
+    margin: 0;
+}
+
+.management-record-section-title {
+    margin: 0 0 .7rem;
+    color: var(--pms-gray-700);
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.management-record-details .datagrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    padding: 1px 0 0 1px;
+    border: 0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.management-record-details .datagrid-item {
+    flex: 1 1 25%;
+    min-height: 5rem;
+    padding: .9rem 1rem;
+    margin: -1px 0 0 -1px;
+    background: #fff;
+    border: 1px solid var(--pms-gray-100);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.management-record-details .datagrid-item-wide {
+    flex-basis: 100%;
+}
+
+.management-record-details .datagrid-title {
+    color: var(--pms-gray-600);
+    font-size: .68rem;
+    font-weight: 600;
+}
+
+.management-record-details .datagrid-content {
+    color: var(--pms-gray-800);
+    font-size: .8125rem;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.management-record-details > .management-record-tabs {
+    min-height: 0;
+    padding: 0 1.25rem;
+    border-color: var(--pms-gray-100);
+}
+
+.management-record-tabs .card-header-tabs {
+    gap: 1rem;
+    margin: 0;
+}
+
+.management-record-tabs .nav-link {
+    padding: .85rem 0;
+}
+
+.management-record-details > .management-record-footer {
+    padding: .75rem 1.25rem;
+    background: #fff;
+    border-color: var(--pms-gray-100);
+}
+
+@media (max-width: 1199.98px) {
+    .management-record-details .datagrid-item {
+        flex-basis: 50%;
+    }
+
+    .management-record-details .datagrid-item-wide {
+        flex-basis: 100%;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .management-record-details > .management-record-header {
+        grid-template-columns: auto minmax(0, 1fr);
+        padding: 1rem;
+    }
+
+    .management-record-header .card-actions {
+        grid-column: 1 / -1;
+    }
+
+    .management-record-header .card-actions .btn {
+        width: 100%;
+    }
+
+    .management-record-details .datagrid-item {
+        flex-basis: 100%;
+    }
+}
+
 /* Unified update forms */
 .reservation-update-trigger-bar {
     min-height: 0;
@@ -33876,4 +34004,32 @@ a.dashboard-metric-card:focus-visible {
 .reservation-edit-page .reservation-date-invalid {
     border-color: var(--tblr-danger, #d63939) !important;
     box-shadow: 0 0 0 1px var(--tblr-danger, #d63939);
+}
+
+.reservation-policy-modal .modal-dialog { max-width: 480px; }
+.reservation-policy-modal .modal-content {
+    border: 1px solid var(--pms-gray-100, #e6edf5);
+    border-radius: 10px;
+    box-shadow: 0 16px 48px rgba(24, 36, 51, .16);
+    overflow: hidden;
+}
+.reservation-policy-modal .modal-header { padding: 20px; gap: 12px; }
+.reservation-policy-heading { display: flex; align-items: center; gap: 12px; }
+.reservation-policy-heading .modal-title { font-size: 16px; font-weight: 600; }
+.reservation-policy-heading .page-pretitle { font-size: 10px; margin-bottom: 4px; }
+.reservation-policy-icon {
+    display: flex; align-items: center; justify-content: center;
+    flex: 0 0 42px; width: 42px; height: 42px;
+    background: #fff4d6; color: #a66b00; border-radius: 8px; font-size: 24px;
+}
+.reservation-policy-modal .modal-body { padding: 20px; font-size: 14px; line-height: 1.65; }
+.reservation-policy-notice {
+    padding: 14px 16px; background: #fffaf0; border: 1px solid #f2dfb5;
+    border-left: 3px solid #d99a24; border-radius: 6px; color: #5d4b2f;
+}
+.reservation-policy-notice strong { font-weight: 600; }
+.reservation-policy-modal .modal-footer { padding: 16px 20px; background: #f8fafc; gap: 8px; }
+@media (max-width: 575.98px) {
+    .reservation-policy-modal .modal-dialog { margin: 12px; }
+    .reservation-policy-modal .modal-footer .btn { flex: 1; margin: 0; }
 }

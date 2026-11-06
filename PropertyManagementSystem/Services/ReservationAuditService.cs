@@ -21,15 +21,18 @@ namespace PropertyManagementSystem.Services
         private readonly IReservationAuthorizationService _authorization;
         private readonly IWebHostEnvironment _environment;
         private readonly ILogger<ReservationAuditService> _logger;
+        private readonly IReservationNotificationService? _notifications;
 
         public ReservationAuditService(
             IReservationAuthorizationService authorization,
             IWebHostEnvironment environment,
-            ILogger<ReservationAuditService> logger)
+            ILogger<ReservationAuditService> logger,
+            IReservationNotificationService? notifications = null)
         {
             _authorization = authorization;
             _environment = environment;
             _logger = logger;
+            _notifications = notifications;
         }
 
         public async Task AddAsync(
@@ -41,8 +44,10 @@ namespace PropertyManagementSystem.Services
             string? details = null)
         {
             var actor = await _authorization.GetActorAsync(user);
+            var eventId = Guid.NewGuid().ToString("N");
             var entry = new
             {
+                eventId,
                 reservationId = reservation.ReservationId,
                 reservationType = reservation.ReservationType,
                 action,
@@ -88,6 +93,14 @@ namespace PropertyManagementSystem.Services
                 actor.ActiveRole,
                 previousStatus,
                 newStatus);
+            if (_notifications != null)
+            {
+                try { await _notifications.QueueTransitionAsync(reservation, action, previousStatus, eventId); }
+                catch (Exception exception)
+                {
+                    _logger.LogError(exception, "Failed to enqueue notifications for reservation {ReservationId}, audit event {EventId}. The reservation remains saved.", reservation.ReservationId, eventId);
+                }
+            }
         }
     }
 }

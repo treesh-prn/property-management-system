@@ -21,7 +21,7 @@
     <None Remove="wwwroot\Uploads\**" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="MailKit" Version="4.7.0" />
+    <PackageReference Include="MailKit" Version="4.16.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.24" />
@@ -44,4 +44,22 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup Condition="'$(SanitizePublish)' == 'true'">
+    <Content Update="appsettings*.json;App_Data\**\*" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="appsettings.Local.json" CopyToPublishDirectory="Never" />
+    <Content Update="App_Data\**\*" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+  <Target Name="PrepareSanitizedIisPackage" AfterTargets="Publish" Condition="'$(SanitizePublish)' == 'true'">
+    <ItemGroup>
+      <_UnexpectedPublishSettings Include="$(PublishDir)appsettings*.json" />
+    </ItemGroup>
+    <Error Condition="'@(_UnexpectedPublishSettings)' != '' Or Exists('$(PublishDir)App_Data')"
+           Text="Publish to a fresh directory. Local settings or runtime data were found in this package." />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/../docs/deployment/appsettings.Iis.example.json"
+          DestinationFiles="$(PublishDir)appsettings.json" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/../docs/email-and-iis-deployment.md"
+          DestinationFiles="$(PublishDir)DEPLOYMENT.md" />
+  </Target>
 </Project>

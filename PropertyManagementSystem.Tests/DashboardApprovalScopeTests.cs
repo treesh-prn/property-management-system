@@ -6,6 +6,26 @@ namespace PropertyManagementSystem.Tests;
 
 public class DashboardApprovalScopeTests
 {
+    [Theory]
+    [InlineData("FN")]
+    [InlineData("GH")]
+    public void Department_head_queue_requires_explicit_email_assignment_for_facility_requests(string type)
+    {
+        var manager = new Gen_Employee { GUID = Guid.NewGuid(), Firstname = "Same", Lastname = "Name", Email = "head@example.invalid" };
+        var report = new Gen_Employee { ReportingTo = manager.GUID, Email = "report@example.invalid" };
+        var reservations = new[]
+        {
+            new GFMS_ReservationHeader { ReservationId = 1, ReservationType = type, Status = ReservationStatuses.DepartmentHeadApproval, ApproverEmail = manager.Email },
+            new GFMS_ReservationHeader { ReservationId = 2, ReservationType = type, Status = ReservationStatuses.DepartmentHeadApproval, Approver = manager.Fullname },
+            new GFMS_ReservationHeader { ReservationId = 3, ReservationType = type, Status = ReservationStatuses.DepartmentHeadApproval, RequestorEmail = report.Email },
+            new GFMS_ReservationHeader { ReservationId = 4, ReservationType = type, Status = ReservationStatuses.Approved, ApproverEmail = manager.Email }
+        }.AsQueryable();
+
+        var result = reservations.ForAssignedApprovalRoles(new[] { ReservationRoles.DepartmentHead }, manager, new[] { report }.AsQueryable());
+
+        Assert.Equal(new[] { 1 }, result.Select(reservation => reservation.ReservationId));
+    }
+
     private static readonly Gen_Employee DepartmentHead = new()
     {
         Firstname = "Jerwin",

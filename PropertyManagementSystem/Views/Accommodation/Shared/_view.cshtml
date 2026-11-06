@@ -1,5 +1,6 @@
 @model PropertyManagementSystem.Models.ReservationViewModel
 @inject PropertyManagementSystem.Services.IRoleService RoleService
+@inject IReservationAuthorizationService ReservationAuthorization
 @{
     var employee = await RoleService.GetUserName(User);
     var reservationDetail = Model.ReservationDetails?.FirstOrDefault();
@@ -10,9 +11,28 @@
         Model.ReservationHeader,
         identityEmail,
         employee?.Email);
+    var canAssignApproved = isOwner && Model.ReservationHeader.Status == ReservationStatuses.Approved &&
+        Model.ReservationDetails.Any(detail => !detail.RoomId.HasValue || !detail.FacilityId.HasValue) &&
+        (await ReservationAuthorization.AuthorizeAsync(User, Model.ReservationHeader, ReservationOperation.Assign)).Succeeded;
 }
 
 <partial name="~/Views/Accommodation/Shared/_reservationDetails.cshtml" model="Model" />
+
+@if (canAssignApproved)
+{
+    <partial name="~/Views/Accommodation/Shared/_guestRoomAssignments.cshtml" model="Model" />
+    <form asp-action="UpdateReservationStatus" method="post" data-guest-room-approval-form>
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId" />
+        <input type="hidden" name="action" value="Assign" />
+        <div data-assignment-fields></div>
+        <div class="card-footer text-end">
+            <button type="submit" class="btn btn-primary" data-assignment-approval-trigger disabled>
+                Save room assignments
+            </button>
+        </div>
+    </form>
+}
 
 @if (reservationDetail != null)
 {

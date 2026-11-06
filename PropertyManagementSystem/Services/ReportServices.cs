@@ -80,6 +80,14 @@ namespace PropertyManagementSystem.Services
             command.Parameters.Add("@ReservationType", SqlDbType.NVarChar, 50).Value = reservationType;
 
             await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+            var columns = Enumerable.Range(0, reader.FieldCount)
+                .Select(reader.GetName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var required = new[] { "ReservationCode", "Requestor", "Occupant", "StartDate", "EndDate",
+                "ReservationType", "FacilityName", "RoomName", "DateOfStay", "NoOfDays" };
+            var missing = required.Where(name => !columns.Contains(name)).ToArray();
+            if (missing.Length > 0)
+                throw new InvalidOperationException("The occupancy report procedure is outdated. Missing columns: " +
+                    string.Join(", ", missing) + ". Deploy the occupancy procedure in Data/Scripts/CorrectReportProcedures.sql.");
             while (await reader.ReadAsync(cancellationToken))
             {
                 reportData.Add(new OccupancyReportRow

@@ -1,5 +1,14 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
-<form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post" class="reservation-workflow-form" data-preserve-draft="accommodation" data-accommodation-schedule-form>
+@inject IReservationAuthorizationService ReservationAuthorization
+@{
+    var bookingActor = await ReservationAuthorization.GetActorAsync(User);
+    var canBookSameDay = ReservationSchedulePolicy.CanBookSameDay(bookingActor);
+    var minimumBookingDate = ReservationSchedulePolicy.GetMinimumDate(bookingActor, DateTime.Now);
+    var defaultArrival = canBookSameDay
+        ? minimumBookingDate.AddMinutes(Math.Ceiling((DateTime.Now.TimeOfDay.TotalMinutes + 1) / 30) * 30)
+        : minimumBookingDate;
+}
+<form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post" class="reservation-workflow-form" data-cancellation-policy="true" data-preserve-draft="accommodation" data-accommodation-schedule-form data-can-book-same-day="@canBookSameDay.ToString().ToLowerInvariant()">
     <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
     <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
     <input type="hidden" class="form-control" name="_requestorEmail" asp-for="@Model.ReservationHeader.RequestorEmail">
@@ -42,8 +51,8 @@
                                 <label class="form-label required">Arrival Date and Time</label>
                                 @(Html.Kendo().DateTimePicker()
                                     .Name("_startDate")
-                                    .Value(DateTime.Today)
-                                    .Min(DateTime.Today)
+                                    .Value(defaultArrival)
+                                    .Min(minimumBookingDate)
                                     .Format("MM/dd/yyyy hh:mm tt")
                                     .TimeFormat("hh:mm tt")
                                     .Interval(30)
@@ -56,8 +65,8 @@
                                 <label class="form-label required">Departure Date and Time</label>
                                 @(Html.Kendo().DateTimePicker()
                                     .Name("_endDate")
-                                    .Value(DateTime.Today)
-                                    .Min(DateTime.Today)
+                                    .Value(defaultArrival.AddDays(1))
+                                    .Min(minimumBookingDate)
                                     .Format("MM/dd/yyyy hh:mm tt")
                                     .TimeFormat("hh:mm tt")
                                     .Interval(30)
@@ -74,6 +83,10 @@
                              hidden>
                             Departure date and time must be later than arrival date and time.
                         </div>
+                        @if (!canBookSameDay)
+                        {
+                            <p class="form-hint">Same-day reservations are available only to Admin Approvers. Select tomorrow or a later date.</p>
+                        }
                         <div class="col-lg-12">
                             <div>
                                 <label class="form-label">

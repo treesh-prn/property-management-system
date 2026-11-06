@@ -1,6 +1,8 @@
 @model PropertyManagementSystem.Models.ReservationViewModel
+@inject IReservationAuthorizationService ReservationAuthorization
 @{
     ViewData["Title"] = "Edit Reservation";
+    var canBookSameDay = ReservationSchedulePolicy.CanBookSameDay(await ReservationAuthorization.GetActorAsync(User));
     var guesthouse = Model.ReservationHeader.ReservationType == "GH";
     var controller = guesthouse ? "Accommodation" : "FunctionRoom";
     var detail = Model.ReservationDetails.FirstOrDefault();
@@ -20,7 +22,7 @@
         <p class="text-secondary mt-2">Update your details and schedule, then save your changes.</p>
     </div></div>
     <div class="page-body"><div class="container-xl">
-        <form asp-controller="@controller" asp-action="@(guesthouse ? "UpdateReservationDetails" : "EditReservationDetails")" method="post" id="reservation-edit-form" data-facility-id="@detail?.FacilityId" data-room-id="@detail?.RoomId" class="reservation-workflow-form">
+        <form asp-controller="@controller" asp-action="@(guesthouse ? "UpdateReservationDetails" : "EditReservationDetails")" method="post" id="reservation-edit-form" data-cancellation-policy="@((Model.ReservationHeader.Status == ReservationStatuses.ForRescheduling).ToString().ToLowerInvariant())" data-facility-id="@detail?.FacilityId" data-room-id="@detail?.RoomId" data-can-book-same-day="@canBookSameDay.ToString().ToLowerInvariant()" class="reservation-workflow-form">
             <input type="hidden" name="ReservationId" value="@Model.ReservationHeader.ReservationId" />
             <input type="hidden" name="ReservationDetailId" value="@Value("ReservationDetailId", detail?.ReservationDetailId.ToString())" />
             @if (!ViewData.ModelState.IsValid)
@@ -62,6 +64,10 @@
                             <div class="col-md-6"><label class="form-label" for="edit-end">@(guesthouse ? "Departure" : "End") date and time</label><input class="form-control" id="edit-end" type="text" autocomplete="off" name="EndDate" required aria-describedby="edit-schedule-error" value="@Value("EndDate", detail?.EndDate?.ToString("yyyy-MM-ddTHH:mm"))" /></div>
                         </div>
                         <p class="text-secondary mt-3 mb-0">Choose a future start time. The end time must be after the start time.</p>
+                        @if (!canBookSameDay)
+                        {
+                            <p class="form-hint mt-2">Same-day reservations are available only to Admin Approvers. Select tomorrow or a later date.</p>
+                        }
                     <div class="reservation-section-title"><i class="ti ti-notes" aria-hidden="true"></i>Additional details</div>
                         @if (!guesthouse)
                         {

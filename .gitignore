@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+PropertyManagementSystem/App_Data/EmailOutbox/
+
 # User-specific files
 *.rsuser
 *.suo
@@ -368,5 +370,12 @@ FodyWeavers.xsd
 # Local agent artifacts, logs, documentation, and test output
 /.agents/
 /logs/
-/docs/
+/docs/*
+!/docs/email-and-iis-deployment.md
+!/docs/deployment/
+/docs/deployment/*
+!/docs/deployment/appsettings.Iis.example.json
 /test-results/
+/tmp/
+**/appsettings.Local.json
+PropertyManagementSystem/App_Data/ReservationAudit/

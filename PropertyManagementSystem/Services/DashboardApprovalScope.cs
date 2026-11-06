@@ -37,11 +37,12 @@ namespace PropertyManagementSystem.Services
                  reservation.Status == ReservationStatuses.DepartmentHeadApproval &&
                  ((!string.IsNullOrEmpty(identityEmail) && reservation.ApproverEmail == identityEmail) ||
                   (!string.IsNullOrEmpty(employeeEmail) && reservation.ApproverEmail == employeeEmail) ||
-                  (!string.IsNullOrEmpty(employeeName) && reservation.Approver == employeeName) ||
+                  (reservation.ReservationType != "FN" && reservation.ReservationType != "GH" &&
+                  ((!string.IsNullOrEmpty(employeeName) && reservation.Approver == employeeName) ||
                   (employeeGuid.HasValue && employees.Any(requestor =>
                       requestor.ReportingTo == employeeGuid.Value &&
                       !string.IsNullOrEmpty(requestor.Email) &&
-                      requestor.Email == reservation.RequestorEmail)))));
+                      requestor.Email == reservation.RequestorEmail)))))));
         }
 
         public static IQueryable<GFMS_ReservationHeader> ForDepartmentHead(

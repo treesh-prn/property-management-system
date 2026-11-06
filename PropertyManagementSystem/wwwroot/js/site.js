@@ -181,6 +181,22 @@ $(document).ready(function () {
     }
 });
 
+function reservationMinimumStart(form, now) {
+    if (form.dataset.canBookSameDay === 'false') {
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    }
+    return new Date(Math.ceil((now.getTime() + 1) / 60000) * 60000);
+}
+
+function reservationStartDateError(form, start, now) {
+    if (start <= now) return 'Choose a start date and time in the future. Past schedules cannot be saved.';
+    if (form.dataset.canBookSameDay === 'false' &&
+        start.getFullYear() === now.getFullYear() && start.getMonth() === now.getMonth() && start.getDate() === now.getDate()) {
+        return 'Same-day reservations are available only to an active Admin Approver. Select tomorrow or a later date.';
+    }
+    return '';
+}
+
 // Validate the Function Room schedule as the user edits it and before submission.
 document.addEventListener('DOMContentLoaded', function () {
     var form = document.querySelector('form[data-preserve-draft="function-room"]');
@@ -237,6 +253,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
+        var startError = reservationStartDateError(form, start, new Date());
+        if (startError) {
+            showError(startError);
+            return false;
+        }
         if (end.getTime() <= start.getTime()) {
             showError('End date and time must be later than start date and time.');
             return false;
@@ -248,9 +269,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateEndMinimum() {
         var start = valueOf(startInput);
+        var minimum = reservationMinimumStart(form, new Date());
+        var startPicker = picker(startInput);
+        if (startPicker) startPicker.min(minimum);
         var endPicker = picker(endInput);
-        if (start && endPicker) {
-            endPicker.min(start);
+        if (endPicker) {
+            endPicker.min(start && start > minimum ? start : minimum);
         }
         validateSchedule(false);
     }
@@ -337,6 +361,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
 
+            var startError = reservationStartDateError(form, arrival, new Date());
+            if (startError) {
+                showError(startError);
+                return false;
+            }
             if (departure.getTime() <= arrival.getTime()) {
                 showError('Departure date and time must be later than arrival date and time.');
                 return false;
@@ -348,8 +377,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function updateDepartureMinimum() {
             var arrival = valueOf(startInput);
+            var minimum = reservationMinimumStart(form, new Date());
+            var arrivalPicker = picker(startInput);
+            if (arrivalPicker) arrivalPicker.min(minimum);
             var departurePicker = picker(endInput);
-            if (arrival && departurePicker) departurePicker.min(arrival);
+            if (departurePicker) departurePicker.min(arrival && arrival > minimum ? arrival : minimum);
             validateSchedule(false);
         }
 
@@ -2015,7 +2047,8 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.reservation-workflow-form').forEach(function (form) {
         var submitting = false;
 
-        form.addEventListener('submit', function (event) {
+        document.addEventListener('submit', function (event) {
+            if (event.target !== form) return;
             if (event.defaultPrevented) {
                 return;
             }

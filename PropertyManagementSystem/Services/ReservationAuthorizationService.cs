@@ -58,7 +58,8 @@ namespace PropertyManagementSystem.Services
         int? DepartmentId,
         int? CompanyId,
         IReadOnlyCollection<string> AssignedRoles,
-        IReadOnlyCollection<string> ManagedEmployeeEmails);
+        IReadOnlyCollection<string> ManagedEmployeeEmails,
+        string AccountName = "");
 
     public sealed record ReservationAuthorizationResult(
         bool Succeeded,
@@ -122,6 +123,10 @@ namespace PropertyManagementSystem.Services
                 ?? user.FindFirstValue("email")
                 ?? user.Identity?.Name
                 ?? string.Empty;
+            var account = employee == null && _userManager != null
+                ? await _userManager.GetUserAsync(user)
+                : null;
+            if (!string.IsNullOrWhiteSpace(account?.Email)) email = account.Email;
 
             return new ReservationActor(
                 user.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty,
@@ -132,7 +137,8 @@ namespace PropertyManagementSystem.Services
                 employee?.DepartmentId,
                 employee?.CompanyId,
                 assignedRoles,
-                managedEmployeeEmails);
+                managedEmployeeEmails,
+                account?.UserName ?? user.Identity?.Name ?? email);
         }
 
         public async Task<bool> CanCreateAsync(ClaimsPrincipal user)
@@ -155,7 +161,7 @@ namespace PropertyManagementSystem.Services
                 return ReservationStatuses.AdminApproverApproval;
             if (activeRole == ReservationRoles.AdminApprover)
                 return reservationType is "FN" or "GH"
-                    ? ReservationStatuses.AdminApproverApproval
+                    ? ReservationStatuses.Approved
                     : ReservationStatuses.AdminManagerApproval;
             return ReservationStatuses.DepartmentHeadApproval;
         }
@@ -164,8 +170,15 @@ namespace PropertyManagementSystem.Services
             GFMS_ReservationHeader reservation, ReservationActor actor)
         {
             var department = _context == null ? null : await _context.Departments
-                .AsNoTracking().FirstOrDefaultAsync(d => d.Id == actor.DepartmentId);
+                .AsNoTracking().FirstOrDefaultAsync(d => d.Id == reservation.Department);
             var status = GetSubmissionStatus(actor.ActiveRole, department?.DepartmentCode, department?.DepartmentName, reservation.ReservationType);
+            if (reservation.ReservationType is "FN" or "GH" && status != ReservationStatuses.DepartmentHeadApproval)
+            {
+                // A bypassed review must not leave an assignment that grants access to the request.
+                reservation.ApproverEmail = null;
+                reservation.Approver = null;
+                return status;
+            }
             var head = _context == null || department?.DepartmentHead == null ? null :
                 await _context.Employees.AsNoTracking()
                     .FirstOrDefaultAsync(e => e.GUID == department.DepartmentHead);
@@ -268,15 +281,19 @@ namespace PropertyManagementSystem.Services
 
             if (actor.AssignedRoles.Contains(ReservationRoles.DepartmentHead))
             {
-                return Matches(reservation.ApproverEmail, actor.Email) ||
-                    Matches(reservation.ApproverEmail, actor.EmployeeEmail) ||
-                    Matches(reservation.Approver, actor.EmployeeName) ||
-                    (reservation.ReservationType != "FN" && reservation.ReservationType != "GH" && IsManagedRequest(reservation, actor));
+                if (reservation.Status != ReservationStatuses.Draft && IsAssignedDepartmentHead(reservation, actor))
+                    return true;
             }
 
             return actor.AssignedRoles.Contains(ReservationRoles.AdminApprover) ||
                 actor.AssignedRoles.Contains(ReservationRoles.AdminManager);
         }
+
+        private static bool IsAssignedDepartmentHead(GFMS_ReservationHeader reservation, ReservationActor actor) =>
+            Matches(reservation.ApproverEmail, actor.Email) ||
+            Matches(reservation.ApproverEmail, actor.EmployeeEmail) ||
+            (reservation.ReservationType is not "FN" and not "GH" &&
+             (Matches(reservation.Approver, actor.EmployeeName) || IsManagedRequest(reservation, actor)));
 
         private static ReservationAuthorizationResult AuthorizeOwnerState(
             bool isOwner,
@@ -297,6 +314,10 @@ namespace PropertyManagementSystem.Services
             GFMS_ReservationHeader reservation,
             ReservationActor actor)
         {
+            if (reservation.ReservationType == "GH" && reservation.Status == ReservationStatuses.Approved &&
+                ReservationCreationPolicy.CanChooseCostCenter(actor) && IsOwner(reservation, actor))
+                return ReservationAuthorizationResult.Allow(ReservationStatuses.Approved, ReservationStatuses.Approved);
+
             if (!actor.AssignedRoles.Contains(ReservationRoles.AdminApprover) &&
                 !actor.AssignedRoles.Contains(ReservationRoles.AdminManager))
             {
@@ -352,10 +373,7 @@ namespace PropertyManagementSystem.Services
             }
 
             if (transition.Value.RequiredRole == ReservationRoles.DepartmentHead &&
-                !(Matches(reservation.ApproverEmail, actor.Email) ||
-                  Matches(reservation.ApproverEmail, actor.EmployeeEmail) ||
-                  Matches(reservation.Approver, actor.EmployeeName) ||
-                  (reservation.ReservationType != "FN" && reservation.ReservationType != "GH" && IsManagedRequest(reservation, actor))))
+                !IsAssignedDepartmentHead(reservation, actor))
             {
                 return ReservationAuthorizationResult.Forbid();
             }

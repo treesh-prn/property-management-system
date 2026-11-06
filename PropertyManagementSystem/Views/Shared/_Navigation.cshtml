@@ -7,6 +7,19 @@
     var gfmsRoles = await RoleService.GetRolesAsync(User);
     var activeRole = await RoleService.GetActiveRoleAsync(User);
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var account = isAuthenticated && string.IsNullOrWhiteSpace(employee?.Fullname)
+        ? await UserManager.GetUserAsync(User)
+        : null;
+    var displayName = !string.IsNullOrWhiteSpace(employee?.Fullname)
+        ? employee.Fullname.Trim()
+        : account?.UserName ?? User.Identity?.Name ?? "User";
+    var nameParts = displayName.Split('@')[0]
+        .Split(new[] { ' ', '.', '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
+    var initials = nameParts.Length > 1
+        ? $"{nameParts[0][0]}{nameParts[^1][0]}".ToUpperInvariant()
+        : nameParts.Length == 1
+            ? nameParts[0][..Math.Min(2, nameParts[0].Length)].ToUpperInvariant()
+            : "U";
     var isRequestor = activeRole == "GFMS.Requestor";
     var canAccessAdminModules = activeRole == "GFMS.System Admin"
         || activeRole == "GFMS.Admin Approver"
@@ -35,10 +48,10 @@
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link d-flex lh-1 text-reset p-0" data-bs-toggle="dropdown" aria-label="Open user menu">
                             <span class="avatar me-3" aria-hidden="true">
-                                <span class="badge bg-success"></span>@employee?.NameInitials
+                                <span class="badge bg-success"></span>@initials
                             </span>
                             <div class="d-none d-xl-block ps-2">
-                                <div>@employee?.Fullname</div>
+                                <div>@displayName</div>
                                 <div class="mt-1 small text-white">@displayRole</div>
                             </div>
                         </a>

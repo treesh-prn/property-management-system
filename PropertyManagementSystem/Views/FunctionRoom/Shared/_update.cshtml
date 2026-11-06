@@ -173,7 +173,9 @@
             Go Back
         </a>
         <div class="ms-auto">
-            @if (Model.ReservationHeader.Requestor == employee.Fullname && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
+            @if (ReservationOwnership.IsOwner(Model.ReservationHeader,
+                User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.FindFirst("email")?.Value ?? User.Identity?.Name,
+                employee?.Email) && Model.ReservationHeader.Status != "CANCELLED" && Model.ReservationHeader.Status != "DISAPPROVED")
             {
                 if (Model.ReservationDetails.FirstOrDefault()?.StartDate >= DateTime.Now.AddHours(1))
                 {

@@ -1,7 +1,10 @@
-﻿@model PropertyManagementSystem.Models.ReservationViewModel
-@inject PropertyManagementSystem.Services.IRoleService RoleService
+@model PropertyManagementSystem.Models.ReservationViewModel
+@using PropertyManagementSystem.Services
+@inject IReservationAuthorizationService ReservationAuthorization
 @{
-    var employee = await RoleService.GetUserName(User);
+    var actor = await ReservationAuthorization.GetActorAsync(User);
+    var canChooseCostCenter = ReservationCreationPolicy.CanChooseCostCenter(actor);
+    var canContinue = canChooseCostCenter || ReservationCreationPolicy.Resolve(actor, null, null) != null;
 }
 @*NEW RESERVATION MODAL *@
 <div class="modal modal-blur fade" id="modal-newReservation" tabindex="-1" role="dialog" aria-hidden="true">
@@ -16,6 +19,10 @@
             </div>
             <form id="fcFRM1" asp-controller="FunctionRoom" asp-action="CreateReservation" method="post">
                 <div class="modal-body">
+                    @if (!canContinue)
+                    {
+                        <div class="alert alert-warning">Your employee profile must include your name, email, company and department before you can create a reservation.</div>
+                    }
                     <div class="reservation-modal-intro">
                         <i class="ti ti-calendar-event"></i>
                         <div>
@@ -26,11 +33,11 @@
                     <div class="row mb-3">
                         <div class="col-lg-6">
                             <label class="form-label required">Requestor Name</label>
-                            <input class="form-control" name="_requestor" type="text" value="@employee.Fullname" readonly>
+                            <input class="form-control" name="_requestor" type="text" value="@ReservationCreationPolicy.GetRequestorName(actor)" readonly>
                         </div>
                         <div class="col-lg-6">
                             <label class="form-label required">Requestor Email</label>
-                            <input class="form-control" name="_requestorEmail" type="email" value="@employee.Email" readonly>
+                            <input class="form-control" name="_requestorEmail" type="email" value="@ReservationCreationPolicy.GetRequestorEmail(actor)" readonly>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -39,7 +46,8 @@
                             .Name("_company")
                             .DataTextField("Company")
                             .DataValueField("Id")
-                            .Value(employee.CompanyId.ToString())
+                            .Value(actor.CompanyId?.ToString())
+                            .Enable(canChooseCostCenter)
                             .DataSource(source =>
                             {
                                 source.Read(read =>
@@ -57,8 +65,10 @@
                             .Name("_department")
                             .DataTextField("DepartmentName")
                             .DataValueField("Id")
-                            .CascadeFrom("_company")
-                            .Value(employee.DepartmentId.ToString())
+                            .CascadeFrom(canChooseCostCenter ? "_company" : string.Empty)
+                            .Value(actor.DepartmentId?.ToString())
+                            .Enable(canChooseCostCenter)
+                            .OptionLabel("Select Department")
                             .DataSource(source =>
                             {
                                 source.Read(read =>
@@ -71,7 +81,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button id="svbtn15" type="submit" class="btn btn-primary ms-auto">
+                    <button id="svbtn15" type="submit" disabled="@(!canContinue)" class="btn btn-primary ms-auto">
                         <i class="ti ti-arrow-right"></i>
                         Continue
                     </button>

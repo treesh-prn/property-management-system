@@ -1,12 +1,22 @@
 ﻿@model PropertyManagementSystem.Models.ReservationViewModel
 
 @inject PropertyManagementSystem.Services.IRoleService RoleService
+@inject IReservationAuthorizationService ReservationAuthorization
 @{
     var activeRole = await RoleService.GetActiveRoleAsync(User);
     var canAssignDraftRoom = activeRole is "GFMS.Admin Approver" or "GFMS.Admin Manager";
+    var bookingActor = await ReservationAuthorization.GetActorAsync(User);
+    var canBookSameDay = ReservationSchedulePolicy.CanBookSameDay(bookingActor);
+    var minimumBookingDate = ReservationSchedulePolicy.GetMinimumDate(bookingActor, DateTime.Now);
+    var defaultStart = minimumBookingDate.AddHours(7);
+    if (defaultStart <= DateTime.Now)
+    {
+        defaultStart = minimumBookingDate.AddMinutes(Math.Ceiling((DateTime.Now.TimeOfDay.TotalMinutes + 1) / 30) * 30);
+        if (defaultStart >= minimumBookingDate.AddHours(18)) defaultStart = minimumBookingDate.AddDays(1).AddHours(7);
+    }
 }
 
-<form asp-action="CreateReservationDetails" asp-controller="FunctionRoom" method="post" class="reservation-workflow-form" data-preserve-draft="function-room">
+<form asp-action="CreateReservationDetails" asp-controller="FunctionRoom" method="post" class="reservation-workflow-form" data-cancellation-policy="true" data-preserve-draft="function-room" data-can-book-same-day="@canBookSameDay.ToString().ToLowerInvariant()">
 
     <input type="hidden" class="form-control" name="_guid" asp-for="@Model.ReservationHeader.GUID">
     <input type="hidden" class="form-control" name="_reservationId" asp-for="@Model.ReservationHeader.ReservationId">
@@ -46,8 +56,8 @@
                                     <label class="form-label required">Start Date and Time</label>
                                     @(Html.Kendo().DateTimePicker()
                                         .Name("_startDate")
-                                        .Value(DateTime.Today.AddHours(7))
-                                        .Min(DateTime.Today)
+                                        .Value(defaultStart)
+                                        .Min(minimumBookingDate)
                                         .Format("MM/dd/yyyy hh:mm tt")
                                         .ParseFormats(new string[] { "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         .Events(e => e.Open("onDateTimePickerOpen"))
@@ -58,8 +68,8 @@
                                     <label class="form-label required">End Date and Time</label>
                                     @(Html.Kendo().DateTimePicker()
                                         .Name("_endDate")
-                                        .Value(DateTime.Today.AddHours(18))
-                                        .Min(DateTime.Today)
+                                        .Value(defaultStart.Date.AddHours(18))
+                                        .Min(minimumBookingDate)
                                         .Format("MM/dd/yyyy hh:mm tt")
                                         .ParseFormats(new string[] { "MM/dd/yyyy hh:mm tt", "yyyy/MM/dd HH:mm:ss.fff", "yyyy-MM-ddTHH:mm:ss.fffZ" })
                                         .Events(e => e.Open("onDateTimePickerOpen"))
@@ -74,6 +84,10 @@
                                  hidden>
                                 End date and time must be later than start date and time.
                             </div>
+                            @if (!canBookSameDay)
+                            {
+                                <p class="form-hint">Same-day reservations are available only to Admin Approvers. Select tomorrow or a later date.</p>
+                            }
                             @if (canAssignDraftRoom)
                             {
                                 <section class="function-recurrence-card" aria-labelledby="function-recurrence-title">

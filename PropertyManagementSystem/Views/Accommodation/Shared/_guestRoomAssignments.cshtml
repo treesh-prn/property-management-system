@@ -2,6 +2,7 @@
 @{
     var details = Model.ReservationDetails ?? new List<PropertyManagementSystem.Models.GFMS_ReservationDetails>();
     var selectedCount = details.Count(detail => detail.RoomId.HasValue);
+    var isAlreadyApproved = Model.ReservationHeader?.Status == "APPROVED";
     var assignmentPercent = details.Count == 0
         ? 0
         : (int)Math.Round((double)selectedCount / details.Count * 100);
@@ -12,7 +13,8 @@
 <section class="card mt-3 guest-room-assignment"
          aria-labelledby="guest-room-assignment-heading"
          data-guest-room-assignment
-         data-manager-reassignment="@isManagerReassignment.ToString().ToLowerInvariant()">
+         data-manager-reassignment="@isManagerReassignment.ToString().ToLowerInvariant()"
+         data-already-approved="@isAlreadyApproved.ToString().ToLowerInvariant()">
     <div class="guest-room-assignment-header">
         <div class="guest-room-assignment-title">
             <span class="guest-room-assignment-icon" aria-hidden="true">
@@ -27,7 +29,7 @@
                     }
                     else
                     {
-                        <span>Select a room for every guest. Nothing is saved until you approve.</span>
+                        <span>@(isAlreadyApproved ? "This reservation is approved. Select a room for every guest, then save the assignments." : "Select a room for every guest. Nothing is saved until you approve.")</span>
                     }
                 </p>
             </div>
@@ -54,7 +56,7 @@
             else
             {
                 <strong>These are temporary selections.</strong>
-                <span>Approve saves all room assignments together. Going back or refreshing discards unsaved changes.</span>
+                <span>@(isAlreadyApproved ? "Save room assignments to confirm all selections together. Going back or refreshing discards unsaved changes." : "Approve saves all room assignments together. Going back or refreshing discards unsaved changes.")</span>
             }
         </div>
     </div>
@@ -279,6 +281,7 @@
         var backLink = document.querySelector('[data-assignment-back-link]');
         var initialValues = selects.map(function (select) { return select.value; });
         var isManagerReassignment = root.dataset.managerReassignment === 'true';
+        var isAlreadyApproved = root.dataset.alreadyApproved === 'true';
         var isSubmitting = false;
         var allowNavigation = false;
 
@@ -439,7 +442,8 @@
                 if (button) {
                     button.disabled = true;
                     button.setAttribute('aria-busy', 'true');
-                    button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>Saving & approving...</span>';
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span><span>' +
+                        (isAlreadyApproved ? 'Saving assignments...' : 'Saving & approving...') + '</span>';
                 }
             });
         }

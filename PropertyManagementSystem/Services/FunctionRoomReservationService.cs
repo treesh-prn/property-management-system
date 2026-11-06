@@ -571,27 +571,29 @@ namespace PropertyManagementSystem.Services
             var userId = actor.UserId;
 
 
-            if (string.IsNullOrWhiteSpace(actor.EmployeeEmail) ||
-                string.IsNullOrWhiteSpace(actor.EmployeeName) ||
-                !actor.DepartmentId.HasValue ||
-                !actor.CompanyId.HasValue)
+            var details = ReservationCreationPolicy.Resolve(actor, request._company, request._department);
+            if (details == null)
             {
                 return FunctionRoomOperationResult.Fail(
-                    "The authenticated account is not linked to an employee record.",
-                    ReservationOperationFailure.Forbidden);
+                    "A requestor name, email, company and department are required. Only an active Admin Approver can select a company and department without an employee profile.",
+                    ReservationOperationFailure.Validation);
             }
+            if (!await ReservationCreationPolicy.IsValidCostCenterAsync(_context, details))
+                return FunctionRoomOperationResult.Fail(
+                    "Select a valid company and a department belonging to that company.",
+                    ReservationOperationFailure.Validation);
 
             var guid = Guid.NewGuid().ToString("N").ToUpper();
             var reservation = new GFMS_ReservationHeader
             {
                 GUID = guid,
-                ChargeToCompany = actor.CompanyId.Value,
-                Requestor = actor.EmployeeName,
-                RequestorEmail = actor.EmployeeEmail,
+                ChargeToCompany = details.CompanyId,
+                Requestor = details.Requestor,
+                RequestorEmail = details.RequestorEmail,
                 DateFiled = DateTime.Now,
                 DateSubmitted = null,
                 Status = "DRAFT",
-                Department = actor.DepartmentId.Value,
+                Department = details.DepartmentId,
                 ReservationType = ReservationType
             };
 
@@ -723,6 +725,9 @@ namespace PropertyManagementSystem.Services
 
             var actor = await _authorization.GetActorAsync(user);
             var canAssignDraft = actor.ActiveRole is ReservationRoles.AdminApprover or ReservationRoles.AdminManager;
+            var scheduleError = ReservationSchedulePolicy.ValidateStart(request._startDate, actor, DateTime.Now);
+            if (scheduleError != null)
+                return ValidationFailure(guid, "Review the reservation schedule.", scheduleError);
             if (!canAssignDraft && !string.IsNullOrWhiteSpace(request._recurrenceRule))
             {
                 return ValidationFailure(
@@ -821,6 +826,8 @@ namespace PropertyManagementSystem.Services
             var previousStatus = reservationHeader.Status;
             reservationHeader.DateSubmitted = _processingPolicy.GetSubmissionTimestamp();
             reservationHeader.Status = await GetSubmittedStatusAsync(actor, reservationHeader);
+            if (reservationHeader.Status == ReservationStatuses.Approved)
+                reservationHeader.ApprovedBy = ReservationCreationPolicy.GetRequestorName(actor);
 
             _context.SaveChanges();
             var manualEquipmentIds = (request._equipment ?? new List<string>())
@@ -897,6 +904,9 @@ namespace PropertyManagementSystem.Services
 
             var inputError = ReservationEditValidation.Validate(request.StartDate, request.EndDate, request._purpose, DateTime.Now);
             if (inputError != null) return FunctionRoomOperationResult.Fail(inputError);
+            var scheduleError = ReservationSchedulePolicy.ValidateStart(
+                request.StartDate, await _authorization.GetActorAsync(user), DateTime.Now);
+            if (scheduleError != null) return FunctionRoomOperationResult.Fail(scheduleError, ReservationOperationFailure.Validation);
             if (request.NumberOfGuest < 1)
                 return FunctionRoomOperationResult.Fail("Enter at least one attendee.");
             if (!System.Text.RegularExpressions.Regex.IsMatch(request._contactNumber ?? "", @"^[0-9]{10}$"))
@@ -1157,7 +1167,7 @@ namespace PropertyManagementSystem.Services
                     reservation.RowVersion.ToArray(),
                     reservationDetails.RowVersion.ToArray(),
                     authorization.NextStatus,
-                    employee?.Fullname,
+                    ReservationCreationPolicy.GetRequestorName(await _authorization.GetActorAsync(user)),
                     ParseEquipmentIds(request.EquipmentNeeded));
 
                 FunctionRoomSwapResult? swap = null;
@@ -1219,10 +1229,9 @@ namespace PropertyManagementSystem.Services
             {
                 reservation.Status = "DISAPPROVED";
                 reservation.Remarks = request.Remarks!.Trim();
-                reservation.ApprovedBy = employee?.Fullname;
+                reservation.ApprovedBy = ReservationCreationPolicy.GetRequestorName(await _authorization.GetActorAsync(user));
                 _context.SaveChanges();
                 await _audit.AddAsync(reservation, user, "REJECT", previousStatus, reservation.Status);
-                await _emailService.SendDisapprovalNotification(reservation, reservation.RequestorEmail);
                 return FunctionRoomOperationResult.Ok(
                     "Reservation disapproved",
                     "The request status and remarks were saved.",

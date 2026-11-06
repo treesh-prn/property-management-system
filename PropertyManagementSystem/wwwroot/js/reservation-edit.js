@@ -27,7 +27,7 @@ window.jQuery(function () {
             timeFormat: 'hh:mm tt',
             parseFormats: dateFormats,
             interval: 30,
-            min: new Date(),
+            min: reservationMinimumStart(form, new Date()),
             value: window.kendo.parseDate(initialValue, dateFormats),
             change: validate,
             open: validate
@@ -57,14 +57,14 @@ window.jQuery(function () {
         const now = new Date();
         const startDate = readDate(start);
         const endDate = readDate(end);
-        const minimumStart = new Date(Math.ceil((now.getTime() + 1) / 60000) * 60000);
+        const minimumStart = reservationMinimumStart(form, now);
         const minimumEnd = startDate ? new Date(Math.max(startDate.getTime() + 60000, minimumStart.getTime())) : minimumStart;
         window.jQuery(start).data('kendoDateTimePicker').min(minimumStart);
         window.jQuery(end).data('kendoDateTimePicker').min(minimumEnd);
         let message = '';
         let invalid = start;
         if (!startDate || !endDate) message = 'Enter valid dates and times or select them using the calendar and clock.';
-        else if (startDate <= now) message = 'Choose a start date and time in the future. Past schedules cannot be saved.';
+        else if (reservationStartDateError(form, startDate, now)) message = reservationStartDateError(form, startDate, now);
         else if (endDate <= startDate) {
             message = 'End date and time must be later than start date and time.';
             invalid = end;

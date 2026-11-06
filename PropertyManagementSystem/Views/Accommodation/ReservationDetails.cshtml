@@ -95,7 +95,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="reservation-form-surface">
-                                    <form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post" class="reservation-workflow-form">
+                                    <form asp-action="CreateReservationDetails" asp-controller="Accommodation" method="post" class="reservation-workflow-form" data-cancellation-policy="true">
                                         <div class="modal-body">
 
                                             <input type="hidden" class="form-control" name="_reservationId" asp-for="ReservationHeader.ReservationId">
