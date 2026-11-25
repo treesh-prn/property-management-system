@@ -1,0 +1,123 @@
+@model GfmsUserAccessIndexViewModel
+@{ ViewData["Title"] = "User Access"; }
+<div class="page-wrapper management-page management-list-page user-access-page">
+    <div class="page-header"><div class="container-xl">
+        <div class="page-pretitle">Setup</div>
+        <h1 class="page-title">User Access</h1>
+        <p class="text-secondary mt-1">Manage GFMS roles for existing user accounts.</p>
+    </div></div>
+    <div class="page-body"><div class="container-xl">
+        <div class="card user-access-directory">
+            <div class="user-access-toolbar">
+                <div><h2 class="access-directory-title">User directory</h2><p class="access-directory-subtitle">Review employee details and manage GFMS access.</p></div>
+                <form method="get" asp-action="Index" role="search" class="user-access-search">
+                    <label for="search" class="visually-hidden">Search accounts by name, email, employee ID or card number</label>
+                    <button type="submit" class="user-access-search-button" aria-label="Search accounts"><i class="ti ti-search" aria-hidden="true"></i></button>
+                    <input id="search" name="search" value="@Model.Search" class="form-control" placeholder="Search..." maxlength="256" />
+                    @if (!string.IsNullOrEmpty(Model.Search))
+                    {
+                        <a asp-action="Index" class="user-access-search-clear" aria-label="Clear search"><i class="ti ti-x" aria-hidden="true"></i></a>
+                    }
+                </form>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter user-access-table">
+                    <caption class="visually-hidden">Employee directory and assigned GFMS access roles</caption>
+                    <colgroup><col class="access-number-column" /><col class="access-details-column" /><col class="access-organization-column" /><col class="access-roles-column" /><col class="access-actions-column" /></colgroup>
+                    <thead><tr><th scope="col">#</th><th scope="col">Employee details</th><th scope="col">Organization</th><th scope="col">Roles</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
+                    <tbody>
+                    @for (var index = 0; index < Model.Users.Count; index++)
+                    {
+                        var account = Model.Users[index];
+                        var initials = string.Concat(account.Name.Split(new[] { ' ', '.', '@', '_' }, StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => char.ToUpperInvariant(part[0])));
+                        <tr>
+                            <td class="access-row-number" data-label="Number">@((Model.Page - 1) * Model.PageSize + index + 1)</td>
+                            <td data-label="Employee">
+                                <div class="access-employee">
+                                    <span class="access-profile" aria-hidden="true">@initials</span>
+                                    <div class="access-employee-copy">
+                                        <div class="access-employee-name">@account.Name</div>
+                                        <div class="access-secondary">@account.Email</div>
+                                        <div class="access-employee-meta"><span>ID: @(string.IsNullOrWhiteSpace(account.EmployeeNumber) ? "No ID" : account.EmployeeNumber)</span><span>Card: @(string.IsNullOrWhiteSpace(account.CardNumber) ? "No card number" : account.CardNumber)</span></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td data-label="Organization">
+                                <div>@(string.IsNullOrWhiteSpace(account.Position) ? "No Position" : account.Position)</div>
+                                <div class="access-secondary">@(string.IsNullOrWhiteSpace(account.Company) ? "No Company" : account.Company)</div>
+                                <div class="access-secondary">@(string.IsNullOrWhiteSpace(account.Department) ? "No Department" : account.Department)</div>
+                            </td>
+                            <td data-label="Roles">
+                                @if (account.Roles.Length == 0) { <span class="text-secondary">No GFMS roles</span> }
+                                <div class="access-role-list">
+                                    @foreach (var role in account.Roles)
+                                    {
+                                        var roleColor = role switch
+                                        {
+                                            ReservationRoles.Requestor => "access-role-requestor",
+                                            ReservationRoles.DepartmentHead => "access-role-department-head",
+                                            ReservationRoles.AdminApprover => "access-role-approver",
+                                            ReservationRoles.AdminManager => "access-role-manager",
+                                            ReservationRoles.SystemAdmin => "access-role-system-admin",
+                                            _ => ""
+                                        };
+                                        <span class="access-role @roleColor"><span class="access-role-dot" aria-hidden="true"></span>@role</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="access-row-action"><button type="button" class="btn access-modify" data-bs-toggle="offcanvas" data-bs-target="#user-access-editor" aria-controls="user-access-editor"
+                                data-edit-url="@Url.Action("Edit", new { id = account.Id, offcanvas = true, search = Model.Search, page = Model.Page })"
+                                aria-label="Modify GFMS access for @account.Name"><i class="ti ti-edit" aria-hidden="true"></i> Modify</button></td>
+                        </tr>
+                    }
+                    @if (Model.Users.Count == 0) { <tr class="access-empty-row"><td colspan="5" class="text-center text-secondary py-5">No user accounts found.</td></tr> }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer access-pagination-footer d-flex flex-wrap gap-3 align-items-center justify-content-between">
+                <span class="text-secondary">Showing @(Model.TotalCount == 0 ? 0 : (Model.Page - 1) * Model.PageSize + 1) to @(Math.Min(Model.Page * Model.PageSize, Model.TotalCount)) of @Model.TotalCount entries</span>
+                <nav aria-label="User access pages">
+                    <ul class="pagination access-pagination mb-0 flex-wrap">
+                        <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                            @if (Model.Page > 1) { <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-page="@(Model.Page - 1)" aria-label="Previous page"><i class="ti ti-chevron-left" aria-hidden="true"></i></a> }
+                            else { <span class="page-link" aria-disabled="true" aria-label="Previous page"><i class="ti ti-chevron-left" aria-hidden="true"></i></span> }
+                        </li>
+                        @for (var number = 1; number <= Model.TotalPages; number++)
+                        {
+                            if (number != 1 && number != Model.TotalPages && Math.Abs(number - Model.Page) > 2)
+                            {
+                                if (number == Model.Page - 3 || number == Model.Page + 3) { <li class="page-item disabled"><span class="page-link">…</span></li> }
+                                continue;
+                            }
+                            <li class="page-item @(number == Model.Page ? "active" : "")">
+                                @if (number == Model.Page) { <span class="page-link" aria-current="page">@number</span> }
+                                else { <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-page="@number" aria-label="Page @number">@number</a> }
+                            </li>
+                        }
+                        <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                            @if (Model.Page < Model.TotalPages) { <a class="page-link" asp-action="Index" asp-route-search="@Model.Search" asp-route-page="@(Model.Page + 1)" aria-label="Next page"><i class="ti ti-chevron-right" aria-hidden="true"></i></a> }
+                            else { <span class="page-link" aria-disabled="true" aria-label="Next page"><i class="ti ti-chevron-right" aria-hidden="true"></i></span> }
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div></div>
+</div>
+<div class="offcanvas offcanvas-end access-editor" tabindex="-1" id="user-access-editor" aria-labelledby="user-access-editor-title"
+     data-initial-edit-url="@(Model.EditUserId == null ? "" : Url.Action("Edit", new { id = Model.EditUserId, offcanvas = true, search = Model.Search, page = Model.Page }))">
+    <div class="offcanvas-header">
+        <div><div class="access-editor-eyebrow">User administration</div><h2 class="offcanvas-title" id="user-access-editor-title">Manage GFMS access</h2></div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        @if (TempData["AccessError"] is string error)
+        {
+            <div class="alert alert-danger" role="alert" id="user-access-save-error">@error</div>
+        }
+        <div id="user-access-editor-content" aria-live="polite"></div>
+    </div>
+</div>
+@section Scripts {
+    <script src="~/js/user-access.js" asp-append-version="true"></script>
+}

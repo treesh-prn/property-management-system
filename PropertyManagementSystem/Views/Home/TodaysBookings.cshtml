@@ -1,0 +1,89 @@
+@model TodaysBookingsViewModel
+@{ ViewData["Title"] = "Today's Bookings"; }
+<div class="page-wrapper management-page todays-bookings-page">
+    <div class="page-header d-print-none"><div class="container-xl">
+        <div class="row g-3 align-items-center">
+            <div class="col">
+                <div class="page-pretitle">Workspace overview</div>
+                <h1 class="page-title">Today's bookings</h1>
+                <p class="text-secondary mt-2 mb-0">Approved schedules for @Model.Date.ToString("dddd, MMMM d, yyyy"), including ongoing stays.</p>
+            </div>
+            <div class="col-auto"><a asp-action="Index" class="btn"><i class="ti ti-arrow-left me-2" aria-hidden="true"></i>Back to dashboard</a></div>
+        </div>
+    </div></div>
+    <div class="page-body"><div class="container-xl">
+        <div class="card today-bookings-card">
+            <div class="card-header today-bookings-header">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="today-bookings-icon"><i class="ti ti-calendar-check" aria-hidden="true"></i></span>
+                    <div><h2 class="card-title mb-1">Approved today <span class="badge bg-purple-lt ms-1">@Model.TotalCount</span></h2><div class="text-secondary small">Function rooms and accommodation</div></div>
+                </div>
+            </div>
+            <div class="card-body border-bottom d-print-none">
+                <form method="get" asp-action="TodaysBookings" class="row g-2 align-items-end" role="search">
+                    <div class="col-md-6"><label for="booking-search" class="form-label">Search bookings</label><input id="booking-search" name="search" value="@Model.Search" class="form-control" maxlength="256" placeholder="Reservation, requestor, location, or purpose" /></div>
+                    <div class="col-md-3"><label for="booking-type" class="form-label">Booking type</label><select id="booking-type" name="type" class="form-select">
+                        <option value="">All types</option>
+                        <option value="FN" selected="@(Model.Type == "FN")">Function room</option>
+                        <option value="GH" selected="@(Model.Type == "GH")">Accommodation</option>
+                    </select></div>
+                    <div class="col-md-3"><div class="btn-list"><button type="submit" class="btn btn-primary">Apply filters</button><a asp-action="TodaysBookings" class="btn">Reset</a></div></div>
+                </form>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table today-bookings-table">
+                    <caption class="visually-hidden">Approved bookings overlapping @Model.Date.ToString("MMMM d, yyyy")</caption>
+                    <thead><tr><th scope="col">Reservation</th><th scope="col">Requestor</th><th scope="col">Facility / room</th><th scope="col">Schedule</th><th scope="col">Purpose</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+                    <tbody>
+                    @foreach (var booking in Model.Bookings)
+                    {
+                        <tr>
+                            <td><div class="fw-semibold">@(booking.Code ?? $"#{booking.ReservationId}")</div><div class="text-secondary small">@booking.TypeName</div></td>
+                            <td>@(string.IsNullOrWhiteSpace(booking.Requestor) ? "Not specified" : booking.Requestor)</td>
+                            <td>@(string.IsNullOrWhiteSpace(booking.Location) ? "Not assigned" : booking.Location)</td>
+                            <td class="today-booking-schedule"><div><span class="text-secondary small">From</span> @booking.Start.ToString("MMM d, yyyy · h:mm tt")</div><div><span class="text-secondary small">To</span> @booking.End.ToString("MMM d, yyyy · h:mm tt")</div></td>
+                            <td class="today-booking-purpose">@(string.IsNullOrWhiteSpace(booking.Purpose) ? "Not specified" : booking.Purpose)</td>
+                            <td><span class="badge bg-green-lt">Approved</span></td>
+                            <td class="d-print-none">
+                                @if (booking.DetailsController != null && !string.IsNullOrWhiteSpace(booking.Guid))
+                                {
+                                    <a asp-controller="@booking.DetailsController" asp-action="ViewReservationDetails" asp-route-id="@booking.Guid" class="btn today-booking-view" aria-label="View reservation @(booking.Code ?? booking.ReservationId.ToString())"><i class="ti ti-eye" aria-hidden="true"></i>VIEW</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    @if (Model.Bookings.Count == 0)
+                    {
+                        <tr><td colspan="7"><div class="today-bookings-empty"><i class="ti ti-calendar-off" aria-hidden="true"></i><h3>@(Model.TotalCount == 0 ? "No approved bookings today" : "No matching bookings")</h3><p class="text-secondary mb-0">@(Model.TotalCount == 0 ? "Approved schedules for today will appear here." : "Try a different search or reset the filters.")</p></div></td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer access-pagination-footer d-flex flex-wrap gap-3 align-items-center justify-content-between">
+                <span class="text-secondary">Showing @(Model.FilteredCount == 0 ? 0 : (Model.Page - 1) * Model.PageSize + 1) to @Math.Min(Model.Page * Model.PageSize, Model.FilteredCount) of @Model.FilteredCount schedules</span>
+                <nav aria-label="Today's bookings pages" class="d-print-none"><ul class="pagination access-pagination mb-0">
+                    <li class="page-item @(Model.Page == 1 ? "disabled" : "")">
+                        @if (Model.Page > 1) { <a class="page-link" asp-action="TodaysBookings" asp-route-search="@Model.Search" asp-route-type="@Model.Type" asp-route-page="@(Model.Page - 1)" aria-label="Previous page"><i class="ti ti-chevron-left" aria-hidden="true"></i></a> }
+                        else { <span class="page-link" aria-disabled="true" aria-label="Previous page"><i class="ti ti-chevron-left" aria-hidden="true"></i></span> }
+                    </li>
+                    @for (var number = 1; number <= Model.TotalPages; number++)
+                    {
+                        if (number != 1 && number != Model.TotalPages && Math.Abs(number - Model.Page) > 2)
+                        {
+                            if (number == Model.Page - 3 || number == Model.Page + 3) { <li class="page-item disabled"><span class="page-link">...</span></li> }
+                            continue;
+                        }
+                        <li class="page-item @(number == Model.Page ? "active" : "")">
+                            @if (number == Model.Page) { <span class="page-link" aria-current="page">@number</span> }
+                            else { <a class="page-link" asp-action="TodaysBookings" asp-route-search="@Model.Search" asp-route-type="@Model.Type" asp-route-page="@number" aria-label="Page @number">@number</a> }
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page == Model.TotalPages ? "disabled" : "")">
+                        @if (Model.Page < Model.TotalPages) { <a class="page-link" asp-action="TodaysBookings" asp-route-search="@Model.Search" asp-route-type="@Model.Type" asp-route-page="@(Model.Page + 1)" aria-label="Next page"><i class="ti ti-chevron-right" aria-hidden="true"></i></a> }
+                        else { <span class="page-link" aria-disabled="true" aria-label="Next page"><i class="ti ti-chevron-right" aria-hidden="true"></i></span> }
+                    </li>
+                </ul></nav>
+            </div>
+        </div>
+    </div></div>
+</div>

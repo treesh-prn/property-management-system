@@ -311,6 +311,24 @@ public class ReservationAuthorizationServiceTests
         }
     }
 
+    [Theory]
+    [InlineData(1, "APPROVED", true)]
+    [InlineData(2, "APPROVED", false)]
+    [InlineData(null, "APPROVED", false)]
+    [InlineData(1, "DRAFT", false)]
+    [InlineData(1, "FOR ADMIN APPROVER'S APPROVAL", false)]
+    public async Task Department_head_can_view_approved_department_bookings_without_being_assigned_approver(
+        int? department, string status, bool expected)
+    {
+        var service = CreateService();
+        var user = User("head", "head@example.invalid", ReservationRoles.DepartmentHead);
+        var reservation = Reservation("other@example.invalid", "FN", status);
+        reservation.Department = department;
+        Assert.Equal(expected, (await service.AuthorizeAsync(user, reservation, ReservationOperation.Read)).Succeeded);
+        foreach (var operation in new[] { ReservationOperation.Edit, ReservationOperation.Cancel, ReservationOperation.Approve })
+            Assert.False((await service.AuthorizeAsync(user, reservation, operation)).Succeeded);
+    }
+
     private static ReservationAuthorizationService CreateService() =>
         new(new FakeRoleService());
 

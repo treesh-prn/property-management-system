@@ -119,16 +119,20 @@
                                 <i class="ti ti-arrow-up-right dashboard-metric-arrow" aria-hidden="true"></i>
                             </a>
                         </div>
+                        @if (TodaysBookingScope.CanView(activeRole))
+                        {
                         <div>
-                            <div class="dashboard-metric-card metric-violet is-static">
+                            <a href="@Url.Action("TodaysBookings", "Home")" class="dashboard-metric-card metric-violet">
                                 <div class="dashboard-metric-icon"><i class="ti ti-calendar-check" aria-hidden="true"></i></div>
                                 <div class="dashboard-metric-content">
                                     <span class="dashboard-metric-label">Today’s bookings</span>
                                     <strong>@(Model.TodaysBookings?.Count() ?? 0)</strong>
                                     <span class="dashboard-metric-caption">approved @(Model.TodaysBookings?.Count() == 1 ? "schedule" : "schedules") today</span>
                                 </div>
-                            </div>
+                                <i class="ti ti-arrow-up-right dashboard-metric-arrow" aria-hidden="true"></i>
+                            </a>
                         </div>
+                        }
                     </div>
                 </div>
                 }

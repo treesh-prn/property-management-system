@@ -30,16 +30,13 @@ namespace PropertyManagementSystem.Areas.Identity.Pages.Account
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
-            string authServerUrl = _configuration["Jwt:AuthServer"];
+            var authServerUrl = _configuration["Jwt:AuthServer"];
             if (string.IsNullOrEmpty(authServerUrl))
             {
-                if (returnUrl != null)
-                {
-                    return LocalRedirect(returnUrl);
-                }
-                return RedirectToPage();
+                return RedirectToPage("/Account/Login");
             }
-            return Redirect($"{_configuration["Jwt:AuthServer"]}/Identity/Account/Login?returnUrl={_configuration["Jwt:AppUrl"]}/Token/HandleToken");
+            // Logout must not ask SSO to issue a fresh token and return to GFMS.
+            return Redirect($"{authServerUrl.TrimEnd('/')}/Identity/Account/Login");
         }
     }
 }

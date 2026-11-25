@@ -281,6 +281,10 @@ namespace PropertyManagementSystem.Services
 
             if (actor.AssignedRoles.Contains(ReservationRoles.DepartmentHead))
             {
+                if (actor.ActiveRole == ReservationRoles.DepartmentHead &&
+                    actor.DepartmentId.HasValue && reservation.Department == actor.DepartmentId &&
+                    reservation.Status == ReservationStatuses.Approved)
+                    return true;
                 if (reservation.Status != ReservationStatuses.Draft && IsAssignedDepartmentHead(reservation, actor))
                     return true;
             }

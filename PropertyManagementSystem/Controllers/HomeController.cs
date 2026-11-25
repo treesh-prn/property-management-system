@@ -103,21 +103,7 @@ namespace PropertyManagementSystem.Controllers
                     .CountAsync();
             }
 
-            var todaysBookings = await (from detail in _context.ReservationDetails
-                                        where detail.StartDate.HasValue && detail.EndDate.HasValue
-                                              && detail.StartDate.Value.Date <= today
-                                              && detail.EndDate.Value.Date >= today
-                                        join header in _context.ReservationHeaders on detail.ReservationId equals header.ReservationId
-                                             where header.Status == "APPROVED"
-                                        select new
-                                        {
-                                            header.ReservationId,
-                                            header.ReservationType,
-                                            detail.StartDate,
-                                            detail.EndDate,
-                                            detail.Purpose
-                                        }).Distinct()
-                                 .ToListAsync();
+            var todaysBookings = await GetTodaysBookingsAsync(today);
 
             var viewModel = new ReservationViewModel
             {
@@ -131,6 +117,72 @@ namespace PropertyManagementSystem.Controllers
             ViewData["Facilities"] = facilities;
 
             return View(viewModel);
+        }
+
+        [HttpGet]
+        [PropertyManagementSystem.Attributes.ActiveRoleAuthorize(
+            ReservationRoles.DepartmentHead, ReservationRoles.AdminApprover, ReservationRoles.SystemAdmin)]
+        public async Task<IActionResult> TodaysBookings(string? search, string? type, int page = 1)
+        {
+            var now = DateTime.Now;
+            await _scheduleStatus.RefreshAllAsync(now);
+            var bookings = await GetTodaysBookingsAsync(now.Date);
+            search = search?.Trim();
+            type = type is "FN" or "GH" or "DRM" ? type : null;
+            var filtered = bookings.AsEnumerable();
+            if (type != null) filtered = filtered.Where(booking => booking.Type == type);
+            if (!string.IsNullOrEmpty(search))
+                filtered = filtered.Where(booking => new[]
+                {
+                    booking.Code, booking.Requestor, booking.Location, booking.Purpose, booking.TypeName
+                }.Any(value => value?.Contains(search, StringComparison.OrdinalIgnoreCase) == true));
+            var rows = filtered.ToList();
+            const int pageSize = 25;
+            var totalPages = Math.Max(1, (int)Math.Ceiling(rows.Count / (double)pageSize));
+            page = Math.Clamp(page, 1, totalPages);
+            return View(new TodaysBookingsViewModel
+            {
+                Date = now.Date, Search = search, Type = type, Page = page, PageSize = pageSize,
+                TotalCount = bookings.Count, FilteredCount = rows.Count, TotalPages = totalPages,
+                Bookings = rows.Skip((page - 1) * pageSize).Take(pageSize).ToList()
+            });
+        }
+
+        private async Task<List<TodaysBookingRow>> GetTodaysBookingsAsync(DateTime date)
+        {
+            var activeRole = await _roleService.GetActiveRoleAsync(User);
+            if (!TodaysBookingScope.CanView(activeRole)) return new List<TodaysBookingRow>();
+            var employee = await _roleService.GetUserName(User);
+            var headers = _context.ReservationHeaders.AsNoTracking()
+                .ForTodaysBookingViewer(activeRole, employee?.DepartmentId);
+            var schedules = await (from detail in _context.ReservationDetails.AsNoTracking().OnBookingDate(date)
+                                   join header in headers on detail.ReservationId equals header.ReservationId
+                                   join room in _context.Rooms.AsNoTracking() on detail.RoomId equals (int?)room.RoomId into rooms
+                                   from room in rooms.DefaultIfEmpty()
+                                   join facility in _context.Facilities.AsNoTracking()
+                                       on (detail.FacilityId ?? (room == null ? (int?)null : room.FacilityId)) equals (int?)facility.FacilityId into facilities
+                                   from facility in facilities.DefaultIfEmpty()
+                                   select new
+                                   {
+                                       header.ReservationId, header.GUID, header.ReservationCode, header.ReservationType,
+                                       header.Requestor, detail.StartDate, detail.EndDate, detail.Purpose,
+                                       Room = room == null ? null : room.RoomName,
+                                       Facility = facility == null ? null : facility.FacilityName
+                                   }).ToListAsync();
+            // Multiple guests or room allocations for one schedule remain one booking.
+            return schedules.GroupBy(schedule => new
+                {
+                    schedule.ReservationId, schedule.GUID, schedule.ReservationCode, schedule.ReservationType,
+                    schedule.Requestor, schedule.StartDate, schedule.EndDate, schedule.Purpose
+                })
+                .Select(group => new TodaysBookingRow(group.Key.ReservationId, group.Key.GUID,
+                    group.Key.ReservationCode, group.Key.ReservationType, group.Key.Requestor,
+                    group.Key.StartDate!.Value, group.Key.EndDate!.Value, group.Key.Purpose,
+                    string.Join(", ", group.Select(schedule => string.Join(" / ",
+                        new[] { schedule.Facility, schedule.Room }.Where(value => !string.IsNullOrWhiteSpace(value))))
+                        .Where(value => value.Length > 0).Distinct().OrderBy(value => value))))
+                .OrderBy(booking => booking.Start).ThenBy(booking => booking.Code).ThenBy(booking => booking.ReservationId)
+                .ToList();
         }
 
         [HttpGet]

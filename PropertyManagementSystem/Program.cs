@@ -49,6 +49,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddRazorPages();
 
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<GfmsUserAccessService>();
 builder.Services.AddScoped<EquipmentService>();
 builder.Services.AddScoped<IFacilityEquipmentLinkService, FacilityEquipmentLinkService>();
 builder.Services.AddScoped<IReservationEquipmentAllocationService, ReservationEquipmentAllocationService>();

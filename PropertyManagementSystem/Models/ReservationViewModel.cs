@@ -91,7 +91,7 @@ namespace PropertyManagementSystem.Models
         public double TotalCost {  get; set; }
 
         //total booking for today
-        public IEnumerable<dynamic> TodaysBookings { get; set; }
+        public IReadOnlyList<TodaysBookingRow> TodaysBookings { get; set; } = Array.Empty<TodaysBookingRow>();
     }
 
     public sealed class RoomAssignmentOption
